@@ -67,11 +67,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <?php
       $labels = [
-        'DO'=>'DO','Encargado'=>'Encargado','IdImportador'=>'ID Importador','TipoProceso'=>'Tipo Proceso',
+        'DO'=>'DO','Encargado'=>'Encargado','IdEmpresa'=>'Cliente','IdImportador'=>'Importador','TipoProceso'=>'Tipo Proceso',
         'DOAgencia'=>'DO Agencia','AgenteCarga'=>'Agente Carga','ETA'=>'ETA','DiasLibres'=>'Días Libres',
         'DigitacionRevision'=>'Digitación/Revisión','Aduana'=>'Aduana','Producto'=>'Producto','NumeroBL'=>'Número BL',
         'Contenedor'=>'Contenedor','Manifiesto'=>'Manifiesto','Pies'=>'Pies','Bulto'=>'Bulto',
-        'PesoBruto'=>'Peso Bruto','Bandera'=>'Bandera','IdEstadoProceso'=>'ID Estado Proceso'
+        'PesoBruto'=>'Peso Bruto','Bandera'=>'Bandera'
       ];
       foreach ($labels as $name => $label): ?>
         <div class="form-group">

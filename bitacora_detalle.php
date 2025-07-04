@@ -53,39 +53,10 @@ $proceso = (object)[
       
       
 <input type="checkbox" id="popup-toggle-add" hidden>
-<div class="toolbar" style="margin-bottom: 20px; display: flex; gap: 10px;">
+
+<div class="toolbar" style="display:flex; justify-content:flex-end; gap:10px; margin-bottom:20px;">
     <label for="popup-toggle-add" class="btn">➕ Nueva Entrada</label>
 </div>
-
-<?php if (empty($bitacoras)): ?>
-    <p>No hay entradas en la bitácora.</p>
-<?php else: ?>
-    <table>
-        <thead>
-            <tr>
-                <th>Tipo</th>
-                <th>Descripción</th>
-                <th>Nombre de Usuario</th>
-                <th>Correo</th>
-                <th>Fecha de Creación</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($bitacoras as $b): ?>
-                <tr>
-                    <td>Trasnporte</td>
-                    <td><?= esc_html($b->user_login) ?></td>
-                    <td><?= esc_html($b->user_nicename) ?></td>
-                    <td><?= esc_html($b->user_email) ?></td>
-                    <td>18/06/2025</td>
-                    <td>
-                        <a class="btn">Ver detalle</a>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
     
     <!-- Popup de edición/formulario completo -->
       <div class="overlay-edit">
@@ -144,4 +115,33 @@ $proceso = (object)[
         </form>
       </div>
     </div>
-<?php endif; ?>
+
+    <ul class="tabs">
+      <li data-tab="tab-contabilidad" class="active">Contabilidad</li>
+      <li data-tab="tab-giros">Giros</li>
+      <li data-tab="tab-transporte">Transporte</li>
+    </ul>
+
+    <!-- Contenido de cada pestaña -->
+    <div id="tab-contabilidad" class="tab-content active">
+      <?php include 'bitacora_detalle_filtro.php'; ?>
+    </div>
+    <div id="tab-giros" class="tab-content">
+      <?php include 'bitacora_detalle_filtro.php'; ?>
+    </div>
+    <div id="tab-transporte" class="tab-content">
+      <?php include 'bitacora_detalle_filtro.php'; ?>
+    </div>
+  </div>
+
+    <script>
+    // Lógica simple de tabs
+    document.querySelectorAll('.tabs li').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tabs li').forEach(li => li.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.getAttribute('data-tab')).classList.add('active');
+      });
+    });
+  </script>

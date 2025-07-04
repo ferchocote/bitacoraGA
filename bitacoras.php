@@ -10,7 +10,28 @@ $bitacoras = $wpdb->get_results("SELECT * FROM wp_users ");
 <!DOCTYPE html>
 
 <div class="toolbar" style="margin-bottom: 20px; display: flex; gap: 10px;">
-    <h1>Últimas Bitácoras</h1>
+    <!-- <h1>Últimas Bitácoras</h1> -->
+     <!-- Filtro global -->
+    <form method="get" class="filter-form">
+      <input type="hidden" name="view" value="bitacora_detalle">
+      <div class="filter-grid">
+        <div class="filter-field full-width input-icon-wrapper">
+          <label for="q">Buscar:</label>
+          <div class="input-icon-group">
+            <input
+              type="text"
+              id="q"
+              name="q"
+              value=""
+              placeholder="Filtrar por Tipo, Descripción, Usuario o Correo"
+            >
+            <button type="submit" class="icon-btn" title="Buscar">🔍</button>
+            <button type="button" onclick="window.location='?view=bitacora_detalle'" class="icon-btn" title="Limpiar">✕</button>
+          </div>
+        </div>
+      </div>
+    </form>
+
     <a href="?view=nueva_bitacora" class="btn">➕ Nuevo Registro</a>
     <!-- <button type="button" class="btn" onclick="editarSeleccionado()">✏️ Editar</button>
     <button type="button" class="btn" onclick="exportarCSV()">📁 Exportar CSV</button>-->

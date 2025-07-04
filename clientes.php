@@ -33,8 +33,27 @@ $roles = $wpdb->get_results("SELECT * FROM bc_roles");
 
 <!DOCTYPE html>
 <div class="toolbar" style="margin-bottom: 20px; display: flex; gap: 10px;">
-    <h1>Clientes</h1>
-    <a href="?view=nueva_bitacora" class="btn btn-icon">
+    <!-- <h1>Clientes</h1> -->
+    <form method="get" class="filter-form">
+      <input type="hidden" name="view" value="bitacora_detalle">
+      <div class="filter-grid">
+        <div class="filter-field full-width input-icon-wrapper">
+          <label for="q">Buscar:</label>
+          <div class="input-icon-group">
+            <input
+              type="text"
+              id="q"
+              name="q"
+              value=""
+              placeholder="Filtrar por Tipo, Descripción, Usuario o Correo"
+            >
+            <button type="submit" class="icon-btn" title="Buscar">🔍</button>
+            <button type="button" onclick="window.location='?view=bitacora_detalle'" class="icon-btn" title="Limpiar">✕</button>
+          </div>
+        </div>
+      </div>
+    </form>
+    <a href="?view=nuevo_cliente" class="btn btn-icon">
         <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
           <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5"/>
         </svg>
@@ -50,14 +69,12 @@ $roles = $wpdb->get_results("SELECT * FROM bc_roles");
     <table>
         <thead>
             <tr>
-                <th>Nombre</th>
+                <th>Tipo de Documento</th>
                 <th>Documento</th>
                 <th>Razón Social</th>
-                <th>Documento</th>
-                <th>Correo</th>
+                <th>Dirección</th>
                 <th>Teléfono</th>
-                <th>Ciudad</th>
-                <th>Activo</th>
+                <th>Cliente</th>
                 <th></th>
             </tr>
         </thead>
@@ -69,9 +86,7 @@ $roles = $wpdb->get_results("SELECT * FROM bc_roles");
                     <td><?= esc_html($b->rol_nombre ?: 'No Asignado') ?></td>
                     <td><?= esc_html($b->user_login) ?></td>
                     <td><?= esc_html($b->user_email) ?></td>
-                    <td><?= esc_html($b->user_login) ?></td>
-                    <td><?= esc_html($b->user_email) ?></td>
-                    <td><?= esc_html($b->user_login) ?></td>
+                    <td>SI</td>
                     <td>
                         
                         <a style="color: #2980b9; text-decoration: none" href="<?= esc_attr($b->ID); ?>">

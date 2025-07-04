@@ -46,7 +46,7 @@ $bitacoras = $wpdb->get_results("SELECT * FROM wp_users ");
                 <th>DO</th>
                 <th>Nombre de Usuario</th>
                 <th>Empresa</th>
-                <th>Correo</th>
+                <!-- <th>Correo</th> -->
                 <th>Numero BL</th>
                 <th>Contenedor</th>
                 <th>Estado</th>
@@ -60,7 +60,7 @@ $bitacoras = $wpdb->get_results("SELECT * FROM wp_users ");
                     <td>I25-001</td>
                     <td><?= esc_html($b->user_login) ?></td>
                     <td><?= esc_html($b->user_login) ?></td>
-                    <td><?= esc_html($b->user_login) ?></td>
+                    <!-- <td><?= esc_html($b->user_login) ?></td> -->
                     <td><?= esc_html($b->user_nicename) ?></td>
                     <td><?= esc_html($b->user_email) ?></td>
                     <td>

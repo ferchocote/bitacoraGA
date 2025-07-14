@@ -190,6 +190,9 @@ th {
 #popup-toggle {
   display: none;
 }
+#popup-toggle-det {
+  display: none;
+}
 
 .overlay {
   position: fixed;
@@ -206,14 +209,24 @@ th {
 #popup-toggle:checked + .overlay {
   display: flex;
 }
+#popup-toggle-det:checked + .overlay {
+  display: flex;
+}
 
 .popup {
   background: white;
   padding: 20px;
   border-radius: 10px;
-  max-width: 90%;
-  width: 300px;
+  max-width: 65%;
+  width: 100%;
   text-align: center;
+}
+
+.popup h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 18px;
+    text-align: center;
 }
 
 .close {
@@ -292,6 +305,24 @@ table tbody tr:nth-child(even) {
   gap: 20px;
 }
 
+.form-row {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-row label {
+    font-weight: bold;
+    margin-bottom: 4px;
+    font-size: 14px;
+}
+
+.form-row input {
+    padding: 6px 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
 .form-group {
   display: flex;
   flex-direction: column;
@@ -305,6 +336,14 @@ table tbody tr:nth-child(even) {
 }
 
 .form-group input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1em;
+  width: 95%;
+}
+
+.form-group select {
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -356,7 +395,7 @@ table tbody tr:nth-child(even) {
 /* Ajuste del botón: ocupa 50% y centrado */
 .form-container button {
   width: 50%;
-  margin: 20px auto 0 auto;
+  /* margin: 20px auto 0 auto; */
   display: block;
 }
 
@@ -742,6 +781,35 @@ table tbody tr:nth-child(even) {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/*loader */
+#loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  z-index: 9999;
+  display: none;
+  justify-content: center;
+  align-items: center;
+}
+
+.spinner {
+  border: 8px solid #ccc;
+  border-top: 8px solid #3498db;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 

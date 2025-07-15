@@ -431,27 +431,27 @@ table tbody tr:nth-child(even) {
   font-weight: 600;
 }
 
-.status-creado {
+.status-crea {
   background-color: #4CAF50; /* Verde aceptado */
   color: #fff;
 }
 
-.status-emitido {
+.status-emit {
   background-color: #FFEB3B; /* Amarillo review */
   color: #333;
 }
 
-.status-en-puerto {
+.status-puer {
   background-color: #FF9800; /* Naranja query */
   color: #fff;
 }
 
-.status-en-transporte {
+.status-trans {
   background-color: #F44336; /* Rojo rechazado */
   color: #fff;
 }
 
-.status-proceso-completado {
+.status-proce {
   background-color: #9E9E9E; /* Gris incomplete */
   color: #fff;
 }
@@ -743,5 +743,21 @@ table tbody tr:nth-child(even) {
   align-items: center;
   gap: 8px;
 }
+
+/* Estilos para select que imitan los inputs */
+    .form-container .form-group select {
+      width: 100%;
+      padding: 8px;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: #fff;
+      box-sizing: border-box;
+      transition: border-color 0.3s;
+    }
+    .form-container .form-group select:focus {
+      outline: none;
+      border-color: #2980b9;
+    }
 
 

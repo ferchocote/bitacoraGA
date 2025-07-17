@@ -1,4 +1,5 @@
 <?php
+ob_start();
 define('WP_USE_THEMES', false);
 require_once('../../wp-load.php');
 
@@ -55,13 +56,80 @@ $detalles = $wpdb->get_results(
     )
 );
 
+$detalle = ! empty( $detalles ) ? $detalles[0] : null;
+
 // Listas para selects
 $clientes = $wpdb->get_results("SELECT Id, RazonSocial FROM {$tabla_clientes} WHERE Activo=1 ORDER BY RazonSocial");
 $importadores = $clientes; // mismos registros, diferencia según flujo
 $estadosList = $wpdb->get_results("SELECT Id, Descripcion FROM {$tabla_estados} WHERE Activo=1 ORDER BY Id");
+
+// 1) Procesar formulario de edición antes de cualquier salida
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view'] === 'bitacora_detalle') {
+    check_admin_referer('editar_proceso_action', 'editar_proceso_nonce');
+    $id = intval($_GET['id']);
+    // Actualizar bc_proceso
+    $tabla_proceso = $tabla;
+    $data_p = [
+      'TipoProceso'         => sanitize_text_field($_POST['TipoProceso']),
+      'DOAgencia'           => sanitize_text_field($_POST['DOAgencia']),
+      'AgenteCarga'         => sanitize_text_field($_POST['AgenteCarga']),
+      'ETA'                 => date('Y-m-d H:i:s', strtotime($_POST['ETA'])),
+      'DiasLibres'          => intval($_POST['DiasLibres']),
+      'DigitacionRevision'  => sanitize_text_field($_POST['DigitacionRevision']),
+      'Aduana'              => sanitize_text_field($_POST['Aduana']),
+      'Producto'            => sanitize_text_field($_POST['Producto']),
+      'NumeroBL'            => sanitize_text_field($_POST['NumeroBL']),
+      'Contenedor'          => sanitize_text_field($_POST['Contenedor']),
+      'Manifiesto'          => sanitize_text_field($_POST['Manifiesto']),
+      'Pies'                => sanitize_text_field($_POST['Pies']),
+      'Bulto'               => sanitize_text_field($_POST['Bulto']),
+      'PesoBruto'           => sanitize_text_field($_POST['PesoBruto']),
+      'Bandera'             => sanitize_text_field($_POST['Bandera']),
+      'IdEstadoProceso'     => intval($_POST['IdEstadoProceso']),
+      'IdCliente'           => intval($_POST['IdCliente']),
+      'IdImportador'        => intval($_POST['IdImportador']),
+    ];
+    $wpdb->update($tabla_proceso, $data_p, ['Id' => $id]);
+
+    // Insertar o actualizar detalle
+    $detalle_id = !empty($_POST['detalle_id']) ? intval($_POST['detalle_id']) : 0;
+    $data_d = [
+      'Liberacion'          => !empty($_POST['Liberacion']) ? date('Y-m-d H:i:s', strtotime($_POST['Liberacion'])) : null,
+      'Aceptacion'          => !empty($_POST['Aceptacion']) ? date('Y-m-d H:i:s', strtotime($_POST['Aceptacion'])) : null,
+      'Selectividad'        => !empty($_POST['Selectividad']) ? date('Y-m-d H:i:s', strtotime($_POST['Selectividad'])) : null,
+      'Levante'       => !empty($_POST['Levantamiento']) ? date('Y-m-d H:i:s', strtotime($_POST['Levantamiento'])) : null,
+      'EntregaTransporte'   => !empty($_POST['EntregaTransporte']) ? date('Y-m-d H:i:s', strtotime($_POST['EntregaTransporte'])) : null,
+      'Pago'                => !empty($_POST['Pago']) ? date('Y-m-d H:i:s', strtotime($_POST['Pago'])) : null,
+      'Deposito'            => sanitize_text_field($_POST['Deposito']),
+      'DevolucionUnidad'    => !empty($_POST['DevolucionUnidad']) ? date('Y-m-d H:i:s', strtotime($_POST['DevolucionUnidad'])) : null,
+      'Puerto'              => sanitize_text_field($_POST['Puerto']),
+      'Observaciones'       => sanitize_text_field($_POST['Observaciones']),
+      'ArchivoFisico'       => isset($_POST['ArchivoFisico']) ? 1 : 0,
+      'IdProceso'           => $id,
+    ];
+    if ($detalle_id) {
+        $wpdb->update($tabla_detalle, $data_d, ['Id' => $detalle_id]);
+    } else {
+        $data_d['Activo'] = 1;
+        $data_d['FechaCreacion'] = current_time('mysql');
+        $data_d['IdUserCreation']  = get_current_user_id();
+        $wpdb->insert($tabla_detalle, $data_d);
+    }
+
+    // Redirigir para evitar reenvío
+    wp_safe_redirect(add_query_arg(['view'=>'bitacora_detalle','id'=>$id], $_SERVER['PHP_SELF']));
+    exit;
+}
 ?>
 
 <!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Entradas Bitácora</title>
+  <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
 <h1>Entradas Bitácora</h1>
 
     <!-- Sección de resumen: una sola tarjeta con múltiples datos -->
@@ -97,19 +165,19 @@ $estadosList = $wpdb->get_results("SELECT Id, Descripcion FROM {$tabla_estados} 
 <div class="overlay-edit">
   <div class="modal-container">
     <h3>Editar Proceso</h3>
-    <form method="post" action="?view=editar_proceso&id=<?= esc_attr($proceso->Id) ?>" class="popup-grid-4">
+    <form method="post" action="?view=bitacora_detalle&id=<?= esc_attr($proceso->Id) ?>" class="popup-grid-4">
       <?php wp_nonce_field('editar_proceso_action','editar_proceso_nonce'); ?>
 
       <!-- Campos principales -->
       <input type="hidden" name="detalle_id" value="<?= esc_attr($detalle ? $detalle->Id : '') ?>">
       <div class="form-group"><label for="DO">DO:</label>
         <input readonly type="text" id="DO" name="DO" value="<?= esc_attr($proceso->DO) ?>"></div>
-      <div class="form-group"><label for="IdEmpresa">Cliente:</label>
-        <select id="IdEmpresa" name="IdEmpresa"><?php foreach($clientes as $c): ?><option value="<?= $c->Id ?>" <?= selected($proceso->IdEmpresa,$c->Id,false) ?>><?= esc_html($c->RazonSocial) ?></option><?php endforeach; ?></select></div>
+      <div class="form-group"><label for="IdCliente">Cliente:</label>
+        <select id="IdCliente" name="IdCliente"><?php foreach($clientes as $c): ?><option value="<?= $c->Id ?>" <?= selected($proceso->IdCliente,$c->Id,false) ?>><?= esc_html($c->RazonSocial) ?></option><?php endforeach; ?></select></div>
       <div class="form-group"><label for="IdImportador">Importador:</label>
         <select id="IdImportador" name="IdImportador"><?php foreach($importadores as $imp): ?><option value="<?= $imp->Id ?>" <?= selected($proceso->IdImportador,$imp->Id,false) ?>><?= esc_html($imp->RazonSocial) ?></option><?php endforeach; ?></select></div>
       <div class="form-group"><label for="IdEstadoProceso">Estado:</label>
-        <select id="IdEstadoProceso" name="IdEstadoProceso"><?php foreach($estadosList as $st): ?><option value="<?= $st->Id ?>" <?= selected($proceso->IdEstadoProceso,$st->Id,false) ?>><?= esc_html($st->Descripcion) ?></option><?php endforeach; ?></select></div>
+        <select readonly id="IdEstadoProceso" name="IdEstadoProceso"><?php foreach($estadosList as $st): ?><option value="<?= $st->Id ?>" <?= selected($proceso->IdEstadoProceso,$st->Id,false) ?>><?= esc_html($st->Descripcion) ?></option><?php endforeach; ?></select></div>
       
       <div class="form-group"><label for="FechaCreacion">Fecha Creación:</label>
         <input readonly type="date" id="FechaCreacion" name="FechaCreacion" value="<?= esc_attr(date('Y-m-d',strtotime($proceso->FechaCreacion))) ?>"></div>
@@ -151,14 +219,20 @@ $estadosList = $wpdb->get_results("SELECT Id, Descripcion FROM {$tabla_estados} 
       <div class="form-group"><label for="Pago">Pago:</label>
         <input type="datetime-local" id="Pago" name="Pago" value="<?= esc_attr($detalle ? date('Y-m-d\TH:i',strtotime($detalle->Pago)) : '') ?>"></div>
       <div class="form-group"><label for="Puerto">Puerto:</label>
-        <input type="text" id="Puerto" name="Puerto" value="<?= esc_attr($detalle ? $detalle->Puerto : '') ?>"></div>
+        <input type="text" id="Puerto" name="Puerto" value="<?= esc_attr($detalle->Puerto ?? '') ?>"></div>
       <div class="form-group"><label for="Observaciones">Observaciones:</label>
-        <input type="text" id="Observaciones" name="Observaciones" value="<?= esc_attr($detalle ? $detalle->Observaciones : '') ?>"></div>
-
-      <div class="form-group last">
-        <label for="popup-toggle-edit" class="btn close">Cancelar</label>
-        <button type="submit" class="btn">Guardar</button>
-      </div>
+        <input type="text" id="Observaciones" name="Observaciones" value="<?= esc_attr($detalle->Observaciones ?? '') ?>"></div>
+      <div class="form-group"><label for="ArchivoFisico">Archivo Físico:</label>
+        <input type="checkbox" id="ArchivoFisico" name="ArchivoFisico" <?= !empty($detalle->ArchivoFisico) ? 'checked' : '' ?>></div>
+      <div class="form-group"><label for="Deposito">Depósito:</label>
+        <input type="text" id="Deposito" name="Deposito" value="<?= esc_attr($detalle->Deposito ?? '') ?>"></div>
+      <div class="form-group"><label for="DevolucionUnidad">Devolución Unidad:</label>
+        <input type="datetime-local" id="DevolucionUnidad" name="DevolucionUnidad" value="<?= esc_attr(!empty($detalle->DevolucionUnidad) ? date('Y-m-d\TH:i', strtotime($detalle->DevolucionUnidad)) : '') ?>"></div>
+      <!-- Acciones -->
+        <div class="popup-actions" style="grid-column:1 / -1; display:flex; justify-content:flex-end; gap:10px;">
+          <label for="popup-toggle-edit" class="btn close">Cancelar</label>
+          <button type="submit" class="btn">Guardar</button>
+        </div>
     </form>
   </div>
 </div>
@@ -210,6 +284,8 @@ $estadosList = $wpdb->get_results("SELECT Id, Descripcion FROM {$tabla_estados} 
       <?php include 'bitacora_detalle_filtro.php'; ?>
     </div>
   </div>
+</body>
+</html>
 
     <script>
     // Lógica simple de tabs

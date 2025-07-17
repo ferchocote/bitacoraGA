@@ -10,6 +10,7 @@ $where_sql = '';
 // Nombre real de tu tabla, ajusta el prefijo si es necesario:
 $tabla = 'bc_' . 'proceso';
 $tabla_estados = 'bc_' . 'estado_proceso';
+$tabla_cliente = 'bc_' . 'cliente';
 
 if ( ! empty($_GET['q']) ) {
     $q    = sanitize_text_field($_GET['q']);
@@ -44,6 +45,7 @@ $sql = $wpdb->prepare(
       p.Id,
       p.DO,
       u.user_login      AS creador,
+      c.RazonSocial,
       p.NumeroBL,
       p.Contenedor,
       ep.Codigo              AS EstadoCodigo,
@@ -55,6 +57,8 @@ $sql = $wpdb->prepare(
       ON u.ID = p.IdUserCreation
     LEFT JOIN {$tabla_estados} ep
       ON ep.ID = p.IdEstadoProceso
+    LEFT JOIN {$tabla_cliente} c
+      ON c.ID = p.IdImportador
     $where_sql
     ORDER BY p.FechaCreacion DESC
     LIMIT %d OFFSET %d
@@ -127,6 +131,7 @@ $estados = $wpdb->get_results(
             <tr>
                 <td><?= esc_html( $p->DO ) ?></td>
                 <td><?= esc_html( $p->creador ) ?></td>
+                <td><?= esc_html( $p->RazonSocial ) ?></td>
                 <td><?= esc_html( $p->NumeroBL ) ?></td>
                 <td><?= esc_html( $p->Contenedor ) ?></td>
                 <td>

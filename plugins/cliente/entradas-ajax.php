@@ -16,7 +16,11 @@ $action = $_GET['action'] ?? '';
 switch ($action) {
     case 'get_entradas_transporte':
         $id_proceso = intval($_GET['id_proceso']);
-        $entradas = $wpdb->get_results("SELECT * FROM  bc_entrada_bitacora WHERE IdProceso = $id_proceso");
+        $entradas = $wpdb->get_results("SELECT TE.Descripcion as TEDescripcion, EB.*,BT.*,U.* FROM `bc_entrada_bitacora` EB 
+                                         INNER JOIN `bc_tipo_entrada` TE ON TE.Id = EB.IdTipoEntrada
+                                         INNER JOIN `bc_entrada_bitacora_transporte` BT ON BT.IdEntradaBitacora = EB.Id
+                                         INNER JOIN `wp_users` U On U.ID = EB.IdUser
+                                         WHERE EB.IdProceso = $id_proceso");
 
 
         echo json_encode($entradas);
@@ -24,17 +28,25 @@ switch ($action) {
 
     case 'get_entradas_giros':
         $id_proceso = intval($_GET['id_proceso']);
-        $ciudades = $wpdb->get_results("SELECT * FROM bc_entrada_bitacora WHERE IdProceso = $id_proceso");
+        $entradas = $wpdb->get_results("SELECT TE.Descripcion as TEDescripcion, EB.*,BT.*,U.* FROM `bc_entrada_bitacora` EB 
+                                         INNER JOIN `bc_tipo_entrada` TE ON TE.Id = EB.IdTipoEntrada
+                                         INNER JOIN `bc_entrada_bitacora_giro` BT ON BT.IdEntradaBitacora = EB.Id
+                                         INNER JOIN `wp_users` U On U.ID = EB.IdUser
+                                         WHERE EB.IdProceso = $id_proceso");
 
 
-        echo json_encode($ciudades);
+        echo json_encode($entradas);
         break;
     case 'get_entradas_contabilidad':
         $id_proceso = intval($_GET['id_proceso']);
-        $ciudades = $wpdb->get_results("SELECT * FROM bc_entrada_bitacora WHERE IdProceso = $id_proceso");
+        $entradas = $wpdb->get_results("SELECT TE.Descripcion as TEDescripcion, EB.*,BT.*,U.* FROM `bc_entrada_bitacora` EB 
+                                         INNER JOIN `bc_tipo_entrada` TE ON TE.Id = EB.IdTipoEntrada
+                                         INNER JOIN `bc_entrada_bitacora_contabilidad` BT ON BT.IdEntradaBitacora = EB.Id
+                                         INNER JOIN `wp_users` U On U.ID = EB.IdUser
+                                         WHERE EB.IdProceso = $id_proceso");
 
 
-        echo json_encode($ciudades);
+        echo json_encode($entradas);
         break;
 
     default:

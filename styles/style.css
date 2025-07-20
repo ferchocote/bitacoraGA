@@ -614,42 +614,6 @@ table tbody tr:nth-child(even) {
   display: flex;
 }
 
-/* Caja del popup CREAR */
-.popup-add {
-  background: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  max-width: 500px;
-  width: 90%;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  position: relative;
-}
-.popup-add h3 {
-  margin-top: 0;
-  text-align: center;
-  color: #2c3e50;
-}
-
-/* Grid de campos en popup CREAR */
-.popup-add .popup-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-  margin-bottom: 20px;
-}
-.popup-add .popup-field {
-  display: flex;
-  flex-direction: column;
-}
-.popup-add .popup-field[style] {
-  grid-column: 1 / -1;
-}
-@media (max-width: 768px) {
-  .popup-add .popup-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 /* Botones de acción genéricos para popups */
 .popup-actions {
   display: flex;
@@ -892,4 +856,199 @@ table tbody tr:nth-child(even) {
       display: flex;
     }
 
+    /* Overlay de “Crear” sobre todo */
+.overlay-add {
+  z-index: 2000;
+}
 
+/* Caja del popup */
+.popup-add {
+  background: #fff;
+  padding: 20px 30px;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  position: relative;
+}
+
+/* Título centrado */
+.popup-add h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 1.25em;
+  color: #2c3e50;
+}
+
+/* Grid de dos columnas */
+.popup-add .popup-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px 20px;
+  margin-bottom: 20px;
+}
+
+/* Cada campo */
+.popup-add .popup-field {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Etiqueta sobre el input */
+.popup-add .popup-field label {
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #34495e;
+  font-size: 0.95em;
+}
+
+/* Inputs y textarea */
+.popup-add .popup-field input[type="text"],
+.popup-add .popup-field input[type="file"],
+.popup-add .popup-field textarea {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 0.95em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  transition: border-color 0.3s;
+}
+
+.popup-add .popup-field textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+/* Focus en inputs */
+.popup-add .popup-field input:focus,
+.popup-add .popup-field textarea:focus {
+  outline: none;
+  border-color: #2980b9;
+}
+
+/* El campo de archivos debe ocupar ambas columnas */
+.popup-add .popup-field[type="file"] {
+  grid-column: 1 / -1;
+}
+
+/* Área de botones alineada a la derecha */
+.popup-add .popup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+  grid-column: 1 / -1;
+}
+
+/* Botón cancelar */
+.popup-add .btn.close {
+  background-color: #e74c3c;
+  border-color: #e74c3c;
+}
+
+/* Botón guardar */
+.popup-add .btn:not(.close) {
+  background-color: #2980b9;
+  border-color: #2980b9;
+}
+
+/* Responsive: una columna en móvil */
+@media (max-width: 480px) {
+  .popup-add .popup-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Estilos base del campo de archivo */
+.popup-add .popup-field input[type="file"] {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 0.95em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fafafa;
+  color: #333;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: border-color 0.3s, background-color 0.3s;
+}
+
+/* Botón real dentro del input file */
+.popup-add .popup-field input[type="file"]::file-selector-button {
+  margin-right: 10px;
+  border: none;
+  padding: 6px 14px;
+  background-color: #2980b9;
+  color: #fff;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+/* Hover sobre el botón */
+.popup-add .popup-field input[type="file"]::file-selector-button:hover {
+  background-color: #1f6391;
+}
+
+/* Cuando pasas el input a foco */
+.popup-add .popup-field input[type="file"]:focus {
+  outline: none;
+  border-color: #2980b9;
+}
+
+/* 1) Aplica estilo genérico a todos los select dentro de los popups */
+.overlay-edit .modal-container select,
+.overlay-add .popup-add select {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 1em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  /* Opcional: flecha personalizada */
+  appearance: none;              /* quita estilos por defecto */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='5'><path fill='%23555' d='M0 0l4 5 4-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 8px 5px;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: border-color 0.3s ease;
+  height: 2.4em;                 /* igual altura que los inputs */
+  line-height: 1.2;
+}
+
+/* 2) Al enfocar, mismo comportamiento que tus inputs */
+.overlay-edit .modal-container select:focus,
+.overlay-add .popup-add select:focus {
+  outline: none;
+  border-color: #2980b9;
+}
+
+/* 3) Ajuste para que no tape la flecha al seleccionar texto largo */
+.overlay-edit .modal-container select option,
+.overlay-add .popup-add select option {
+  padding-right: 16px;
+}
+
+/* 4) Si quieres que el contenedor select quede 100% adaptado: */
+.overlay-edit .modal-container .form-group,
+.overlay-add .popup-add .popup-field {
+  margin-bottom: 12px;
+}
+
+.entry-fields {
+  /* ya está en cascade dentro de .popup-grid */
+  grid-column: 1 / -1;
+  padding: 10px;
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+}

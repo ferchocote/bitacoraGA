@@ -309,7 +309,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
             </div>
 
             <!-- Aquí van los formularios específicos, inicialmente ocultos -->
-            <div id="fields-contabilidad" class="entry-fields" style="display:none; grid-column:1 / -1;">
+            <!-- <div id="fields-contabilidad" class="entry-fields" style="display:none; grid-column:1 / -1;">
               <?php include __DIR__ . '/entradas/contabilidad.php'; ?>
             </div>
             <div id="fields-giros" class="entry-fields" style="display:none; grid-column:1 / -1;">
@@ -317,7 +317,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
             </div>
             <div id="fields-transporte" class="entry-fields" style="display:none; grid-column:1 / -1;">
               <?php include __DIR__ . '/entradas/transporte.php'; ?>
-            </div>
+            </div> -->
 
           </div>
           <div class="popup-actions">

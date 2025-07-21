@@ -16,11 +16,12 @@ if (!$id) {
   return;
 }
 
-// Tablas
-$tabla = 'bc_' . 'proceso';
-$tabla_clientes = 'bc_' . 'cliente';
-$tabla_estados = 'bc_' . 'estado_proceso';
-$tabla_detalle = 'bc_' . 'detalle_proceso';
+  // Tablas
+  $tabla = 'bc_' . 'proceso';
+  $tabla_clientes = 'bc_' . 'cliente';
+  $tabla_estados = 'bc_' . 'estado_proceso';
+  $tabla_detalle = 'bc_' . 'detalle_proceso';
+  $tabla_tipo_entrada = 'bc_' . 'tipo_entrada';
 
 $bitacoras = $wpdb->get_results("SELECT * FROM wp_users ");
 
@@ -65,6 +66,13 @@ $detalle = ! empty($detalles) ? $detalles[0] : null;
 $clientes = $wpdb->get_results("SELECT Id, RazonSocial FROM {$tabla_clientes} WHERE Activo=1 ORDER BY RazonSocial");
 $importadores = $clientes; // mismos registros, diferencia según flujo
 $estadosList = $wpdb->get_results("SELECT Id, Descripcion FROM {$tabla_estados} WHERE Activo=1 ORDER BY Id");
+
+$tipos_entrada = $wpdb->get_results(
+  "SELECT Id, Descripcion 
+   FROM {$tabla_tipo_entrada} 
+   WHERE Activo = 1 
+   ORDER BY Descripcion"
+);
 
 // 1) Procesar formulario de edición antes de cualquier salida
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view'] === 'bitacora_detalle') {
@@ -267,39 +275,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
           <label for="popup-toggle-edit" class="btn close">Cancelar</label>
           <button type="submit" class="btn">Guardar</button>
         </div>
-      </form>
-    </div>
+    </form>
   </div>
+</div>
+    
+    <!-- Overlay y popup de Crear Entrada -->
+    <div class="overlay-add">
+      <div class="popup-add">
+        <h3>Crear Nueva Entrada</h3>
+        <form method="post" action="?view=guardar_entrada" enctype="multipart/form-data">
+          <div class="popup-grid">
+            <!-- Tipo de Entrada -->
+            <div class="popup-field">
+              <label for="IdTipoEntrada">Tipo de Entrada</label>
+              <select id="IdTipoEntrada" name="IdTipoEntrada" required>
+                <option value="">— Seleccione un tipo —</option>
+                <?php foreach ( $tipos_entrada as $t ): ?>
+                  <option value="<?= esc_attr( $t->Id ) ?>">
+                    <?= esc_html( $t->Descripcion ) ?>
+                  </option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <!-- Descripción -->
+            <div class="popup-field">
+              <label for="descripcionEntrada">Descripción</label>
+              <textarea id="descripcionEntrada" name="descripcionEntrada" rows="3" required></textarea>
+            </div>
+            <!-- Subir Documentos -->
+            <div class="popup-field" style="grid-column: 1 / -1;">
+              <label for="documentos">Subir Documentos</label>
+              <input type="file" id="documentos" name="documentos[]" multiple>
+            </div>
 
-  <!-- Overlay y popup de Crear Entrada -->
-  <div class="overlay-add">
-    <div class="popup-add">
-      <h3>Crear Nueva Entrada</h3>
-      <form method="post" action="?view=guardar_entrada" enctype="multipart/form-data">
-        <div class="popup-grid">
-          <!-- Tipo de Entrada -->
-          <div class="popup-field">
-            <label for="tipoEntrada">Tipo de Entrada</label>
-            <input type="text" id="tipoEntrada" name="tipoEntrada" required>
+            <!-- Aquí van los formularios específicos, inicialmente ocultos -->
+            <div id="fields-contabilidad" class="entry-fields" style="display:none; grid-column:1 / -1;">
+              <?php include __DIR__ . '/entradas/contabilidad.php'; ?>
+            </div>
+            <div id="fields-giros" class="entry-fields" style="display:none; grid-column:1 / -1;">
+              <?php include __DIR__ . '/entradas/giros.php'; ?>
+            </div>
+            <div id="fields-transporte" class="entry-fields" style="display:none; grid-column:1 / -1;">
+              <?php include __DIR__ . '/entradas/transporte.php'; ?>
+            </div>
+
           </div>
-          <!-- Descripción -->
-          <div class="popup-field">
-            <label for="descripcionEntrada">Descripción</label>
-            <textarea id="descripcionEntrada" name="descripcionEntrada" rows="3" required></textarea>
+          <div class="popup-actions">
+            <label for="popup-toggle-add" class="btn close">Cancelar</label>
+            <button type="submit" class="btn">Guardar</button>
           </div>
-          <!-- Subir Documentos -->
-          <div class="popup-field" style="grid-column: 1 / -1;">
-            <label for="documentos">Subir Documentos</label>
-            <input type="file" id="documentos" name="documentos[]" multiple>
-          </div>
-        </div>
-        <div class="popup-actions">
-          <label for="popup-toggle-add" class="btn close">Cancelar</label>
-          <button type="submit" class="btn">Guardar</button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
-  </div>
 
   <ul class="tabs">
     <li data-tab="tab-contabilidad" data-tipo="CTB" class="active">Contabilidad</li>
@@ -341,8 +368,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
       });
     });
 
-    // Cargar primer tab automáticamente
-    const initialTab = document.querySelector('.tabs li.active');
-    if (initialTab) initialTab.click();
-  });
-</script>
+      // Cargar primer tab automáticamente
+      const initialTab = document.querySelector('.tabs li.active');
+      if (initialTab) initialTab.click();
+    });
+
+    document.getElementById('IdTipoEntrada').addEventListener('change', function() {
+        // ocultar todos los bloques
+        document.querySelectorAll('.entry-fields').forEach(div => {
+          div.style.display = 'none';
+        });
+        // según el valor del select, mostramos el div correspondiente
+        const tipo = this.value;
+        if (!tipo) return;
+        // mapeo de IDs a sufijos de bloque (ajusta los IDs según tu tabla)
+        const map = {
+          '1': 'contabilidad',
+          '2': 'giros',
+          '3': 'transporte'
+        };
+        const sufijo = map[tipo];
+        if (sufijo) {
+          document.getElementById('fields-' + sufijo).style.display = 'block';
+        }
+      });
+
+      (function(){
+    // Checkbox que controla el modal
+    const toggleAdd = document.getElementById('popup-toggle-add');
+    // El form dentro del modal “Crear Nueva Entrada”
+    const formAdd   = document.querySelector('.popup-add form');
+    // Todos los bloques de campos extra
+    const extras    = document.querySelectorAll('.entry-fields');
+
+    toggleAdd.addEventListener('change', () => {
+      if (!toggleAdd.checked) {
+        // 1) Ocultar TODOS los bloques de campos extra
+        extras.forEach(div => div.style.display = 'none');
+        // 2) Resetear TODO el formulario (select, inputs, textarea, file inputs...)
+        formAdd.reset();
+      }
+    });
+
+    // Opcional: si quieres que al abrir también esté limpio,
+    // puedes disparar manualmente el handler al cargar la página:
+    if (!toggleAdd.checked) {
+      extras.forEach(div => div.style.display = 'none');
+      formAdd.reset();
+    }
+  })();
+  </script>

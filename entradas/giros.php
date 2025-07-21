@@ -1,5 +1,5 @@
-<div class="popup">
-        <h3 id="popup-title">Detalle Transporte</h3>
+<div >
+        <h3 id="popup-title">Detalle Giros</h3>
 
         <form id="cliente-form" class="form-grid">
             <input type="hidden" id="cliente-id" name="id" />
@@ -44,25 +44,4 @@
             <button type="button" id="btn-guardar" class="btn" style="display: none;">Guardar</button>
         </div>
     </div>
-    <script>   
-    document.addEventListener('click', function (e) {
-    const detalle = e.target.closest('.detalle-cliente');
-    const editar = e.target.closest('.modificar-cliente');
-
-    if (detalle || editar) {
-        // Mostrar el popup
-        document.getElementById('popup-toggle').checked = true;
-
-        const modo = detalle ? 'detalle' : 'editar';
-        document.getElementById('popup-title').textContent = modo === 'detalle' ? 'Detalle Giros' : 'Editar Giros';
-
-        // Aquí puedes cargar los datos al formulario según el item seleccionado (ej. por data-id)
-        // Por ejemplo, si asignas data-id al <a>: <a class="detalle-cliente" data-id="123">
-
-        // document.getElementById('cliente-id').value = ID del cliente
-
-        // Mostrar u ocultar botón guardar
-        document.getElementById('btn-guardar').style.display = modo === 'editar' ? 'inline-block' : 'none';
-    }
-});
-</script>
+    

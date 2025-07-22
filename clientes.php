@@ -4,6 +4,7 @@ require_once('../../wp-load.php');
 
 global $wpdb;
 $tabla = 'bc_cliente';
+
 // --- MANEJO AJAX INTERNO ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'actualizar_cliente') {
     $id = intval($_POST['id']);
@@ -41,25 +42,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 // Parámetros actuales de la URL
 $params = $_GET;
 
-// Página actual
-$pagina_actual = isset($_GET['pg']) ? max(1, intval($_GET['pg'])) : 1;
-$registros_por_pagina = 10;
-$offset = ($pagina_actual - 1) * $registros_por_pagina;
+// Capturamos el término de búsqueda
+$q = isset($_GET['q']) ? sanitize_text_field( $_GET['q'] ) : '';
+$where_clauses = [];
+$prepare_params = [];
 
-// Total de registros
-$total_registros = $wpdb->get_var("SELECT COUNT(*) FROM {$tabla}");
-$total_paginas = ceil($total_registros / $registros_por_pagina);
+// Si hay búsqueda, añadimos cláusula
+if ( $q !== '' ) {
+    $like = '%' . $wpdb->esc_like( $q ) . '%';
+    $where_clauses[] = "( td.Descripcion      LIKE %s
+                          OR c.NumeroDocumento LIKE %s
+                          OR c.RazonSocial     LIKE %s
+                          OR c.Direccion       LIKE %s )";
+    // empujamos 4 veces el mismo parámetro
+    array_push( $prepare_params, $like, $like, $like, $like );
+}
+
+// Montamos la parte WHERE
+$where_sql = '';
+if ( ! empty( $where_clauses ) ) {
+    $where_sql = 'WHERE ' . implode( ' AND ', $where_clauses );
+}
+
+// 1) Contar total para paginador (sin LIMIT)
+$count_sql = "
+    SELECT COUNT(*)
+      FROM {$tabla} c
+      LEFT JOIN bc_tipo_documento td ON td.Id = c.IdTipoDocumento
+    {$where_sql}
+";
+if ( ! empty( $prepare_params ) ) {
+    // si tenemos placeholders en WHERE, preparamos
+    $total_registros = (int) $wpdb->get_var( $wpdb->prepare( $count_sql, $prepare_params ) );
+} else {
+    // sin parámetros, ejecutamos directo
+    $total_registros = (int) $wpdb->get_var( $count_sql );
+}
+
+// 2) Paginación
+$pagina_actual         = isset( $_GET['pg'] ) ? max(1,intval($_GET['pg'])) : 1;
+$registros_por_pagina  = 10;
+$offset                = ($pagina_actual - 1) * $registros_por_pagina;
+$total_paginas         = ceil( $total_registros / $registros_por_pagina );
+
+// 3) Consulta paginada (añadimos LIMIT y OFFSET a los parámetros)
+$prepare_params[] = $registros_por_pagina;
+$prepare_params[] = $offset;
 
 // Consulta paginada
-$Clientes = $wpdb->get_results(
-    $wpdb->prepare("
-        SELECT c.Id,c.IdTipoDocumento,td.Descripcion, c.NumeroDocumento,c.RazonSocial,c.Direccion,c.NumeroCelular, c.CorreoElectronico,r.Id as        IdRegimen, c.EsCliente,c.ResponsableIva,c.AplicaRetenciones,c.IdCiudad,c.ActividadEconomica
+$select_sql = "
+    SELECT 
+    c.Id,
+    c.IdTipoDocumento,
+    td.Descripcion, 
+    c.NumeroDocumento,
+    c.RazonSocial,
+    c.Direccion,
+    c.NumeroCelular, 
+    c.CorreoElectronico,r.Id as        IdRegimen, 
+    c.EsCliente,c.ResponsableIva,
+    c.AplicaRetenciones,
+    c.IdCiudad,
+    c.ActividadEconomica
         FROM $tabla c
         LEFT JOIN bc_tipo_documento td ON td.Id = c.IdTipoDocumento 
-        LEFT JOIN bc_regimen r ON r.Id = c.IdRegimen 
-        LIMIT %d OFFSET %d       
-    ", $registros_por_pagina, $offset)
-);
+        LEFT JOIN bc_regimen r ON r.Id = c.IdRegimen
+    {$where_sql}
+    ORDER BY c.RazonSocial ASC
+    LIMIT %d OFFSET %d
+";
+
+$Clientes = $wpdb->get_results( $wpdb->prepare( $select_sql, $prepare_params ) );
 
 $roles = $wpdb->get_results("SELECT * FROM bc_roles");
 $tipoIdentificacion = $wpdb->get_results("SELECT * FROM bc_tipo_documento");
@@ -71,7 +124,7 @@ $regimenes = $wpdb->get_results("SELECT * FROM bc_regimen");
 <div class="toolbar" style="margin-bottom: 20px; display: flex; gap: 10px;">
     <!-- <h1>Clientes</h1> -->
     <form method="get" class="filter-form">
-        <input type="hidden" name="view" value="bitacora_detalle">
+        <input type="hidden" name="view" value="clientes">
         <div class="filter-grid">
             <div class="filter-field full-width input-icon-wrapper">
                 <label for="q">Buscar:</label>
@@ -83,7 +136,6 @@ $regimenes = $wpdb->get_results("SELECT * FROM bc_regimen");
                         value=""
                         placeholder="Filtrar por Tipo, Descripción, Usuario o Correo">
                     <button type="submit" class="icon-btn" title="Buscar">🔍</button>
-                    <button type="button" onclick="window.location='?view=bitacora_detalle'" class="icon-btn" title="Limpiar">✕</button>
                 </div>
             </div>
         </div>

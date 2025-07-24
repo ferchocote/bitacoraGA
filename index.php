@@ -1,9 +1,9 @@
 <?php
-define('WP_USE_THEMES', false);
+// define('WP_USE_THEMES', false);
 require_once('../../wp-load.php');
 
 if (!is_user_logged_in()) {
-    wp_redirect(wp_login_url($_SERVER['REQUEST_URI']));
+    wp_redirect(home_url('/wp-content/bitacoras/login.php'));
     exit;
 }
 
@@ -11,9 +11,13 @@ $current_user = wp_get_current_user();
 
 global $wpdb;
 $tabla = $wpdb->prefix . 'users';
-$bitacoras = $wpdb->get_results("SELECT * FROM wp_users ");
+$usuario = $wpdb->get_row("SELECT u.*, r.Nombre AS rol_nombre, r.Codigo AS rol_codigo
+        FROM wp_users u
+        LEFT JOIN bc_user_role ur ON ur.IdUser = u.ID
+        LEFT JOIN bc_roles r ON r.Id = ur.IdRol
+        WHERE u.id = {$current_user->id}");
 
-$vista = isset($_GET['view']) ? $_GET['view'] : '';
+$vista = isset($_GET['view']) && !empty($_GET['view']) ? $_GET['view'] : 'bitacoras';
 $viewFile = basename($vista) . '.php';
 
 if (!file_exists($viewFile)) {
@@ -49,12 +53,19 @@ function formatearNombrePagina($archivo) {
     <div class="sidebar">
         <h2>Menú</h2>
         <hr />
-        <a href="?view=">
+        <!-- <a href="?view=bitacoras">
             <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
               <path fill-rule="evenodd" d="M11.293 3.293a1 1 0 0 1 1.414 0l6 6 2 2a1 1 0 0 1-1.414 1.414L19 12.414V19a2 2 0 0 1-2 2h-3a1 1 0 0 1-1-1v-3h-2v3a1 1 0 0 1-1 1H7a2 2 0 0 1-2-2v-6.586l-.293.293a1 1 0 0 1-1.414-1.414l2-2 6-6Z" clip-rule="evenodd"/>
             </svg>
             Inicio
+        </a> -->
+        <a href="<?php echo admin_url(); ?>">
+            <svg class="w-[18px] h-[18px]" width="18" height="18" viewBox="0 0 122.52 122.523" xmlns="http://www.w3.org/2000/svg"><g fill="#ffffff"><path d="m8.708 61.26c0 20.802 12.089 38.779 29.619 47.298l-25.069-68.686c-2.916 6.536-4.55 13.769-4.55 21.388z"/><path d="m96.74 58.608c0-6.495-2.333-10.993-4.334-14.494-2.664-4.329-5.161-7.995-5.161-12.324 0-4.831 3.664-9.328 8.825-9.328.233 0 .454.029.681.042-9.35-8.566-21.807-13.796-35.489-13.796-18.36 0-34.513 9.42-43.91 23.688 1.233.037 2.395.063 3.382.063 5.497 0 14.006-.667 14.006-.667 2.833-.167 3.167 3.994.337 4.329 0 0-2.847.335-6.015.501l19.138 56.925 11.501-34.493-8.188-22.434c-2.83-.166-5.511-.501-5.511-.501-2.832-.166-2.5-4.496.332-4.329 0 0 8.679.667 13.843.667 5.496 0 14.006-.667 14.006-.667 2.835-.167 3.168 3.994.337 4.329 0 0-2.853.335-6.015.501l18.992 56.494 5.242-17.517c2.272-7.269 4.001-12.49 4.001-16.989z"/><path d="m62.184 65.857-15.768 45.819c4.708 1.384 9.687 2.141 14.846 2.141 6.12 0 11.989-1.058 17.452-2.979-.141-.225-.269-.464-.374-.724z"/><path d="m107.376 36.046c.226 1.674.354 3.471.354 5.404 0 5.333-.996 11.328-3.996 18.824l-16.053 46.413c15.624-9.111 26.133-26.038 26.133-45.426.001-9.137-2.333-17.729-6.438-25.215z"/><path d="m61.262 0c-33.779 0-61.262 27.481-61.262 61.26 0 33.783 27.483 61.263 61.262 61.263 33.778 0 61.265-27.48 61.265-61.263-.001-33.779-27.487-61.26-61.265-61.26zm0 119.715c-32.23 0-58.453-26.223-58.453-58.455 0-32.23 26.222-58.451 58.453-58.451 32.229 0 58.45 26.221 58.45 58.451 0 32.232-26.221 58.455-58.45 58.455z"/></g>
+            </svg>
+
+            Panel de Wordpress
         </a>
+        <?php if ($usuario->rol_codigo != "RRHH"): ?>
         <a href="?view=bitacoras">
             <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24">
               <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 4h3a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3m0 3h6m-3 5h3m-6 0h.01M12 16h3m-6 0h.01M10 3v4h4V3h-4Z"/>
@@ -62,23 +73,13 @@ function formatearNombrePagina($archivo) {
 
             Bitácoras
         </a>
+        <?php endif; ?>
+        <?php if ($usuario->rol_codigo == "ADMIN" || $usuario->rol_codigo == "RRHH"): ?>
         <a href="?view=clientes">
             <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
               <path fill-rule="evenodd" d="M12 20a7.966 7.966 0 0 1-5.002-1.756l.002.001v-.683c0-1.794 1.492-3.25 3.333-3.25h3.334c1.84 0 3.333 1.456 3.333 3.25v.683A7.966 7.966 0 0 1 12 20ZM2 12C2 6.477 6.477 2 12 2s10 4.477 10 10c0 5.5-4.44 9.963-9.932 10h-.138C6.438 21.962 2 17.5 2 12Zm10-5c-1.84 0-3.333 1.455-3.333 3.25S10.159 13.5 12 13.5c1.84 0 3.333-1.455 3.333-3.25S13.841 7 12 7Z" clip-rule="evenodd"/>
             </svg>
             Clientes
-        </a>
-        <a href="?view=empresas">
-            <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
-              <path fill-rule="evenodd" d="M4 4a1 1 0 0 1 1-1h14a1 1 0 1 1 0 2v14a1 1 0 1 1 0 2H5a1 1 0 1 1 0-2V5a1 1 0 0 1-1-1Zm5 2a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H9Zm5 0a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-1Zm-5 4a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1a1 1 0 0 0-1-1H9Zm5 0a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1a1 1 0 0 0-1-1h-1Zm-3 4a2 2 0 0 0-2 2v3h2v-3h2v3h2v-3a2 2 0 0 0-2-2h-2Z" clip-rule="evenodd"/>
-            </svg>
-            Empresas
-        </a>
-        <a href="?view=estados">
-            <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
-              <path fill-rule="evenodd" d="M12 2c-.791 0-1.55.314-2.11.874l-.893.893a.985.985 0 0 1-.696.288H7.04A2.984 2.984 0 0 0 4.055 7.04v1.262a.986.986 0 0 1-.288.696l-.893.893a2.984 2.984 0 0 0 0 4.22l.893.893a.985.985 0 0 1 .288.696v1.262a2.984 2.984 0 0 0 2.984 2.984h1.262c.261 0 .512.104.696.288l.893.893a2.984 2.984 0 0 0 4.22 0l.893-.893a.985.985 0 0 1 .696-.288h1.262a2.984 2.984 0 0 0 2.984-2.984V15.7c0-.261.104-.512.288-.696l.893-.893a2.984 2.984 0 0 0 0-4.22l-.893-.893a.985.985 0 0 1-.288-.696V7.04a2.984 2.984 0 0 0-2.984-2.984h-1.262a.985.985 0 0 1-.696-.288l-.893-.893A2.984 2.984 0 0 0 12 2Zm3.683 7.73a1 1 0 1 0-1.414-1.413l-4.253 4.253-1.277-1.277a1 1 0 0 0-1.415 1.414l1.985 1.984a1 1 0 0 0 1.414 0l4.96-4.96Z" clip-rule="evenodd"/>
-            </svg>
-            Estado Proceso
         </a>
         <a href="?view=usuarios">
             <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
@@ -92,6 +93,19 @@ function formatearNombrePagina($archivo) {
             </svg>
             Roles
         </a>
+        <a href="?view=drive_test">
+            <svg fill="#ffffff" height="18px" width="18px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+            	 viewBox="0 0 31.004 31.004" xml:space="preserve">
+            <g>
+            	<path d="M22.4,31.004V26.49c0-0.936,0.757-1.697,1.696-1.697l3.498-0.1L22.4,31.004z"/>
+            	<path d="M25.899,0H5.108C4.17,0,3.411,0.762,3.411,1.697v27.611c0,0.939,0.759,1.695,1.697,1.695H20.71v-6.02
+            		c0-0.936,0.762-1.697,1.699-1.697h5.184V1.697C27.594,0.762,26.835,0,25.899,0z M12.068,20.783v6.898H7.741V20.9H5.632l4.219-4.789
+            		l4.328,4.672H12.068z"/>
+            </g>
+            </svg>
+            Drive Test
+        </a>
+        <?php endif; ?>        
         <a href="<?php echo wp_logout_url(); ?>">
             <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24">
               <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H8m12 0-4 4m4-4-4-4M9 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h2"/>
@@ -108,7 +122,7 @@ function formatearNombrePagina($archivo) {
               <div class="menu-dropdown">
                 <a href="?view=perfil">Ver Usuario</a>
                 <a href="<?php echo admin_url(); ?>">Panel de Wordpress</a>
-                <a href="<?php echo wp_logout_url(); ?>">Salir</a>
+                <a href="<?php echo wp_logout_url(home_url('/wp-content/bitacoras/login.php')); ?>">Salir</a>
               </div>
             </div>
         </div>

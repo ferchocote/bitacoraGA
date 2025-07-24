@@ -1,6 +1,6 @@
 <?php
 // Valida rol de usuario 
-if ($usuario->rol_codigo != "IMPOR" && $usuario->rol_codigo != "ADMIN") {
+if ($usuario->rol_codigo != "RRHH" && $usuario->rol_codigo != "ADMIN") {
     echo "No tienes permiso para acceder a esta vista.";
     exit;
 }
@@ -61,23 +61,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Crear Proceso</title>
+  <title>Crear</title>
   <link rel="stylesheet" href="styles/style.css">
 </head>
 <body>
   <div class="form-container">
-    <h1>Crear Nuevo Proceso (DO)</h1>
+    <h1>Crear Nuevo Cliente o Importador</h1>
     <?php echo $message; ?>
     <form method="post" action="" class="form-grid">
       <?php wp_nonce_field('crear_proceso_action','crear_proceso_nonce'); ?>
 
+      <!-- Checkbox para elegir Cliente o Importador -->
+      <div class="form-group checkbox-group">
+        <label for="es_importador">Marcar si es Importador</label>
+        <input type="checkbox" id="es_importador" name="es_importador" />       
+      </div>
+
       <?php
       $labels = [
-        'DO'=>'DO','Encargado'=>'Encargado','IdEmpresa'=>'Cliente','IdImportador'=>'Importador','TipoProceso'=>'Tipo Proceso',
-        'DOAgencia'=>'DO Agencia','AgenteCarga'=>'Agente Carga','ETA'=>'ETA','DiasLibres'=>'Días Libres',
-        'DigitacionRevision'=>'Digitación/Revisión','Aduana'=>'Aduana','Producto'=>'Producto','NumeroBL'=>'Número BL',
-        'Contenedor'=>'Contenedor','Manifiesto'=>'Manifiesto','Pies'=>'Pies','Bulto'=>'Bulto',
-        'PesoBruto'=>'Peso Bruto','Bandera'=>'Bandera'
+        'TipoDocumento'=>'Tipo de Documento','Documento'=>'Documento','RazonSocial'=>'Razon Social','Direccion'=>'Dirección','Pais'=>'Pais',
+        'Departamento'=>'Departamento','Ciudad'=>'Ciudad','Telefono'=>'Telefono','Correo'=>'Correo',
+        'ActividadEconomica'=>'Actividad Economica','ResponsableIva'=>'Responsable Iva','Regimen'=>'Regimen'
       ];
       foreach ($labels as $name => $label): ?>
         <div class="form-group">
@@ -94,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <div class="form-group">
         <div></div>
-        <button type="submit">Crear Proceso</button>
+        <button type="submit">Crear</button>
       </div>
     </form>
   </div>

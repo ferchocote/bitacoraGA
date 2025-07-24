@@ -1,4 +1,10 @@
 <?php
+// Valida rol de usuario 
+if ($usuario->rol_codigo == "RRHH") {
+    echo "No tienes permiso para acceder a esta vista.";
+    exit;
+}
+
 define('WP_USE_THEMES', false);
 require_once('../../wp-load.php');
 
@@ -10,7 +16,28 @@ $bitacoras = $wpdb->get_results("SELECT * FROM wp_users ");
 <!DOCTYPE html>
 
 <div class="toolbar" style="margin-bottom: 20px; display: flex; gap: 10px;">
-    <h1>Últimas Bitácoras</h1>
+    <!-- <h1>Últimas Bitácoras</h1> -->
+     <!-- Filtro global -->
+    <form method="get" class="filter-form">
+      <input type="hidden" name="view" value="bitacora_detalle">
+      <div class="filter-grid">
+        <div class="filter-field full-width input-icon-wrapper">
+          <label for="q">Buscar:</label>
+          <div class="input-icon-group">
+            <input
+              type="text"
+              id="q"
+              name="q"
+              value=""
+              placeholder="Filtrar por Tipo, Descripción, Usuario o Correo"
+            >
+            <button type="submit" class="icon-btn" title="Buscar">🔍</button>
+            <button type="button" onclick="window.location='?view=bitacora_detalle'" class="icon-btn" title="Limpiar">✕</button>
+          </div>
+        </div>
+      </div>
+    </form>
+
     <a href="?view=nueva_bitacora" class="btn">➕ Nuevo Registro</a>
     <!-- <button type="button" class="btn" onclick="editarSeleccionado()">✏️ Editar</button>
     <button type="button" class="btn" onclick="exportarCSV()">📁 Exportar CSV</button>-->
@@ -25,7 +52,7 @@ $bitacoras = $wpdb->get_results("SELECT * FROM wp_users ");
                 <th>DO</th>
                 <th>Nombre de Usuario</th>
                 <th>Empresa</th>
-                <th>Correo</th>
+                <!-- <th>Correo</th> -->
                 <th>Numero BL</th>
                 <th>Contenedor</th>
                 <th>Estado</th>
@@ -39,7 +66,7 @@ $bitacoras = $wpdb->get_results("SELECT * FROM wp_users ");
                     <td>I25-001</td>
                     <td><?= esc_html($b->user_login) ?></td>
                     <td><?= esc_html($b->user_login) ?></td>
-                    <td><?= esc_html($b->user_login) ?></td>
+                    <!-- <td><?= esc_html($b->user_login) ?></td> -->
                     <td><?= esc_html($b->user_nicename) ?></td>
                     <td><?= esc_html($b->user_email) ?></td>
                     <td>

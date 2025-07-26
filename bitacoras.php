@@ -94,14 +94,17 @@ $select_sql = "
     ep.Codigo              AS EstadoCodigo,
     ep.Descripcion         AS EstadoDescripcion,
     ep.Color               AS EstadoColor,
-    p.FechaCreacion
+    p.FechaCreacion,
+    ( p.DiasLibres
+      - DATEDIFF(CURDATE(), DATE(p.FechaCreacion)) 
+    ) AS DiasRestantes
   FROM bc_proceso p
   LEFT JOIN {$wpdb->prefix}users u ON u.ID = p.IdUserCreation
   LEFT JOIN bc_estado_proceso ep ON ep.Id = p.IdEstadoProceso
   LEFT JOIN {$tabla_cliente} c
       ON c.ID = p.IdImportador
   {$where_sql}
-  ORDER BY p.FechaCreacion DESC
+  ORDER BY DiasRestantes ASC
   LIMIT %d OFFSET %d
 ";
 
@@ -110,41 +113,66 @@ $procesos = $wpdb->get_results( $prepared );
 
 // Traemos solo los activos y en el orden lógico
 $estados = $wpdb->get_results(
-  "SELECT Descripcion, Color 
+  "SELECT Id, Descripcion, Color 
    FROM {$tabla_estados}
    WHERE Activo = 1
    ORDER BY Id"
 );
+$Listestados = $estados;
 
-// 1) Capturamos el POST de “Emitir”
-if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['emitir'], $_POST['process_id'] ) ) {
-  $id = intval( $_POST['process_id'] );
-  // Verificamos el nonce
-  check_admin_referer( 'cambiar_estado_emitido', 'nonce_emitido_' . $id );
+// Eliminamos “Creado”
+$estadosList = array_filter( $estados, function( $e ){
+  return $e->Descripcion !== 'Creado';
+});
 
-  // Buscamos el Id del estado “Emitido”
-  $estado_emitido = $wpdb->get_var( 
-    $wpdb->prepare(
-      "SELECT Id 
-         FROM {$tabla_est} 
-        WHERE Codigo = %s 
-          AND Activo = 1", 
-      'EMIT'
-    ) 
-  );
-  if ( $estado_emitido ) {
-    // Actualizamos el estado
-    $wpdb->update(
-      $tabla,
-      [ 'IdEstadoProceso' => $estado_emitido ],
-      [ 'Id'              => $id ]
+// 1) Capturar el POST de “gestionar”
+if (
+    $_SERVER['REQUEST_METHOD'] === 'POST' &&
+    ! empty( $_POST['gestionar_nonce'] )
+) {
+    // 1.1) Verifica el nonce
+    check_admin_referer( 'gestionar_proceso', 'gestionar_nonce' );
+
+    // 1.2) Recoge datos
+    $id     = intval( $_POST['IdProceso'] );
+    $nuevo  = intval( $_POST['NuevoEstado'] );
+    $obs    = sanitize_text_field( $_POST['ObservacionCambio'] );
+
+    // 1.3) Obtén el estado actual antes de cambiarlo
+    $ant = $wpdb->get_var( 
+        $wpdb->prepare(
+            "SELECT IdEstadoProceso FROM bc_proceso WHERE Id = %d",
+            $id
+        )
     );
-  }
-  // Redirigimos de nuevo a la misma página para evitar resubmit
-  wp_safe_redirect( add_query_arg( $_GET, $_SERVER['REQUEST_URI'] ) );
-  exit;
-}
 
+    // 1.4) Actualiza bc_proceso (usa el nombre real de tu tabla)
+    $wpdb->update(
+        'bc_proceso',
+        [ 'IdEstadoProceso' => $nuevo ],
+        [ 'Id'               => $id ]
+    );
+
+    // 1.5) Inserta en el histórico
+    $wpdb->insert(
+        'bc_proceso_estado_historial',
+        [
+            'IdProceso'        => $id,
+            'EstadoAnteriorId' => $ant,
+            'EstadoNuevoId'    => $nuevo,
+            'Observacion'      => $obs,
+            'IdUsuarioCambio'  => get_current_user_id(),
+            'FechaCambio'      => current_time( 'mysql' )
+        ]
+    );
+
+    $url = remove_query_arg(
+      ['gestionar_nonce','NuevoEstado','ObservacionCambio','IdProceso'],
+      wp_unslash($_SERVER['REQUEST_URI'])
+    );
+    wp_safe_redirect( $url );
+    exit;
+}
 ?>
 
 <!DOCTYPE html>
@@ -179,6 +207,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['emitir'], $_POST['p
 <?php if (empty($bitacoras)): ?>
     <p>No hay bitácoras registradas.</p>
 <?php else: ?>
+  <div class="table-container">
     <table>
         <thead>
             <tr>
@@ -186,10 +215,11 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['emitir'], $_POST['p
                 <th>Encargado</th>
                 <th>Importador</th>
                 <th>Numero BL</th>
-                <th>Contenedor</th>
+                <!-- <th>Contenedor</th> -->
                 <th>Estado</th>
+                <th>Días</th>
                 <th>Fecha de Creación</th>
-                <th>Emitir</th>
+                <th>Gestionar</th>
                 <th>Detalle</th>            
             </tr>
         </thead>
@@ -203,27 +233,33 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['emitir'], $_POST['p
                 <td><?= esc_html( $p->creador ) ?></td>
                 <td><?= esc_html( $p->RazonSocial ) ?></td>
                 <td><?= esc_html( $p->NumeroBL ) ?></td>
-                <td><?= esc_html( $p->Contenedor ) ?></td>
+                <!-- <td><?= esc_html( $p->Contenedor ) ?></td> -->
                 <td>
                 <span class="status-label status-<?= strtolower($p->EstadoCodigo) ?>">
                     <?= esc_html( $p->EstadoDescripcion ) ?>
                 </span>
                 </td>
-                <td><?= esc_html( date('d/m/Y', strtotime($p->FechaCreacion)) ) ?></td>
-                <td>
-                  <form method="post" style="display:inline;">
-                    <?php wp_nonce_field( 'cambiar_estado_emitido', 'nonce_emitido_' . $p->Id ); ?>
-                    <input type="hidden" name="process_id" value="<?= esc_attr( $p->Id ) ?>">
-                    <button
-                      type="submit"
-                      name="emitir"
-                      class="btn"
-                      style="padding:4px 8px; font-size:0.85em;"
-                      title="Marcar como Emitido"
-                    >Emitir</button>
-                  </form>
+                <td style="text-align: center;">
+                  <?= intval( $p->DiasRestantes ) ?>
                 </td>
-                <td>
+                <td><?= esc_html( date('d/m/Y', strtotime($p->FechaCreacion)) ) ?></td>
+                <td style="text-align: center;">
+                  <label 
+                    for="gestionar-toggle"
+                    class="gestionar-btn manage-link"
+                    data-id="<?= esc_attr( $p->Id ) ?>" 
+                    title="Gestionar Estado"
+                    style="cursor: pointer; display: inline-flex; align-items: center; justify-content: center;"
+                  >
+                    <!-- tu SVG de tres puntitos -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                      <path d="M3 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 
+                              0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 
+                              0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
+                    </svg>
+                  </label>
+                </td>
+                <td style="text-align: center;">
                   <a 
                     href="?view=bitacora_detalle&id=<?= esc_attr($p->Id) ?>" 
                     class="detail-link" 
@@ -258,7 +294,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['emitir'], $_POST['p
             <?php endif; ?>
         </tbody>
     </table>
-
+  </div>
 <?php
 // 3) Renderizado del paginador
 $total_pages = ceil( $total / $per_page );
@@ -296,3 +332,56 @@ if ( $total_pages > 1 ): ?>
       <?php endforeach; ?>
     </div>
 <?php endif; ?>
+
+<input type="checkbox" id="gestionar-toggle" hidden>
+
+<!-- Overlay / modal de gestión -->
+<div class="overlay-manage">
+  <div class="popup-manage">
+    <h3>Gestionar Estado</h3>
+    <form id="form-gestionar" method="post" action="">
+      <?php wp_nonce_field('gestionar_proceso','gestionar_nonce'); ?>
+      <input type="hidden" name="IdProceso" id="IdProceso">
+
+      <div class="form-group">
+        <label for="NuevoEstado">Nuevo Estado:</label>
+        <select name="NuevoEstado" id="NuevoEstado" required>
+          <option value="">— Seleccione —</option>
+          <?php foreach( $estadosList as $st ): ?>
+            <option value="<?= esc_attr( $st->Id ) ?>">
+              <?= esc_html( $st->Descripcion ) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="ObservacionCambio">Observación (opcional):</label>
+        <textarea name="ObservacionCambio" id="ObservacionCambio" rows="2"></textarea>
+      </div>
+
+      <div class="popup-actions">
+        <!-- este label desmarca el checkbox y cierra el modal -->
+        <label for="gestionar-toggle" class="btn close">Cancelar</label>
+        <button type="submit" class="btn">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// Para cada botón .gestionar-btn (en tu tabla),
+document.querySelectorAll('.gestionar-btn').forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.preventDefault();
+    // recogemos el Id del proceso
+    const id = btn.dataset.id;
+    document.getElementById('IdProceso').value = id;
+    // reset campos del modal
+    document.getElementById('NuevoEstado').selectedIndex = 0;
+    document.getElementById('ObservacionCambio').value = '';
+    // abrimos el modal
+    document.getElementById('gestionar-toggle').checked = true;
+  });
+});
+</script>

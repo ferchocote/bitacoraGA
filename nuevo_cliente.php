@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $data['IdUser']     = get_current_user_id();
   $data['FechaCreacion'] = current_time('mysql');
   $data['Activo']     = 1;
-  echo "<script>console.log(" . json_encode($data) . ");</script>";
+  
 
   // Insertar
   $inserted = $wpdb->insert($tabla, $data);

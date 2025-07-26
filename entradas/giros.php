@@ -1,13 +1,14 @@
-<div >
-        <h3 id="popup-title">Detalle Giros</h3>
+<div>
+  <h3 id="popup-title">Detalle Giros</h3>
 
-        <form id="giro-form" class="form-grid">
-    <input type="hidden" id="giro-id" name="IdEntradaBitacora" />
+  <form id="entrada-form" class="form-grid">
+    <input type="hidden" id="IdEntradaBitacora" name="idEntradaBitacora" />
+    <input type="hidden" id="Id" name="id" />
 
     <div class="form-row">
-      <label for="Descripcion">Descripción</label>
-      <input type="text" id="Descripcion" name="Descripcion" />
-    </div>
+     <label>Descripción</label>
+     <textarea id="Descripcion" name="descripcion" rows="4" style="resize: vertical; width: 100%;"></textarea>
+   </div>
     <div class="form-row">
       <label for="ComprobanteSiigo">Comprobante SIIGO</label>
       <input type="text" id="ComprobanteSiigo" name="ComprobanteSiigo" />
@@ -65,9 +66,8 @@
       <input type="text" id="Proveedor" name="Proveedor" />
     </div>
   </form>
-        <div style="margin-top: 10px;">
-            <label for="popup-toggle" class="btn">Cerrar</label>
-            <button type="button" id="btn-guardar" class="btn" style="display: none;">Guardar</button>
-        </div>
-    </div>
-    
+  <div style="margin-top: 10px;">
+    <label for="popup-toggle" class="btn">Cerrar</label>
+    <button type="button" id="btn-guardar" class="btn" style="display: none;">Guardar</button>
+  </div>
+</div>

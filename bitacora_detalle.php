@@ -9,70 +9,6 @@ if (!is_user_logged_in()) {
 }
 
 global $wpdb;
-// Leer el ID del proceso que viene por URL
-$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-if (!$id) {
-  echo '<p>Proceso no válido.</p>';
-  return;
-}
-
-  // Tablas
-  $tabla = 'bc_' . 'proceso';
-  $tabla_clientes = 'bc_' . 'cliente';
-  $tabla_estados = 'bc_' . 'estado_proceso';
-  $tabla_detalle = 'bc_' . 'detalle_proceso';
-  $tabla_tipo_entrada = 'bc_' . 'tipo_entrada';
-
-$bitacoras = $wpdb->get_results("SELECT * FROM wp_users ");
-
-// Consultar datos del proceso (incluye creador, cliente, importador y estado)
-$sql = $wpdb->prepare(
-  "SELECT
-          p.*, 
-          u.user_login AS creador,
-          c1.RazonSocial AS Cliente,
-          c2.RazonSocial AS Importador,
-          ep.Descripcion AS EstadoDescripcion,
-          ep.Color       AS EstadoColor
-      FROM {$tabla} p
-      LEFT JOIN {$wpdb->prefix}users u
-        ON u.ID = p.IdUserCreation
-      LEFT JOIN {$tabla_clientes} c1
-        ON c1.Id = p.IdCliente
-      LEFT JOIN {$tabla_clientes} c2
-        ON c2.Id = p.IdImportador
-      LEFT JOIN {$tabla_estados} ep
-        ON ep.Id = p.IdEstadoProceso
-      WHERE p.Id = %d",
-  $id
-);
-$proceso = $wpdb->get_row($sql);
-if (!$proceso) {
-  echo '<p>Proceso no encontrado.</p>';
-  return;
-}
-
-// Detalles relacionados
-$detalles = $wpdb->get_results(
-  $wpdb->prepare(
-    "SELECT * FROM {$tabla_detalle} WHERE IdProceso = %d ORDER BY Id",
-    $id
-  )
-);
-
-$detalle = ! empty($detalles) ? $detalles[0] : null;
-
-// Listas para selects
-$clientes = $wpdb->get_results("SELECT Id, RazonSocial FROM {$tabla_clientes} WHERE Activo=1 ORDER BY RazonSocial");
-$importadores = $clientes; // mismos registros, diferencia según flujo
-$estadosList = $wpdb->get_results("SELECT Id, Descripcion FROM {$tabla_estados} WHERE Activo=1 ORDER BY Id");
-
-$tipos_entrada = $wpdb->get_results(
-  "SELECT Id, Descripcion 
-   FROM {$tabla_tipo_entrada} 
-   WHERE Activo = 1 
-   ORDER BY Descripcion"
-);
 
 // 1) Procesar formulario de edición antes de cualquier salida
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view'] === 'bitacora_detalle') {
@@ -131,6 +67,295 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
   wp_safe_redirect(add_query_arg(['view' => 'bitacora_detalle', 'id' => $id], $_SERVER['PHP_SELF']));
   exit;
 }
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'crear_transporte') {
+  $dataEntrada = [];
+  $dataDetalle = [];
+  $idProceso = intval($_POST['idProceso']);
+  $idEntrada = intval($_POST['IdTipoEntrada']);
+  $tabla = 'bc_entrada_bitacora_transporte';
+  $tablaEntrada = 'bc_entrada_bitacora';
+
+  // Auditoría
+  //echo "<script>console.log(" . json_encode($_POST) . ");</script>";
+
+
+  $dataEntrada = [
+    'IdTipoEntrada'       => $idEntrada,
+    'IdProceso'               => $idProceso,
+    'IdUser'               => get_current_user_id(),
+    'FechaCreacion'     => current_time('mysql'),
+    'Activo'  => 1
+  ];
+
+  
+  // Insertar
+  $insertedEntrada = $wpdb->insert($tablaEntrada, $dataEntrada);
+
+  if ($insertedEntrada) {
+    $new_id = $wpdb->insert_id;
+    $response = ['success' => false, 'data' => ''];
+
+    $dataDetalle = [
+      'Descripcion'   => sanitize_text_field($_POST['descripcion']),
+      'Manifiesto'   => sanitize_text_field($_POST['manifiestoEntrada']),
+      'IdEntradaBitacora'       => $new_id,
+      'CiudadDestino'       => sanitize_text_field($_POST['ciudadDestino']),
+      'Documentacion'         => sanitize_text_field($_POST['documentacion']),
+      'CobroCliente'     => sanitize_text_field($_POST['cobroCliente']),
+      'TamanoContenedor' => sanitize_text_field($_POST['tamanoContenedor']),
+      'NumeroContenedor' => sanitize_text_field($_POST['numeroContenedor']),
+      'Conductor' => sanitize_text_field($_POST['conductor']),
+      'Placa' => sanitize_text_field($_POST['placa']),
+      'Remesa' => sanitize_text_field($_POST['remesa']),
+      'FechaElaboracion' => sanitize_text_field($_POST['fechaElaboracion']),
+      'FechaSalidaPuerto' => sanitize_text_field($_POST['fechaSalidaPuerto']),
+      'FechaEntregaUnidadVacia' => sanitize_text_field($_POST['fechaEntregaUnidadVacia'])
+
+    ];
+
+
+    // Auditoría
+
+    //$data['IdUser']     = get_current_user_id();
+    $dataDetalle['FechaCreacion'] = current_time('mysql');
+    $dataDetalle['Activo']     = 1;
+    //echo "<script>console.log(" . json_encode($dataDetalle) . ");</script>";
+
+
+
+
+    // Insertar
+    $wpdb->show_errors(); // Activar errores SQL
+    $inserted = $wpdb->insert($tabla, $dataDetalle);
+
+    if ($inserted) {
+      $response['success'] = true;
+      $response['data'] = 'Entrada y detalle creados correctamente.';
+    } else {
+      $response['data'] = 'Error al crear detalle: ' . $wpdb->last_error;
+      error_log('Error SQL: ' . $wpdb->last_error);
+    }
+  } else {
+   $response['data'] = 'Error al crear la entrada: ' . $wpdb->last_error;
+  }
+   // Devuelve JSON válido
+  wp_send_json($response);
+}
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'crear_giros') {
+  $dataEntrada = [];
+  $dataDetalle = [];
+  $idProceso = intval($_POST['idProceso']);
+  $idEntrada = intval($_POST['IdTipoEntrada']);
+  $tabla = 'bc_entrada_bitacora_giro';
+  $tablaEntrada = 'bc_entrada_bitacora';
+
+  // Auditoría
+  
+
+
+  $dataEntrada = [
+    'IdTipoEntrada'       => $idEntrada,
+    'IdProceso'               => $idProceso,
+    'IdUser'               => get_current_user_id(),
+    'FechaCreacion'     => current_time('mysql'),
+    'Activo'  => 1
+  ];
+
+  //echo "<script>console.log(" . json_encode($dataEntrada) . ");</script>";
+  // Insertar
+  $insertedEntrada = $wpdb->insert($tablaEntrada, $dataEntrada);
+
+  if ($insertedEntrada) {
+    $new_id = $wpdb->insert_id;
+    $response = ['success' => false, 'data' => ''];
+
+    $dataDetalle = [
+      'Descripcion'   => sanitize_text_field($_POST['descripcion']),
+      'ComprobanteSiigo'   => sanitize_text_field($_POST['ComprobanteSiigo']),
+      'IdEntradaBitacora'       => $new_id,
+      'FechaElaboracion'       => sanitize_text_field($_POST['FechaElaboracion']),
+      'NombreTercero'         => sanitize_text_field($_POST['NombreTercero']),
+      'DescripcionMovimiento'     => sanitize_text_field($_POST['DescripcionMovimiento']),
+      'Debito' => sanitize_text_field($_POST['Debito']),
+      'DOCruzado' => sanitize_text_field($_POST['DOCruzado']),
+      'Estado' => sanitize_text_field($_POST['Estado']),
+      'DO' => sanitize_text_field($_POST['DO']),
+      'NumeroDeclaracion' => sanitize_text_field($_POST['NumeroDeclaracion']),
+      'USDFOB' => sanitize_text_field($_POST['USDFOB']),
+      'USDDeclaradoConFlete' => sanitize_text_field($_POST['USDDeclaradoConFlete']),
+      'USDReal' => sanitize_text_field($_POST['USDReal']),
+      'FechaMovimiento' => sanitize_text_field($_POST['FechaMovimiento']),
+      'Proveedor' => sanitize_text_field($_POST['Proveedor'])
+
+    ];
+
+
+    // Auditoría
+
+    //$data['IdUser']     = get_current_user_id();
+    $dataDetalle['FechaCreacion'] = current_time('mysql');
+    $dataDetalle['Activo']     = 1;
+    
+
+
+
+
+    // Insertar
+    $wpdb->show_errors(); // Activar errores SQL
+    $inserted = $wpdb->insert($tabla, $dataDetalle);
+
+    if ($inserted) {
+      $response['success'] = true;
+      $response['data'] = 'Entrada y detalle creados correctamente.';
+    } else {
+      $response['data'] = 'Error al crear detalle: ' . $wpdb->last_error;
+      error_log('Error SQL: ' . $wpdb->last_error);
+    }
+  } else {
+   $response['data'] = 'Error al crear la entrada: ' . $wpdb->last_error;
+  }
+   // Devuelve JSON válido
+  wp_send_json($response);
+}
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'crear_contabilidad') {
+  $dataEntrada = [];
+  $dataDetalle = [];
+  $idProceso = intval($_POST['idProceso']);
+  $idEntrada = intval($_POST['IdTipoEntrada']);
+  $tabla = 'bc_entrada_bitacora_contabilidad';
+  $tablaEntrada = 'bc_entrada_bitacora';
+
+  // Auditoría
+ 
+
+
+  $dataEntrada = [
+    'IdTipoEntrada'       => $idEntrada,
+    'IdProceso'               => $idProceso,
+    'IdUser'               => get_current_user_id(),
+    'FechaCreacion'     => current_time('mysql'),
+    'Activo'  => 1
+  ];
+
+  
+  // Insertar
+  $insertedEntrada = $wpdb->insert($tablaEntrada, $dataEntrada);
+
+  if ($insertedEntrada) {
+    $new_id = $wpdb->insert_id;
+     $response = ['success' => false, 'data' => ''];
+
+    $dataDetalle = [
+      'Descripcion'   => sanitize_text_field($_POST['descripcion']),
+      'NombreClienteProveedor'   => sanitize_text_field($_POST['NombreClienteProveedor']),
+      'IdEntradaBitacora'       => $new_id,
+      'FechaDocumento'       => sanitize_text_field($_POST['FechaDocumento']),
+      'FechaIngresoSistema'         => sanitize_text_field($_POST['FechaIngresoSistema']),
+      'FechaVencimiento'     => sanitize_text_field($_POST['FechaVencimiento']),
+      'IdTipoDocumento' => sanitize_text_field($_POST['IdTipoDocumento']),
+      'IdTipoDocumentoContabilidad' => sanitize_text_field($_POST['IdTipoDocumentoContabilidad']),
+
+
+    ];
+
+
+    // Auditoría
+
+
+    $dataDetalle['FechaCreacion'] = current_time('mysql');
+    $dataDetalle['Activo']     = 1;
+ 
+
+
+
+
+    // Insertar
+    $wpdb->show_errors(); // Activar errores SQL
+    $inserted = $wpdb->insert($tabla, $dataDetalle);
+
+    if ($inserted) {
+      $response['success'] = true;
+      $response['data'] = 'Entrada y detalle creados correctamente.';
+    } else {
+      $response['data'] = 'Error al crear detalle: ' . $wpdb->last_error;
+      error_log('Error SQL: ' . $wpdb->last_error);
+    }
+  } else {
+   $response['data'] = 'Error al crear la entrada: ' . $wpdb->last_error;
+  }
+   // Devuelve JSON válido
+  wp_send_json($response);
+
+}
+// Leer el ID del proceso que viene por URL
+$id = isset($_GET['id']) ? intval($_GET['id']) : (
+  isset($_POST['id']) ? intval($_POST['id']) : 0);
+if (!$id) {
+  echo '<p>Proceso no válido.</p>';
+  return;
+}
+
+// Tablas
+$tabla = 'bc_' . 'proceso';
+$tabla_clientes = 'bc_' . 'cliente';
+$tabla_estados = 'bc_' . 'estado_proceso';
+$tabla_detalle = 'bc_' . 'detalle_proceso';
+$tabla_tipo_entrada = 'bc_' . 'tipo_entrada';
+
+$bitacoras = $wpdb->get_results("SELECT * FROM wp_users ");
+
+
+
+// Consultar datos del proceso (incluye creador, cliente, importador y estado)
+$sql = $wpdb->prepare(
+  "SELECT
+          p.*, 
+          u.user_login AS creador,
+          c1.RazonSocial AS Cliente,
+          c2.RazonSocial AS Importador,
+          ep.Descripcion AS EstadoDescripcion,
+          ep.Color       AS EstadoColor
+      FROM {$tabla} p
+      LEFT JOIN {$wpdb->prefix}users u
+        ON u.ID = p.IdUserCreation
+      LEFT JOIN {$tabla_clientes} c1
+        ON c1.Id = p.IdCliente
+      LEFT JOIN {$tabla_clientes} c2
+        ON c2.Id = p.IdImportador
+      LEFT JOIN {$tabla_estados} ep
+        ON ep.Id = p.IdEstadoProceso
+      WHERE p.Id = %d",
+  $id
+);
+$proceso = $wpdb->get_row($sql);
+if (!$proceso) {
+  echo '<p>Proceso no encontrado.</p>';
+  return;
+}
+
+// Detalles relacionados
+$detalles = $wpdb->get_results(
+  $wpdb->prepare(
+    "SELECT * FROM {$tabla_detalle} WHERE IdProceso = %d ORDER BY Id",
+    $id
+  )
+);
+
+$detalle = ! empty($detalles) ? $detalles[0] : null;
+
+// Listas para selects
+$clientes = $wpdb->get_results("SELECT Id, RazonSocial FROM {$tabla_clientes} WHERE Activo=1 ORDER BY RazonSocial");
+$importadores = $clientes; // mismos registros, diferencia según flujo
+$estadosList = $wpdb->get_results("SELECT Id, Descripcion FROM {$tabla_estados} WHERE Activo=1 ORDER BY Id");
+
+$tipos_entrada = $wpdb->get_results(
+  "SELECT Id, Descripcion 
+   FROM {$tabla_tipo_entrada} 
+   WHERE Activo = 1 
+   ORDER BY Descripcion"
+);
+
+
 ?>
 
 <!DOCTYPE html>
@@ -275,58 +500,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
           <label for="popup-toggle-edit" class="btn close">Cancelar</label>
           <button type="submit" class="btn">Guardar</button>
         </div>
-    </form>
-  </div>
-</div>
-    
-    <!-- Overlay y popup de Crear Entrada -->
-    <div class="overlay-add">
-      <div class="popup-add">
-        <h3>Crear Nueva Entrada</h3>
-        <form method="post" action="?view=guardar_entrada" enctype="multipart/form-data">
-          <div class="popup-grid">
-            <!-- Tipo de Entrada -->
-            <div class="popup-field">
-              <label for="IdTipoEntrada">Tipo de Entrada</label>
-              <select id="IdTipoEntrada" name="IdTipoEntrada" required>
-                <option value="">— Seleccione un tipo —</option>
-                <?php foreach ( $tipos_entrada as $t ): ?>
-                  <option value="<?= esc_attr( $t->Id ) ?>">
-                    <?= esc_html( $t->Descripcion ) ?>
-                  </option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-            <!-- Descripción -->
-            <div class="popup-field">
-              <label for="descripcionEntrada">Descripción</label>
-              <textarea id="descripcionEntrada" name="descripcionEntrada" rows="3" required></textarea>
-            </div>
-            <!-- Subir Documentos -->
-            <div class="popup-field" style="grid-column: 1 / -1;">
-              <label for="documentos">Subir Documentos</label>
-              <input type="file" id="documentos" name="documentos[]" multiple>
-            </div>
-
-            <!-- Aquí van los formularios específicos, inicialmente ocultos -->
-            <!-- <div id="fields-contabilidad" class="entry-fields" style="display:none; grid-column:1 / -1;">
-              <?php include __DIR__ . '/entradas/contabilidad.php'; ?>
-            </div>
-            <div id="fields-giros" class="entry-fields" style="display:none; grid-column:1 / -1;">
-              <?php include __DIR__ . '/entradas/giros.php'; ?>
-            </div>
-            <div id="fields-transporte" class="entry-fields" style="display:none; grid-column:1 / -1;">
-              <?php include __DIR__ . '/entradas/transporte.php'; ?>
-            </div> -->
-
-          </div>
-          <div class="popup-actions">
-            <label for="popup-toggle-add" class="btn close">Cancelar</label>
-            <button type="submit" class="btn">Guardar</button>
-          </div>
-        </form>
-      </div>
+      </form>
     </div>
+  </div>
+
+
+  <!-- Overlay y popup de Crear Entrada -->
+  <div class="overlay-add">
+    <div class="popup-add">
+      <h3>Crear Nueva Entrada</h3>
+      <form id="entrada-add-form" onsubmit="showLoader()">
+        <div class="form-grid">
+          <!-- Tipo de Entrada -->
+          <input type="hidden" name="idProceso" value="<?= esc_attr($id) ?>">
+          <div class="form-group">
+            <label for="IdTipoEntrada">Tipo de Entrada</label>
+            <select id="IdTipoEntrada" name="IdTipoEntrada" required>
+              <option value="">— Seleccione un tipo —</option>
+              <?php foreach ($tipos_entrada as $t): ?>
+                <option value="<?= esc_attr($t->Id) ?>">
+                  <?= esc_html($t->Descripcion) ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+
+          <!-- Subir Documentos -->
+          <div class="form-row">
+            <label for="documentos">Subir Documentos</label>
+            <input type="file" id="documentos" name="documentos[]" multiple>
+          </div>
+
+        </div>
+
+
+        <div id="formulario-popup-container-add" class="form-grid"></div>
+        <div id="loader-overlay">
+          <div class="spinner"></div>
+        </div>
+
+
+
+      </form>
+      <div class="form-buttons" style="display: flex; justify-content: center; gap: 20px; ">
+        <a href="?view=bitacora_detalle&id=<?= $id ?>" class="btn" style="width: 150px; text-align: center;">Cerrar</a>
+        <button id="btn-add-guardar" class="btn" style="width: 150px;">Crear</button>
+      </div>
+
+    </div>
+  </div>
 
   <ul class="tabs">
     <li data-tab="tab-contabilidad" data-tipo="CTB" class="active">Contabilidad</li>
@@ -345,6 +567,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
 
 <?php include_once(__DIR__ . '/bitacora_detalle_filtro.php'); ?>
 <script>
+  document.getElementById('btn-add-guardar').addEventListener('click', () => {
+    const formData = new FormData(document.getElementById('entrada-add-form'));
+
+    switch ($sufijo_entrada) {
+      case 'TRS':
+        formData.append('action', 'crear_transporte');
+        break;
+      case 'GRO':
+        formData.append('action', 'crear_giros');
+        break;
+      case 'CTB':
+        formData.append('action', 'crear_contabilidad');
+        break;
+      default:
+        console.warn('Tipo de entrada no reconocido:', $sufijo_entrada);
+    }
+
+
+
+
+    showLoader();
+    fetch('bitacora_detalle.php', {
+        method: 'POST',
+        body: formData
+      })
+      .then(r => r.json())
+      .then(res => {
+        if (res.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Creado',
+            text: 'La entrada fue creada correctamente.',
+            confirmButtonText: 'OK'
+          }).then(() => {
+            showLoader();
+            location.reload();
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: res.data || 'Ocurrió un error inesperado.'
+          });
+        }
+      }).finally(hideLoader);
+  });
   document.addEventListener('DOMContentLoaded', () => {
     const tabs = document.querySelectorAll('.tabs li');
     const contents = document.querySelectorAll('.tab-content');
@@ -368,38 +636,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
       });
     });
 
-      // Cargar primer tab automáticamente
-      const initialTab = document.querySelector('.tabs li.active');
-      if (initialTab) initialTab.click();
-    });
+    // Cargar primer tab automáticamente
+    const initialTab = document.querySelector('.tabs li.active');
+    if (initialTab) initialTab.click();
+  });
 
-    document.getElementById('IdTipoEntrada').addEventListener('change', function() {
-        // ocultar todos los bloques
-        document.querySelectorAll('.entry-fields').forEach(div => {
-          div.style.display = 'none';
-        });
-        // según el valor del select, mostramos el div correspondiente
-        const tipo = this.value;
-        if (!tipo) return;
-        // mapeo de IDs a sufijos de bloque (ajusta los IDs según tu tabla)
-        const map = {
-          '1': 'contabilidad',
-          '2': 'giros',
-          '3': 'transporte'
-        };
-        const sufijo = map[tipo];
-        if (sufijo) {
-          document.getElementById('fields-' + sufijo).style.display = 'block';
-        }
+  function cargarFormularioPorTipoNuevo(tipoTab) {
+    const rutas = {
+      CTB: '/wp-content/bitacoras/entradas/nuevo-contabilidad.php',
+      GRO: '/wp-content/bitacoras/entradas/nuevo-giros.php',
+      TRS: '/wp-content/bitacoras/entradas/nuevo-transporte.php'
+    };
+
+    const ruta = rutas[tipoTab];
+    if (!ruta) {
+      document.getElementById('formulario-popup-container-add').innerHTML = '<p>Formulario no disponible.</p>';
+      return;
+    }
+
+    fetch(ruta)
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById('formulario-popup-container-add').innerHTML = html;
+
+
+      })
+      .catch(err => {
+        console.error('Error cargando formulario:', err);
+        document.getElementById('formulario-popup-container-add').innerHTML = '<p>Error al cargar formulario.</p>';
       });
+  }
 
-      (function(){
+  document.getElementById('IdTipoEntrada').addEventListener('change', function() {
+    // ocultar todos los bloques
+    document.querySelectorAll('.entry-fields').forEach(div => {
+      div.style.display = 'none';
+    });
+    // según el valor del select, mostramos el div correspondiente
+    $tipoEntrada = this.value;
+    if (!$tipoEntrada) return;
+    // mapeo de IDs a sufijos de bloque (ajusta los IDs según tu tabla)
+    const map = {
+      '1': 'CTB',
+      '2': 'GRO',
+      '3': 'TRS'
+    };
+    $sufijo_entrada = map[$tipoEntrada];
+    cargarFormularioPorTipoNuevo($sufijo_entrada);
+  });
+
+  (function() {
     // Checkbox que controla el modal
     const toggleAdd = document.getElementById('popup-toggle-add');
     // El form dentro del modal “Crear Nueva Entrada”
-    const formAdd   = document.querySelector('.popup-add form');
+    const formAdd = document.querySelector('.popup-add form');
     // Todos los bloques de campos extra
-    const extras    = document.querySelectorAll('.entry-fields');
+    const extras = document.querySelectorAll('.formulario-popup-container-add');
 
     toggleAdd.addEventListener('change', () => {
       if (!toggleAdd.checked) {
@@ -417,4 +709,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
       formAdd.reset();
     }
   })();
-  </script>
+
+  function showLoader() {
+    document.getElementById('loader-overlay').style.display = 'flex';
+  }
+
+  function hideLoader() {
+    document.getElementById('loader-overlay').style.display = 'none';
+  }
+</script>

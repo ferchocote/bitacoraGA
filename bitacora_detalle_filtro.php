@@ -5,7 +5,7 @@ require_once('../../wp-load.php');
 global $wpdb;
 // --- MANEJO AJAX INTERNO ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'actualizar_transporte') {
-    //$id = intval($_POST['IdProceso']);
+    
     $idEntrada = intval($_POST['id']);
     $tabla = 'bc_entrada_bitacora_transporte';
 
@@ -44,26 +44,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit;
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'actualizar_giros') {
-    //$id = intval($_POST['IdProceso']);
-    $idEntrada = intval($_POST['id']);
-    $tabla = 'bc_entrada_bitacora_transporte';
+      $idEntrada = intval($_POST['id']);
+    $tabla = 'bc_entrada_bitacora_giro';
 
-
+   
     $data = [
-        'Descripcion'   => sanitize_text_field($_POST['descripcion']),
-        'Manifiesto'   => sanitize_text_field($_POST['manifiestoEntrada']),
-        'IdEntradaBitacora'       => sanitize_text_field($_POST['idEntradaBitacora']),
-        'CiudadDestino'       => sanitize_text_field($_POST['ciudadDestino']),
-        'Documentacion'         => sanitize_text_field($_POST['documentacion']),
-        'CobroCliente'     => sanitize_text_field($_POST['cobroCliente']),
-        'TamanoContenedor' => sanitize_email($_POST['tamanoContenedor']),
-        'NumeroContenedor' => sanitize_text_field($_POST['numeroContenedor']),
-        'Conductor' => sanitize_text_field($_POST['conductor']),
-        'Placa' => sanitize_text_field($_POST['placa']),
-        'Remesa' => sanitize_text_field($_POST['remesa']),
-        'FechaElaboracion' => sanitize_text_field($_POST['fechaElaboracion']),
-        'FechaSalidaPuerto' => sanitize_text_field($_POST['fechaSalidaPuerto']),
-        'FechaEntregaUnidadVacia' => sanitize_text_field($_POST['fechaEntregaUnidadVacia'])
+      'Descripcion'   => sanitize_text_field($_POST['descripcion']),
+      'ComprobanteSiigo'   => sanitize_text_field($_POST['ComprobanteSiigo']),
+    'IdEntradaBitacora'       => sanitize_text_field($_POST['idEntradaBitacora']),
+      'FechaElaboracion'       => sanitize_text_field($_POST['FechaElaboracion']),
+      'NombreTercero'         => sanitize_text_field($_POST['NombreTercero']),
+      'DescripcionMovimiento'     => sanitize_text_field($_POST['DescripcionMovimiento']),
+      'Debito' => sanitize_text_field($_POST['Debito']),
+      'DOCruzado' => sanitize_text_field($_POST['DOCruzado']),      
+      'Estado' => sanitize_text_field($_POST['Estado']),
+      'DO' => sanitize_text_field($_POST['DO']),
+      'NumeroDeclaracion' => sanitize_text_field($_POST['NumeroDeclaracion']),
+      'USDFOB' => sanitize_text_field($_POST['USDFOB']),
+      'USDDeclaradoConFlete' => sanitize_text_field($_POST['USDDeclaradoConFlete']),  
+      'USDReal' => sanitize_text_field($_POST['USDReal']),
+      'FechaMovimiento' => sanitize_text_field($_POST['FechaMovimiento']),
+      'Proveedor' => sanitize_text_field($_POST['Proveedor'])
 
     ];
     //echo "<script>console.log(" . json_encode($_POST) . ");</script>";
@@ -85,26 +86,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'actualizar_contabilidad') {
     //$id = intval($_POST['IdProceso']);
     $idEntrada = intval($_POST['id']);
-    $tabla = 'bc_entrada_bitacora_transporte';
+    $tabla = 'bc_entrada_bitacora_contabilidad';
 
 
-    $data = [
-        'Descripcion'   => sanitize_text_field($_POST['descripcion']),
-        'Manifiesto'   => sanitize_text_field($_POST['manifiestoEntrada']),
-        'IdEntradaBitacora'       => sanitize_text_field($_POST['idEntradaBitacora']),
-        'CiudadDestino'       => sanitize_text_field($_POST['ciudadDestino']),
-        'Documentacion'         => sanitize_text_field($_POST['documentacion']),
-        'CobroCliente'     => sanitize_text_field($_POST['cobroCliente']),
-        'TamanoContenedor' => sanitize_email($_POST['tamanoContenedor']),
-        'NumeroContenedor' => sanitize_text_field($_POST['numeroContenedor']),
-        'Conductor' => sanitize_text_field($_POST['conductor']),
-        'Placa' => sanitize_text_field($_POST['placa']),
-        'Remesa' => sanitize_text_field($_POST['remesa']),
-        'FechaElaboracion' => sanitize_text_field($_POST['fechaElaboracion']),
-        'FechaSalidaPuerto' => sanitize_text_field($_POST['fechaSalidaPuerto']),
-        'FechaEntregaUnidadVacia' => sanitize_text_field($_POST['fechaEntregaUnidadVacia'])
+     $data = [
+      'Descripcion'   => sanitize_text_field($_POST['descripcion']),
+      'NombreClienteProveedor'   => sanitize_text_field($_POST['NombreClienteProveedor']),
+      'IdEntradaBitacora'       => sanitize_text_field($_POST['idEntradaBitacora']),
+      'FechaDocumento'       => sanitize_text_field($_POST['FechaDocumento']),
+      'FechaIngresoSistema'         => sanitize_text_field($_POST['FechaIngresoSistema']),
+      'FechaVencimiento'     => sanitize_text_field($_POST['FechaVencimiento']),
+      'IdTipoDocumento' => sanitize_text_field($_POST['IdTipoDocumento']),
+      'IdTipoDocumentoContabilidad' => sanitize_text_field($_POST['IdTipoDocumentoContabilidad'])  
 
     ];
+
     //echo "<script>console.log(" . json_encode($_POST) . ");</script>";
     // echo "<script>console.log(" . json_encode($tabla) . ");</script>";
     // echo "<script>console.log(" . json_encode($id) . ");</script>";
@@ -181,21 +177,18 @@ if (!isset($id)) {
         console.log("Datos recibidos:", data);
         const entradas = data;
         switch (entradas.TECodigo) {
-        case 'TRS':
-            cargarDatosTransporte(entradas, modo);
-            break;
-        case 'GRO':
-            cargarDatosGiros(entradas, modo);
-            break;
-        case 'CTB':
-            cargarDatosContabilidad(entradas, modo);
-            break;
-        default:
-            console.warn('Tipo de entrada no reconocido:', entradas.TECodigo);
-    }
-        
-
-        
+            case 'TRS':
+                cargarDatosTransporte(entradas, modo);
+                break;
+            case 'GRO':
+                cargarDatosGiros(entradas, modo);
+                break;
+            case 'CTB':
+                cargarDatosContabilidad(entradas, modo);
+                break;
+            default:
+                console.warn('Tipo de entrada no reconocido:', entradas.TECodigo);
+        }
     }
 
     function cargarEntradas(tipoTab, contenedorId, idProceso = <?= json_encode($id) ?>) {
@@ -330,6 +323,7 @@ if (!isset($id)) {
                             text: 'La entrada fue actualizada correctamente.',
                             confirmButtonText: 'OK'
                         }).then(() => {
+                            showLoader();
                             location.reload();
                         });
                     } else {
@@ -386,7 +380,8 @@ if (!isset($id)) {
         }
 
         popupToggle.checked = true;
-    } 
+    }
+
     function cargarDatosGiros(data, modo) {
 
         const popupToggle = document.querySelector('#popup-toggle');
@@ -417,6 +412,7 @@ if (!isset($id)) {
                             text: 'La entrada fue actualizada correctamente.',
                             confirmButtonText: 'OK'
                         }).then(() => {
+                            showLoader();
                             location.reload();
                         });
                     } else {
@@ -433,33 +429,40 @@ if (!isset($id)) {
         document.getElementById('IdEntradaBitacora').value = data.IdEntradaBitacora;
         document.getElementById('Id').value = data.Id;
         document.getElementById('Descripcion').value = data.Descripcion;
-        document.getElementById('Documentacion').value = data.Documentacion;
-        document.getElementById('CobroCliente').value = data.CobroCliente;
-        document.getElementById('ManifiestoEntrada').value = data.Manifiesto;
-        document.getElementById('TamanoContenedor').value = data.TamanoContenedor;
-        document.getElementById('NumeroContenedor').value = data.NumeroContenedor;
-        document.getElementById('Conductor').value = data.Conductor;
-        document.getElementById('Placa').value = data.Placa;
-        document.getElementById('Remesa').value = data.Remesa;
-        document.getElementById('CiudadDestino').value = data.CiudadDestino;
+        document.getElementById('ComprobanteSiigo').value = data.ComprobanteSiigo;
         document.getElementById('FechaElaboracion').value = data.FechaElaboracion;
-        document.getElementById('FechaSalidaPuerto').value = data.FechaSalidaPuerto;
-        document.getElementById('FechaEntregaUnidadVacia').value = data.FechaEntregaUnidadVacia;
+        document.getElementById('NombreTercero').value = data.NombreTercero;
+        document.getElementById('DescripcionMovimiento').value = data.DescripcionMovimiento;
+        document.getElementById('Debito').value = data.Debito;
+        document.getElementById('DOCruzado').value = data.DOCruzado;
+        document.getElementById('Estado').value = data.Estado;
+        document.getElementById('DO').value = data.DO;
+        document.getElementById('NumeroDeclaracion').value = data.NumeroDeclaracion;
+        document.getElementById('USDFOB').value = data.USDFOB;
+        document.getElementById('USDDeclaradoConFlete').value = data.USDDeclaradoConFlete;
+        document.getElementById('USDReal').value = data.USDReal;
+        document.getElementById('FechaMovimiento').value = data.FechaMovimiento;
+        document.getElementById('Proveedor').value = data.Proveedor;
 
         const esEditable = modo === 'editar';
+   
         document.getElementById('Descripcion').disabled = !esEditable;
-        document.getElementById('Documentacion').disabled = !esEditable;
-        document.getElementById('CobroCliente').disabled = !esEditable;
-        document.getElementById('ManifiestoEntrada').disabled = !esEditable;
-        document.getElementById('TamanoContenedor').disabled = !esEditable;
-        document.getElementById('NumeroContenedor').disabled = !esEditable;
-        document.getElementById('Conductor').disabled = !esEditable;
-        document.getElementById('Placa').disabled = !esEditable;
-        document.getElementById('Remesa').disabled = !esEditable;
-        document.getElementById('CiudadDestino').disabled = !esEditable;
+        document.getElementById('ComprobanteSiigo').disabled = !esEditable;
         document.getElementById('FechaElaboracion').disabled = !esEditable;
-        document.getElementById('FechaSalidaPuerto').disabled = !esEditable;
-        document.getElementById('FechaEntregaUnidadVacia').disabled = !esEditable;
+        document.getElementById('NombreTercero').disabled = !esEditable;
+        document.getElementById('DescripcionMovimiento').disabled = !esEditable;
+        document.getElementById('Debito').disabled = !esEditable;
+        document.getElementById('DOCruzado').disabled = !esEditable;
+        document.getElementById('Estado').disabled = !esEditable;
+        document.getElementById('DO').disabled = !esEditable;
+        document.getElementById('NumeroDeclaracion').disabled = !esEditable;
+        document.getElementById('USDFOB').disabled = !esEditable;
+        document.getElementById('USDDeclaradoConFlete').disabled = !esEditable;
+        document.getElementById('USDReal').disabled = !esEditable;
+        document.getElementById('FechaMovimiento').disabled = !esEditable;
+        document.getElementById('Proveedor').disabled = !esEditable;
+
+       
 
 
 
@@ -474,6 +477,7 @@ if (!isset($id)) {
 
         popupToggle.checked = true;
     }
+
     function cargarDatosContabilidad(data, modo) {
 
         const popupToggle = document.querySelector('#popup-toggle');
@@ -504,6 +508,7 @@ if (!isset($id)) {
                             text: 'La entrada fue actualizada correctamente.',
                             confirmButtonText: 'OK'
                         }).then(() => {
+                            showLoader();
                             location.reload();
                         });
                     } else {
@@ -516,37 +521,29 @@ if (!isset($id)) {
                 }).finally(hideLoader);
         });
 
-        // Rellenar formulario
+      
+
+
         document.getElementById('IdEntradaBitacora').value = data.IdEntradaBitacora;
         document.getElementById('Id').value = data.Id;
         document.getElementById('Descripcion').value = data.Descripcion;
-        document.getElementById('Documentacion').value = data.Documentacion;
-        document.getElementById('CobroCliente').value = data.CobroCliente;
-        document.getElementById('ManifiestoEntrada').value = data.Manifiesto;
-        document.getElementById('TamanoContenedor').value = data.TamanoContenedor;
-        document.getElementById('NumeroContenedor').value = data.NumeroContenedor;
-        document.getElementById('Conductor').value = data.Conductor;
-        document.getElementById('Placa').value = data.Placa;
-        document.getElementById('Remesa').value = data.Remesa;
-        document.getElementById('CiudadDestino').value = data.CiudadDestino;
-        document.getElementById('FechaElaboracion').value = data.FechaElaboracion;
-        document.getElementById('FechaSalidaPuerto').value = data.FechaSalidaPuerto;
-        document.getElementById('FechaEntregaUnidadVacia').value = data.FechaEntregaUnidadVacia;
+        document.getElementById('NombreClienteProveedor').value = data.NombreClienteProveedor;
+        document.getElementById('FechaDocumento').value = data.FechaDocumento;
+        document.getElementById('FechaIngresoSistema').value = data.FechaIngresoSistema;
+        document.getElementById('FechaVencimiento').value = data.FechaVencimiento;
+        document.getElementById('IdTipoDocumento').value = data.IdTipoDocumento;
+        document.getElementById('IdTipoDocumentoContabilidad').value = data.IdTipoDocumentoContabilidad;
+      
 
         const esEditable = modo === 'editar';
         document.getElementById('Descripcion').disabled = !esEditable;
-        document.getElementById('Documentacion').disabled = !esEditable;
-        document.getElementById('CobroCliente').disabled = !esEditable;
-        document.getElementById('ManifiestoEntrada').disabled = !esEditable;
-        document.getElementById('TamanoContenedor').disabled = !esEditable;
-        document.getElementById('NumeroContenedor').disabled = !esEditable;
-        document.getElementById('Conductor').disabled = !esEditable;
-        document.getElementById('Placa').disabled = !esEditable;
-        document.getElementById('Remesa').disabled = !esEditable;
-        document.getElementById('CiudadDestino').disabled = !esEditable;
-        document.getElementById('FechaElaboracion').disabled = !esEditable;
-        document.getElementById('FechaSalidaPuerto').disabled = !esEditable;
-        document.getElementById('FechaEntregaUnidadVacia').disabled = !esEditable;
+        document.getElementById('NombreClienteProveedor').disabled = !esEditable;
+        document.getElementById('FechaDocumento').disabled = !esEditable;
+        document.getElementById('FechaIngresoSistema').disabled = !esEditable;
+        document.getElementById('FechaVencimiento').disabled = !esEditable;
+        document.getElementById('IdTipoDocumento').disabled = !esEditable;
+        document.getElementById('IdTipoDocumentoContabilidad').disabled = !esEditable;
+       
 
 
 

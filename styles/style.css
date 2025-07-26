@@ -461,37 +461,70 @@ table tbody tr:nth-child(even) {
   }
 }
 
-/* Estilos para etiquetas de estado en la columna */
-.status-label {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 0.9em;
-  font-weight: 600;
+.table-container {
+  border-radius: 8px;
+  overflow: hidden;        /* para que la tabla recorte su parte trasera, no los badges */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+/* La tabla ahora hereda el borde redondeado del contenedor */
+.table-container table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+/* Aseguramos que las celdas no recorten los badges */
+.table-container th,
+.table-container td {
+  overflow: visible !important;
+  white-space: normal !important;
+}
+
+/* El badge de estado puede envolver texto y mantiene padding / border-radius */
+.table-container .status-label {
+  display: inline-block !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  padding: 4px 12px !important;
+  border-radius: 12px !important;
+  line-height: 1.2 !important;
+  text-align: center !important;
+  word-break: break-word;
+}
+
+/* “Creado” – Amarillo */
 .status-crea {
-  background-color: #4CAF50; /* Verde aceptado */
+  background-color: #F1C40F; /* un amarillo más intenso */
   color: #fff;
 }
 
-.status-emit {
-  background-color: #FFEB3B; /* Amarillo review */
-  color: #333;
-}
-
-.status-puer {
-  background-color: #FF9800; /* Naranja query */
+/* “Seleccionado/Aprobado” – Verde */
+.status-selaut {
+  background-color: #43A047; /* un verde ligeramente más oscuro */
   color: #fff;
 }
 
+/* “En revisión” – Naranja claro */
+.status-selfis {
+  background-color: #FF8F00; /* un naranja más suave */
+  color: #fff;
+}
+
+/* “Orden recibido” – Rojo anaranjado */
+.status-ordret {
+  background-color: #E53935; /* rojizo con toque anaranjado */
+  color: #fff;
+}
+
+/* “En transporte” – Azul */
 .status-trans {
-  background-color: #F44336; /* Rojo rechazado */
+  background-color: #3398FF; /* azul más claro para destacar sobre fondos oscuros */
   color: #fff;
 }
 
-.status-proce {
-  background-color: #9E9E9E; /* Gris incomplete */
+/* “Completado” – Gris */
+.status-com {
+  background-color: #BDC3C7; /* un gris más suave */
   color: #fff;
 }
 
@@ -1071,3 +1104,40 @@ table tbody tr:nth-child(even) {
   width: 18px;
   height: 18px;
 }
+
+/* Para centrar el icono en la celda */
+.manage-link svg {
+  display: block;
+}
+
+/* Sólo mostramos el overlay cuando #gestionar-toggle esté marcado */
+#gestionar-toggle:checked ~ .overlay-manage {
+  display: flex;
+}
+/* Estilos básicos */
+.overlay-manage {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.6);
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+.popup-manage {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  width: 320px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.popup-manage h3 { text-align: center; margin-top: 0; }
+.popup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+}
+.popup-actions .close { background-color: #e74c3c; }
+

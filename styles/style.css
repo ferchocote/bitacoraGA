@@ -473,11 +473,43 @@ table tbody tr:nth-child(even) {
   width: 100%;
 }
 
+/* Columna “Gestión” (penúltima) */
+.table-container th:nth-last-child(2),
+.table-container td:nth-last-child(2) {
+  width: 60px;        /* ajústalo al ancho que necesites */
+  max-width: 60px;
+  text-align: center; /* centra el contenido */
+}
+
+/* Columna “Detalle” (última) */
+.table-container th:nth-last-child(1),
+.table-container td:nth-last-child(1) {
+  width: 60px;
+  max-width: 60px;
+  text-align: center;
+}
+
+/* Asegura que los enlaces/iconos no desborden */
+.table-container td a {
+  display: inline-block;
+  overflow: hidden;
+}
+
 /* Aseguramos que las celdas no recorten los badges */
 .table-container th,
 .table-container td {
   overflow: visible !important;
   white-space: normal !important;
+}
+
+/* Fijar ancho de los labels de estado y recortar exceso */
+.status-label {
+  display: inline-block;       /* permite dar ancho fijo */
+  width: 120px;                /* ancho fijo, ajústalo a tu gusto */
+  text-align: center;          /* opcional: centra el texto */
+  white-space: nowrap;         /* evita saltos de línea */
+  overflow: hidden;            /* oculta el contenido sobrante */
+  text-overflow: ellipsis;     /* muestra “…” al recortar */
 }
 
 /* El badge de estado puede envolver texto y mantiene padding / border-radius */
@@ -490,6 +522,32 @@ table tbody tr:nth-child(even) {
   line-height: 1.2 !important;
   text-align: center !important;
   word-break: break-word;
+}
+
+.table-container td .status-label {
+  margin: 0 auto;              /* centra horizontal */
+  line-height: 1.4em;          /* ajusta verticalmente si fuera necesario */
+}
+
+.table-container table {
+  table-layout: fixed;
+}
+
+/* 2) Fijamos la 6ª columna (Estado) */
+.table-container th:nth-child(6),
+.table-container td:nth-child(6) {
+  width: 120px;       /* ajusta el ancho que necesites */
+  min-width: 120px;
+  max-width: 120px;
+  white-space: nowrap;    /* que no rompa el texto */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 3) (Opcional) Centrar el badge dentro */
+.table-container td:nth-child(6) .status-label {
+  display: block;
+  margin: 0 auto;
 }
 
 /* “Creado” – Amarillo */

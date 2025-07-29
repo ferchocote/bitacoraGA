@@ -216,9 +216,9 @@ if (
                 <th>Importador</th>
                 <th>Numero BL</th>
                 <!-- <th>Contenedor</th> -->
-                <th>Estado</th>
-                <th>Días</th>
+                <th>Días Libres</th>
                 <th>Fecha de Creación</th>
+                <th>Estado</th>
                 <th>Gestionar</th>
                 <th>Detalle</th>            
             </tr>
@@ -235,15 +235,15 @@ if (
                 <td><?= esc_html( $p->NumeroBL ) ?></td>
                 <!-- <td><?= esc_html( $p->Contenedor ) ?></td> -->
                 <td>
+                  <?= intval( $p->DiasRestantes ) ?>
+                </td>
+                <td><?= esc_html( date('d/m/Y', strtotime($p->FechaCreacion)) ) ?></td>
+                <td>
                 <span class="status-label status-<?= strtolower($p->EstadoCodigo) ?>">
                     <?= esc_html( $p->EstadoDescripcion ) ?>
                 </span>
                 </td>
-                <td style="text-align: center;">
-                  <?= intval( $p->DiasRestantes ) ?>
-                </td>
-                <td><?= esc_html( date('d/m/Y', strtotime($p->FechaCreacion)) ) ?></td>
-                <td style="text-align: center;">
+                <td>
                   <label 
                     for="gestionar-toggle"
                     class="gestionar-btn manage-link"
@@ -259,7 +259,7 @@ if (
                     </svg>
                   </label>
                 </td>
-                <td style="text-align: center;">
+                <td>
                   <a 
                     href="?view=bitacora_detalle&id=<?= esc_attr($p->Id) ?>" 
                     class="detail-link" 
@@ -370,18 +370,49 @@ if ( $total_pages > 1 ): ?>
 </div>
 
 <script>
-// Para cada botón .gestionar-btn (en tu tabla),
-document.querySelectorAll('.gestionar-btn').forEach(btn => {
-  btn.addEventListener('click', e => {
-    e.preventDefault();
-    // recogemos el Id del proceso
-    const id = btn.dataset.id;
-    document.getElementById('IdProceso').value = id;
-    // reset campos del modal
-    document.getElementById('NuevoEstado').selectedIndex = 0;
-    document.getElementById('ObservacionCambio').value = '';
-    // abrimos el modal
-    document.getElementById('gestionar-toggle').checked = true;
+
+// 1) Definimos las transiciones válidas
+  const transiciones = {
+    'Creado':               ['Selectividad Auto', 'Selectividad Fisica'],
+    'Selectividad Auto':    ['Transporte'],        // si SelectAuto -> Fisica
+    'Selectividad Fisica':  ['Orden de Retiro'],
+    'Orden de Retiro':      ['Transporte'],
+    'Transporte':           ['Completado'],
+  };
+
+  // 2) Para cada botón de gestionar
+  document.querySelectorAll('.gestionar-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+
+      // a) Guardamos el Id del proceso
+      const id = btn.dataset.id;
+      document.getElementById('IdProceso').value = id;
+
+      // b) Encontramos el estado actual en esa misma fila
+      const fila      = btn.closest('tr');
+      const estadoEl  = fila.querySelector('.status-label');
+      const estadoActual = estadoEl ? estadoEl.textContent.trim() : '';
+
+      // c) Calculamos las opciones permitidas
+      const permitidos = transiciones[estadoActual] || [];
+
+      // d) Filtramos el <select id="NuevoEstado">
+      const select = document.getElementById('NuevoEstado');
+      Array.from(select.options).forEach(opt => {
+        // La primera opción vacía siempre se deja visible
+        if (!opt.value) return opt.hidden = false;
+
+        // Mostrar solo si su texto coincide con uno de los permitidos
+        opt.hidden = ! permitidos.includes(opt.textContent.trim());
+      });
+
+      // e) Reiniciamos selección y observación
+      select.value = '';
+      document.getElementById('ObservacionCambio').value = '';
+
+      // f) Abrimos el modal
+      document.getElementById('gestionar-toggle').checked = true;
+    });
   });
-});
 </script>

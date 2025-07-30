@@ -1,4 +1,10 @@
 <?php
+// Valida rol de usuario 
+if ($usuario->rol_codigo != "ADMIN" && $usuario->rol_codigo != "RRHH") {
+    echo "No tienes permiso para acceder a esta vista.";
+    exit;
+}
+
 define('WP_USE_THEMES', false);
 require_once('../../wp-load.php');
 
@@ -157,10 +163,13 @@ $regimenes = $wpdb->get_results("SELECT * FROM bc_regimen");
         <thead>
             <tr>
                 <th>Tipo de Documento</th>
+                <th>Tipo de Documento</th>
                 <th>Documento</th>
                 <th>Razón Social</th>
                 <th>Dirección</th>
+                <th>Dirección</th>
                 <th>Teléfono</th>
+                <th>Cliente</th>
                 <th>Cliente</th>
                 <th></th>
             </tr>

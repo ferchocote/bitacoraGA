@@ -1,5 +1,12 @@
 <?php
 ob_start();
+
+// Valida rol de usuario 
+if ($usuario->rol_codigo == "RRHH") {
+    echo "No tienes permiso para acceder a esta vista.";
+    exit;
+}
+
 define('WP_USE_THEMES', false);
 require_once('../../wp-load.php');
 

@@ -1,4 +1,9 @@
 <?php
+// Valida rol de usuario 
+if ($usuario->rol_codigo != "RRHH" && $usuario->rol_codigo != "ADMIN") {
+    echo "No tienes permiso para acceder a esta vista.";
+    exit;
+}
 // 1. Cargar WP y verificar sesión
 define('WP_USE_THEMES', false);
 require_once __DIR__ . '/../../wp-load.php';

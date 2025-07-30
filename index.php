@@ -16,7 +16,7 @@ $usuario = $wpdb->get_row("SELECT u.*, r.Nombre AS rol_nombre, r.Codigo AS rol_c
         FROM wp_users u
         LEFT JOIN bc_user_role ur ON ur.IdUser = u.ID
         LEFT JOIN bc_roles r ON r.Id = ur.IdRol
-        WHERE u.id = {$current_user->id}");
+        WHERE u.id = {$current_user->ID}");
 
 $vista = isset($_GET['view']) && !empty($_GET['view']) ? $_GET['view'] : 'bitacoras';
 $viewFile = basename($vista) . '.php';

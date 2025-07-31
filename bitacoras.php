@@ -210,7 +210,7 @@ if (
     <button type="button" class="btn" onclick="exportarCSV()">📁 Exportar CSV</button>-->
 </div>
 
-<?php if (empty($bitacoras)): ?>
+<?php if (empty($procesos)): ?>
     <p>No hay bitácoras registradas.</p>
 <?php else: ?>
   <div class="table-container">

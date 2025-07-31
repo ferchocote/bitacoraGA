@@ -424,8 +424,19 @@ $tipos_entrada = $wpdb->get_results(
         <div class="form-group"><label for="IdImportador">Importador:</label>
           <select id="IdImportador" name="IdImportador"><?php foreach ($importadores as $imp): ?><option value="<?= $imp->Id ?>" <?= selected($proceso->IdImportador, $imp->Id, false) ?>><?= esc_html($imp->RazonSocial) ?></option><?php endforeach; ?></select>
         </div>
-        <div class="form-group"><label for="IdEstadoProceso">Estado:</label>
-          <select readonly id="IdEstadoProceso" name="IdEstadoProceso"><?php foreach ($estadosList as $st): ?><option value="<?= $st->Id ?>" <?= selected($proceso->IdEstadoProceso, $st->Id, false) ?>><?= esc_html($st->Descripcion) ?></option><?php endforeach; ?></select>
+        <div class="form-group">
+          <label for="IdEstadoProceso">Estado:</label>
+          <select disabled id="IdEstadoProceso" name="IdEstadoProceso_disabled">
+            <?php foreach ( $estadosList as $st ): ?>
+              <option value="<?= esc_attr( $st->Id ) ?>"
+                <?= selected( $proceso->IdEstadoProceso, $st->Id, false ) ?>>
+                <?= esc_html( $st->Descripcion ) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+          <!-- Campo oculto para que el valor enviado sea el correcto -->
+          <input type="hidden" id="IdEstadoProceso" name="IdEstadoProceso"
+                value="<?= esc_attr( $proceso->IdEstadoProceso ) ?>">
         </div>
 
         <div class="form-group"><label for="FechaCreacion">Fecha Creación:</label>

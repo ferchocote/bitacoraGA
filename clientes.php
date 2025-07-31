@@ -163,14 +163,10 @@ $regimenes = $wpdb->get_results("SELECT * FROM bc_regimen");
         <thead>
             <tr>
                 <th>Tipo de Documento</th>
-                <th>Tipo de Documento</th>
                 <th>Documento</th>
                 <th>Razón Social</th>
                 <th>Dirección</th>
-                <th>Dirección</th>
                 <th>Teléfono</th>
-                <th>Cliente</th>
-                <th>Cliente</th>
                 <th></th>
             </tr>
         </thead>

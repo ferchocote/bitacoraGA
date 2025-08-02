@@ -204,8 +204,9 @@ if (
         </div>
       </div>
     </form>
-
+<?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR') : ?>
     <a href="?view=nueva_bitacora" class="btn">➕ Nuevo Registro</a>
+<?php endif; ?>
     <!-- <button type="button" class="btn" onclick="editarSeleccionado()">✏️ Editar</button>
     <button type="button" class="btn" onclick="exportarCSV()">📁 Exportar CSV</button>-->
 </div>
@@ -225,8 +226,12 @@ if (
                 <th>Días Libres</th>
                 <th>Fecha de Creación</th>
                 <th>Estado</th>
+                <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS') : ?>
                 <th>Gestionar</th>
-                <th>Detalle</th>            
+                <?php endif; ?>
+                <?php if ($usuario->rol_codigo !== 'CLI') : ?>
+                <th>Detalle</th>
+                <?php endif; ?>            
             </tr>
         </thead>
         <tbody>
@@ -249,6 +254,7 @@ if (
                     <?= esc_html( $p->EstadoDescripcion ) ?>
                 </span>
                 </td>
+                <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS') : ?>
                 <td>
                   <label 
                     for="gestionar-toggle"
@@ -265,6 +271,8 @@ if (
                     </svg>
                   </label>
                 </td>
+                <?php endif; ?>
+                <?php if ($usuario->rol_codigo !== 'CLI') : ?>
                 <td>
                   <a 
                     href="?view=bitacora_detalle&id=<?= esc_attr($p->Id) ?>" 
@@ -294,7 +302,7 @@ if (
                     </svg>
                   </a>
                 </td>
-                
+                <?php endif; ?>
             </tr>
             <?php endforeach; ?>
             <?php endif; ?>

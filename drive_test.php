@@ -120,7 +120,7 @@ try {
         'fields' => 'files(id, name)'
     ]);
     foreach ($results->getFiles() as $file) {
-        $downloadUrl = "https://drive.google.com/uc?export=download&id={$file->getId()}";
+        $downloadUrl = "descargar.php?id={$file->getId()}";
         echo "<li>{$file->getName()} (ID: {$file->getId()}) <a href='$downloadUrl' target='_blank' download>{$file->getName()}</a></li>";
     }
     echo "</ul>";

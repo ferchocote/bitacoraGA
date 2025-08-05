@@ -17,6 +17,13 @@ if (!is_user_logged_in()) {
 
 global $wpdb;
 
+// Tablas
+$tabla = 'bc_' . 'proceso';
+$tabla_clientes = 'bc_' . 'cliente';
+$tabla_estados = 'bc_' . 'estado_proceso';
+$tabla_detalle = 'bc_' . 'detalle_proceso';
+$tabla_tipo_entrada = 'bc_' . 'tipo_entrada';
+
 // 1) Procesar formulario de edición antes de cualquier salida
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view'] === 'bitacora_detalle') {
   check_admin_referer('editar_proceso_action', 'editar_proceso_nonce');
@@ -34,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
     'Producto'            => sanitize_text_field($_POST['Producto']),
     'NumeroBL'            => sanitize_text_field($_POST['NumeroBL']),
     'Contenedor'          => sanitize_text_field($_POST['Contenedor']),
-    'Manifiesto'          => sanitize_text_field($_POST['Manifiesto']),
+    'Puerto'              => sanitize_text_field($_POST['Puerto']),
     'Pies'                => sanitize_text_field($_POST['Pies']),
     'Bulto'               => sanitize_text_field($_POST['Bulto']),
     'PesoBruto'           => sanitize_text_field($_POST['PesoBruto']),
@@ -56,11 +63,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
     'Pago'                => !empty($_POST['Pago']) ? date('Y-m-d H:i:s', strtotime($_POST['Pago'])) : null,
     'Deposito'            => sanitize_text_field($_POST['Deposito']),
     'DevolucionUnidad'    => !empty($_POST['DevolucionUnidad']) ? date('Y-m-d H:i:s', strtotime($_POST['DevolucionUnidad'])) : null,
-    'Puerto'              => sanitize_text_field($_POST['Puerto']),
+    'Manifiesto'              => sanitize_text_field($_POST['Manifiesto']),
     'Observaciones'       => sanitize_text_field($_POST['Observaciones']),
-    'ArchivoFisico'       => isset($_POST['ArchivoFisico']) ? 1 : 0,
+    'ArchivoFisico' => $_POST['ArchivoFisico'],
     'IdProceso'           => $id,
   ];
+
   if ($detalle_id) {
     $wpdb->update($tabla_detalle, $data_d, ['Id' => $detalle_id]);
   } else {
@@ -157,9 +165,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
   $tablaEntrada = 'bc_entrada_bitacora';
 
   // Auditoría
-  
-
-
   $dataEntrada = [
     'IdTipoEntrada'       => $idEntrada,
     'IdProceso'               => $idProceso,
@@ -196,17 +201,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     ];
 
-
     // Auditoría
 
     //$data['IdUser']     = get_current_user_id();
     $dataDetalle['FechaCreacion'] = current_time('mysql');
     $dataDetalle['Activo']     = 1;
     
-
-
-
-
     // Insertar
     $wpdb->show_errors(); // Activar errores SQL
     $inserted = $wpdb->insert($tabla, $dataDetalle);
@@ -233,9 +233,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
   $tablaEntrada = 'bc_entrada_bitacora';
 
   // Auditoría
- 
-
-
   $dataEntrada = [
     'IdTipoEntrada'       => $idEntrada,
     'IdProceso'               => $idProceso,
@@ -243,7 +240,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     'FechaCreacion'     => current_time('mysql'),
     'Activo'  => 1
   ];
-
   
   // Insertar
   $insertedEntrada = $wpdb->insert($tablaEntrada, $dataEntrada);
@@ -261,20 +257,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
       'FechaVencimiento'     => sanitize_text_field($_POST['FechaVencimiento']),
       'IdTipoDocumento' => sanitize_text_field($_POST['IdTipoDocumento']),
       'IdTipoDocumentoContabilidad' => sanitize_text_field($_POST['IdTipoDocumentoContabilidad']),
-
-
     ];
 
-
     // Auditoría
-
-
     $dataDetalle['FechaCreacion'] = current_time('mysql');
     $dataDetalle['Activo']     = 1;
- 
-
-
-
 
     // Insertar
     $wpdb->show_errors(); // Activar errores SQL
@@ -301,13 +288,6 @@ if (!$id) {
   echo '<p>Proceso no válido.</p>';
   return;
 }
-
-// Tablas
-$tabla = 'bc_' . 'proceso';
-$tabla_clientes = 'bc_' . 'cliente';
-$tabla_estados = 'bc_' . 'estado_proceso';
-$tabla_detalle = 'bc_' . 'detalle_proceso';
-$tabla_tipo_entrada = 'bc_' . 'tipo_entrada';
 
 $bitacoras = $wpdb->get_results("SELECT * FROM wp_users ");
 
@@ -401,16 +381,16 @@ $tipos_entrada = $wpdb->get_results(
 
 
   <input type="checkbox" id="popup-toggle-add" hidden>
-
+<?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'GIRO' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CONT') : ?>
   <div class="toolbar" style="display:flex; justify-content:flex-end; gap:10px; margin-bottom:20px;">
     <label for="popup-toggle-add" class="btn">➕ Nueva Entrada</label>
   </div>
-
+<?php endif; ?>
   <!-- Popup de edición/formulario completo -->
   <div class="overlay-edit">
     <div class="modal-container">
       <h3>Editar Proceso</h3>
-      <form method="post" action="?view=bitacora_detalle&id=<?= esc_attr($proceso->Id) ?>" class="popup-grid-4">
+      <form method="post" action="?view=bitacora_detalle&id=<?= esc_attr($proceso->Id) ?>" class="popup-grid-5">
         <?php wp_nonce_field('editar_proceso_action', 'editar_proceso_nonce'); ?>
 
         <!-- Campos principales -->
@@ -466,7 +446,7 @@ $tipos_entrada = $wpdb->get_results(
             'Producto' => 'Producto',
             'NumeroBL' => 'NumeroBL',
             'Contenedor' => 'Contenedor',
-            'Manifiesto' => 'Manifiesto',
+            'Puerto' => 'Puerto',
             'Pies' => 'Pies',
             'Bulto' => 'Bulto',
             'PesoBruto' => 'PesoBruto',
@@ -486,6 +466,9 @@ $tipos_entrada = $wpdb->get_results(
         <div class="form-group"><label for="Aceptacion">Aceptación:</label>
           <input type="datetime-local" id="Aceptacion" name="Aceptacion" value="<?= esc_attr($detalle ? date('Y-m-d\TH:i', strtotime($detalle->Aceptacion)) : '') ?>">
         </div>
+        <div class="form-group"><label for="Pago">Pago:</label>
+          <input type="datetime-local" id="Pago" name="Pago" value="<?= esc_attr($detalle ? date('Y-m-d\TH:i', strtotime($detalle->Pago)) : '') ?>">
+        </div>
         <div class="form-group"><label for="Selectividad">Selectividad:</label>
           <input type="datetime-local" id="Selectividad" name="Selectividad" value="<?= esc_attr($detalle ? date('Y-m-d\TH:i', strtotime($detalle->Selectividad)) : '') ?>">
         </div>
@@ -495,17 +478,11 @@ $tipos_entrada = $wpdb->get_results(
         <div class="form-group"><label for="EntregaTransporte">Entrega Transporte:</label>
           <input type="datetime-local" id="EntregaTransporte" name="EntregaTransporte" value="<?= esc_attr($detalle ? date('Y-m-d\TH:i', strtotime($detalle->EntregaTransporte)) : '') ?>">
         </div>
-        <div class="form-group"><label for="Pago">Pago:</label>
-          <input type="datetime-local" id="Pago" name="Pago" value="<?= esc_attr($detalle ? date('Y-m-d\TH:i', strtotime($detalle->Pago)) : '') ?>">
-        </div>
-        <div class="form-group"><label for="Puerto">Puerto:</label>
-          <input type="text" id="Puerto" name="Puerto" value="<?= esc_attr($detalle->Puerto ?? '') ?>">
+        <div class="form-group"><label for="Manifiesto">Manifiesto:</label>
+          <input type="text" id="Manifiesto" name="Manifiesto" value="<?= esc_attr($detalle->Manifiesto ?? '') ?>">
         </div>
         <div class="form-group"><label for="Observaciones">Observaciones:</label>
           <input type="text" id="Observaciones" name="Observaciones" value="<?= esc_attr($detalle->Observaciones ?? '') ?>">
-        </div>
-        <div class="form-group"><label for="ArchivoFisico">Archivo Físico:</label>
-          <input type="checkbox" id="ArchivoFisico" name="ArchivoFisico" <?= !empty($detalle->ArchivoFisico) ? 'checked' : '' ?>>
         </div>
         <div class="form-group"><label for="Deposito">Depósito:</label>
           <input type="text" id="Deposito" name="Deposito" value="<?= esc_attr($detalle->Deposito ?? '') ?>">
@@ -513,11 +490,20 @@ $tipos_entrada = $wpdb->get_results(
         <div class="form-group"><label for="DevolucionUnidad">Devolución Unidad:</label>
           <input type="datetime-local" id="DevolucionUnidad" name="DevolucionUnidad" value="<?= esc_attr(!empty($detalle->DevolucionUnidad) ? date('Y-m-d\TH:i', strtotime($detalle->DevolucionUnidad)) : '') ?>">
         </div>
+        <div class="form-group">
+          <label for="ArchivoFisico">Archivo Físico:</label>
+          <!-- campo oculto con valor por defecto -->
+          <input type="hidden" name="ArchivoFisico" value="0">
+          <!-- checkbox real -->
+          <input type="checkbox" id="ArchivoFisico" name="ArchivoFisico" value="1" <?= !empty($detalle->ArchivoFisico) ? 'checked' : '' ?>>
+        </div>
         <!-- Acciones -->
+         <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS') : ?>
         <div class="popup-actions" style="grid-column:1 / -1; display:flex; justify-content:flex-end; gap:10px;">
           <label for="popup-toggle-edit" class="btn close">Cancelar</label>
           <button type="submit" class="btn">Guardar</button>
         </div>
+        <?php endif; ?>
       </form>
     </div>
   </div>

@@ -1,9 +1,4 @@
 <?php
-// Valida rol de usuario 
-if ($usuario->rol_codigo != "ADMIN" && $usuario->rol_codigo != "RRHH") {
-    echo "No tienes permiso para acceder a esta vista.";
-    exit;
-}
 
 define('WP_USE_THEMES', false);
 require_once('../../wp-load.php');
@@ -43,7 +38,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit;
 }
 
-
+// Valida rol de usuario 
+if ($usuario->rol_codigo != "ADMIN" && $usuario->rol_codigo != "RRHH") {
+    echo "No tienes permiso para acceder a esta vista.";
+    exit;
+}
 
 // Parámetros actuales de la URL
 $params = $_GET;
@@ -178,7 +177,6 @@ $regimenes = $wpdb->get_results("SELECT * FROM bc_regimen");
                     <td><?= esc_html($b->RazonSocial ?: 'No Asignado') ?></td>
                     <td><?= esc_html($b->Direccion) ?></td>
                     <td><?= esc_html($b->NumeroCelular) ?></td>
-                    <td>SI</td>
                     <td>
 
                         <a href="javascript:void(0);" class="detalle-cliente" data-user="<?= esc_attr($b->Id); ?>" style="color: #2980b9; text-decoration: none">

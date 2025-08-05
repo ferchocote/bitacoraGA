@@ -474,21 +474,37 @@ table tbody tr:nth-child(even) {
   width: 100%;
 }
 
-/* Columna “Gestión” (penúltima) */
-.table-container th:nth-last-child(2),
-.table-container td:nth-last-child(2) {
-  width: 60px;        /* ajústalo al ancho que necesites */
+/* Columna “Gestión” */
+.table-container th.col-gestion,
+.table-container td.col-gestion {
+  width: 60px;
   max-width: 60px;
-  text-align: center; /* centra el contenido */
+  text-align: center;
 }
 
-/* Columna “Detalle” (última) */
+/* Columna “Detalle” */
+.table-container th.col-detalle,
+.table-container td.col-detalle {
+  width: 60px;
+  max-width: 60px;
+  text-align: center;
+}
+
+/* Columna “Gestión” (penúltima) 
+.table-container th:nth-last-child(2),
+.table-container td:nth-last-child(2) {
+  width: 60px;        
+  max-width: 60px;
+  text-align: center; 
+}*/
+
+/* Columna “Detalle” (última) 
 .table-container th:nth-last-child(1),
 .table-container td:nth-last-child(1) {
   width: 60px;
   max-width: 60px;
   text-align: center;
-}
+}*/
 
 /* Asegura que los enlaces/iconos no desborden */
 .table-container td a {
@@ -917,20 +933,20 @@ table tbody tr:nth-child(even) {
 }
 
 /* Grid de 4 columnas para el popup */
-    .popup-grid-4 {
+    .popup-grid-5 {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 15px;
     }
     @media (max-width: 768px) {
-      .popup-grid-4 {
-        grid-template-columns: repeat(2, 1fr);
+      .popup-grid-5 {
+        grid-template-columns: repeat(3, 1fr);
       }
     }
     /* Nueva clase para modales, basada en .form-container */
     .modal-container {
       width: auto;
-      max-width: 1100px;
+      max-width: 1150px;
       margin: auto;
       background-color: #ffffff;
       padding: 20px;

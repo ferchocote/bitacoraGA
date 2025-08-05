@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data['Producto']         = sanitize_text_field($_POST['Producto']);
     $data['NumeroBL']         = sanitize_text_field($_POST['NumeroBL']);
     $data['Contenedor']       = sanitize_text_field($_POST['Contenedor']);
-    $data['Manifiesto']       = sanitize_text_field($_POST['Manifiesto']);
+    $data['Puerto']           = sanitize_text_field($_POST['Puerto']);
     $data['Pies']             = sanitize_text_field($_POST['Pies']);
     $data['Bulto']            = sanitize_text_field($_POST['Bulto']);
     $data['PesoBruto']        = sanitize_text_field($_POST['PesoBruto']);
@@ -132,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <!-- Resto de campos -->
       <?php foreach([
         'DiasLibres'=>'Días Libres','DigitacionRevision'=>'Digitación/Revisión','Aduana'=>'Aduana',
-        'Producto'=>'Producto','NumeroBL'=>'Número BL','Contenedor'=>'Contenedor','Manifiesto'=>'Manifiesto',
+        'Producto'=>'Producto','NumeroBL'=>'Número BL','Contenedor'=>'Contenedor','Puerto'=>'Puerto',
         'Pies'=>'Pies','Bulto'=>'Bulto','PesoBruto'=>'Peso Bruto','Bandera'=>'Bandera'
       ] as $field => $label): ?>
         <div class="form-group">

@@ -27,7 +27,7 @@ $tabla_roles     = 'bc_roles';           // o "{$wpdb->prefix}bc_rol" si usas pr
 $cliente_rol_id  = (int) $wpdb->get_var("
     SELECT Id 
     FROM {$tabla_roles} 
-    WHERE Codigo = 'CLIENTE'
+    WHERE Codigo = 'CLIE'
     LIMIT 1
 ");
 
@@ -231,7 +231,7 @@ if (
                 <?php endif; ?>
                 <?php if ($usuario->rol_codigo !== 'CLI') : ?>
                 <th>Detalle</th>
-                <?php endif; ?>            
+                <?php endif; ?>
             </tr>
         </thead>
         <tbody>
@@ -255,7 +255,7 @@ if (
                 </span>
                 </td>
                 <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS') : ?>
-                <td>
+                <td class="col-gestion">
                   <label 
                     for="gestionar-toggle"
                     class="gestionar-btn manage-link"
@@ -273,7 +273,7 @@ if (
                 </td>
                 <?php endif; ?>
                 <?php if ($usuario->rol_codigo !== 'CLI') : ?>
-                <td>
+                <td class="col-detalle">
                   <a 
                     href="?view=bitacora_detalle&id=<?= esc_attr($p->Id) ?>" 
                     class="detail-link" 

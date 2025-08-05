@@ -5,7 +5,7 @@ require_once('../../wp-load.php');
 global $wpdb;
 // --- MANEJO AJAX INTERNO ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'actualizar_transporte') {
-    
+
     $idEntrada = intval($_POST['id']);
     $tabla = 'bc_entrada_bitacora_transporte';
 
@@ -44,27 +44,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit;
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'actualizar_giros') {
-      $idEntrada = intval($_POST['id']);
+    $idEntrada = intval($_POST['id']);
     $tabla = 'bc_entrada_bitacora_giro';
 
-   
+
     $data = [
-      'Descripcion'   => sanitize_text_field($_POST['descripcion']),
-      'ComprobanteSiigo'   => sanitize_text_field($_POST['ComprobanteSiigo']),
-    'IdEntradaBitacora'       => sanitize_text_field($_POST['idEntradaBitacora']),
-      'FechaElaboracion'       => sanitize_text_field($_POST['FechaElaboracion']),
-      'NombreTercero'         => sanitize_text_field($_POST['NombreTercero']),
-      'DescripcionMovimiento'     => sanitize_text_field($_POST['DescripcionMovimiento']),
-      'Debito' => sanitize_text_field($_POST['Debito']),
-      'DOCruzado' => sanitize_text_field($_POST['DOCruzado']),      
-      'Estado' => sanitize_text_field($_POST['Estado']),
-      'DO' => sanitize_text_field($_POST['DO']),
-      'NumeroDeclaracion' => sanitize_text_field($_POST['NumeroDeclaracion']),
-      'USDFOB' => sanitize_text_field($_POST['USDFOB']),
-      'USDDeclaradoConFlete' => sanitize_text_field($_POST['USDDeclaradoConFlete']),  
-      'USDReal' => sanitize_text_field($_POST['USDReal']),
-      'FechaMovimiento' => sanitize_text_field($_POST['FechaMovimiento']),
-      'Proveedor' => sanitize_text_field($_POST['Proveedor'])
+        'Descripcion'   => sanitize_text_field($_POST['descripcion']),
+        'ComprobanteSiigo'   => sanitize_text_field($_POST['ComprobanteSiigo']),
+        'IdEntradaBitacora'       => sanitize_text_field($_POST['idEntradaBitacora']),
+        'FechaElaboracion'       => sanitize_text_field($_POST['FechaElaboracion']),
+        'NombreTercero'         => sanitize_text_field($_POST['NombreTercero']),
+        'DescripcionMovimiento'     => sanitize_text_field($_POST['DescripcionMovimiento']),
+        'Debito' => sanitize_text_field($_POST['Debito']),
+        'DOCruzado' => sanitize_text_field($_POST['DOCruzado']),
+        'Estado' => sanitize_text_field($_POST['Estado']),
+        'DO' => sanitize_text_field($_POST['DO']),
+        'NumeroDeclaracion' => sanitize_text_field($_POST['NumeroDeclaracion']),
+        'USDFOB' => sanitize_text_field($_POST['USDFOB']),
+        'USDDeclaradoConFlete' => sanitize_text_field($_POST['USDDeclaradoConFlete']),
+        'USDReal' => sanitize_text_field($_POST['USDReal']),
+        'FechaMovimiento' => sanitize_text_field($_POST['FechaMovimiento']),
+        'Proveedor' => sanitize_text_field($_POST['Proveedor'])
 
     ];
     //echo "<script>console.log(" . json_encode($_POST) . ");</script>";
@@ -89,15 +89,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $tabla = 'bc_entrada_bitacora_contabilidad';
 
 
-     $data = [
-      'Descripcion'   => sanitize_text_field($_POST['descripcion']),
-      'NombreClienteProveedor'   => sanitize_text_field($_POST['NombreClienteProveedor']),
-      'IdEntradaBitacora'       => sanitize_text_field($_POST['idEntradaBitacora']),
-      'FechaDocumento'       => sanitize_text_field($_POST['FechaDocumento']),
-      'FechaIngresoSistema'         => sanitize_text_field($_POST['FechaIngresoSistema']),
-      'FechaVencimiento'     => sanitize_text_field($_POST['FechaVencimiento']),
-      'IdTipoDocumento' => sanitize_text_field($_POST['IdTipoDocumento']),
-      'IdTipoDocumentoContabilidad' => sanitize_text_field($_POST['IdTipoDocumentoContabilidad'])  
+    $data = [
+        'Descripcion'   => sanitize_text_field($_POST['descripcion']),
+        'NombreClienteProveedor'   => sanitize_text_field($_POST['NombreClienteProveedor']),
+        'IdEntradaBitacora'       => sanitize_text_field($_POST['idEntradaBitacora']),
+        'FechaDocumento'       => sanitize_text_field($_POST['FechaDocumento']),
+        'FechaIngresoSistema'         => sanitize_text_field($_POST['FechaIngresoSistema']),
+        'FechaVencimiento'     => sanitize_text_field($_POST['FechaVencimiento']),
+        'IdTipoDocumento' => sanitize_text_field($_POST['IdTipoDocumento']),
+        'IdTipoDocumentoContabilidad' => sanitize_text_field($_POST['IdTipoDocumentoContabilidad'])
 
     ];
 
@@ -137,9 +137,9 @@ if (!isset($id)) {
     document.addEventListener('click', function(e) {
         const detalle = e.target.closest('.detalle-entrada');
         const editar = e.target.closest('.modificar-entrada');
-
-        if (detalle || editar) {
-            const entradaRaw = (detalle || editar).getAttribute('data-entrada');
+        const documentos = e.target.closest('.documentos-entrada');
+        if (detalle) {
+            const entradaRaw = detalle.getAttribute('data-entrada');
             let entrada;
             try {
                 entrada = JSON.parse(entradaRaw.replaceAll("'", '"')); // Maneja si el HTML escapó comillas
@@ -167,6 +167,45 @@ if (!isset($id)) {
             }, 100);
 
 
+        } else if (editar) {
+            const entradaRaw = editar.getAttribute('data-entrada');
+            let entrada;
+            try {
+                entrada = JSON.parse(entradaRaw.replaceAll("'", '"')); // Maneja si el HTML escapó comillas
+            } catch (err) {
+                console.error("Error al parsear entrada:", err);
+                return;
+            }
+
+
+            // Mostrar el popup
+            document.getElementById('popup-toggle').checked = true;
+
+            const modo = detalle ? 'detalle' : 'editar';
+            document.getElementById('popup-title').textContent = modo === 'detalle' ? 'Detalle Transporte' : 'Editar Transporte';
+
+
+            // Mostrar u ocultar botón guardar
+            document.getElementById('btn-guardar').style.display = modo === 'editar' ? 'inline-block' : 'none';
+
+            // Esperar que el HTML cargue y luego enviar item
+            setTimeout(() => {
+                if (typeof window.inicializarFormulario === 'function') {
+                    window.inicializarFormulario(entrada, modo);
+                }
+            }, 100);
+        } else if (documentos) {
+            const entradaRaw = documentos.getAttribute('data-entrada');
+            let entrada;
+            try {
+                entrada = JSON.parse(entradaRaw.replaceAll("'", '"'));
+            } catch (err) {
+                console.error("Error al parsear entrada:", err);
+                return;
+            }
+            // Mostrar modal de documentos y cargar archivos asociados
+
+            mostrarModalDocumentos(entrada);
         }
     });
 
@@ -243,7 +282,7 @@ if (!isset($id)) {
                             <td>${item.user_email || '---'}</td>
                             <td>${item.FechaCreacion ? new Date(item.FechaCreacion).toLocaleDateString() : '---'}</td>
                             <td>
-                            <a href="javascript:void(0);" class="detalle-entrada"  data-entrada='${JSON.stringify(item).replace(/'/g, "&apos;")}' style="color: #2980b9; text-decoration: none">
+                            <a href="javascript:void(0);" class="detalle-entrada"  data-entrada='${JSON.stringify(item).replace(/'/g, "&apos;")}' style="color: #2980b9; text-decoration: none" title="Ver detalle">
                                 <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                                 <path fill-rule="evenodd" d="M4.998 7.78C6.729 6.345 9.198 5 12 5c2.802 0 5.27 1.345 7.002 2.78a12.713 12.713 0 0 1 2.096 2.183c.253.344.465.682.618.997.14.286.284.658.284 1.04s-.145.754-.284 1.04a6.6 6.6 0 0 1-.618.997 12.712 12.712 0 0 1-2.096 2.183C17.271 17.655 14.802 19 12 19c-2.802 0-5.27-1.345-7.002-2.78a12.712 12.712 0 0 1-2.096-2.183 6.6 6.6 0 0 1-.618-.997C2.144 12.754 2 12.382 2 12s.145-.754.284-1.04c.153-.315.365-.653.618-.997A12.714 12.714 0 0 1 4.998 7.78ZM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd" />
                                 </svg>
@@ -447,7 +486,7 @@ if (!isset($id)) {
         document.getElementById('Proveedor').value = data.Proveedor;
 
         const esEditable = modo === 'editar';
-   
+
         document.getElementById('Descripcion').disabled = !esEditable;
         document.getElementById('ComprobanteSiigo').disabled = !esEditable;
         document.getElementById('FechaElaboracion').disabled = !esEditable;
@@ -464,7 +503,7 @@ if (!isset($id)) {
         document.getElementById('FechaMovimiento').disabled = !esEditable;
         document.getElementById('Proveedor').disabled = !esEditable;
 
-       
+
 
 
 
@@ -523,7 +562,7 @@ if (!isset($id)) {
                 }).finally(hideLoader);
         });
 
-      
+
 
 
         document.getElementById('IdEntradaBitacora').value = data.IdEntradaBitacora;
@@ -535,7 +574,7 @@ if (!isset($id)) {
         document.getElementById('FechaVencimiento').value = data.FechaVencimiento;
         document.getElementById('IdTipoDocumento').value = data.IdTipoDocumento;
         document.getElementById('IdTipoDocumentoContabilidad').value = data.IdTipoDocumentoContabilidad;
-      
+
 
         const esEditable = modo === 'editar';
         document.getElementById('Descripcion').disabled = !esEditable;
@@ -545,7 +584,7 @@ if (!isset($id)) {
         document.getElementById('FechaVencimiento').disabled = !esEditable;
         document.getElementById('IdTipoDocumento').disabled = !esEditable;
         document.getElementById('IdTipoDocumentoContabilidad').disabled = !esEditable;
-       
+
 
 
 
@@ -561,11 +600,136 @@ if (!isset($id)) {
         popupToggle.checked = true;
     }
 
-    function showLoader() {
-        document.getElementById('loader-overlay').style.display = 'flex';
+    function showLoaderdocumento() { // Mantengo el nombre que ya usabas
+        console.log('Mostrando loader de documentos...');
+        const loaderOverlayDoc = document.getElementById('loader-overlay-documento'); // Apunta al nuevo ID
+        if (loaderOverlayDoc) {
+            loaderOverlayDoc.style.display = 'flex';
+        } else {
+            console.error('Elemento #loader-overlay-documentos no encontrado en el DOM.');
+        }
     }
 
-    function hideLoader() {
-        document.getElementById('loader-overlay').style.display = 'none';
+    function hideLoaderDocumento() { // Nueva función para ocultar el loader de documentos
+        console.log('Ocultando loader de documentos...');
+        const loaderOverlayDoc = document.getElementById('loader-overlay-documento'); // Apunta al nuevo ID
+        if (loaderOverlayDoc) {
+            loaderOverlayDoc.style.display = 'none';
+        }
+    }
+
+    function mostrarModalDocumentos(entrada) {
+        document.getElementById('modal-documentos').style.display = 'flex';
+        document.getElementById('doc-id-entrada').value = entrada.IdEntradaBitacora;
+        cargarListaDocumentos(entrada.IdEntradaBitacora);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const btnCerrar = document.getElementById('cerrar-modal-documentos');
+        const formSubir = document.getElementById('form-subir-documento');
+        if (btnCerrar) {
+            btnCerrar.onclick = function() {
+                document.getElementById('modal-documentos').style.display = 'none';
+            };
+        }
+        if (formSubir) {
+            formSubir.onsubmit = function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                showLoaderdocumento();
+                fetch('/wp-content/bitacoras/plugins/cliente/entradas-ajax.php?action=subir_documento', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(resp => {
+                        if (resp.success) {
+                            
+                            cargarListaDocumentos(formData.get('id_entrada'));
+                            this.reset();
+                        } else {
+                            this.reset();
+                            document.getElementById('modal-documentos').style.display = 'none';
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: resp.msg || 'Ocurrió un error inesperado.'
+                            });
+                        }
+                    }).finally(hideLoaderDocumento);
+            };
+        }
+
+    });
+
+
+    function cargarListaDocumentos(idEntrada) {
+        hideLoaderDocumento();
+        showLoaderdocumento();
+        fetch(`/wp-content/bitacoras/plugins/cliente/entradas-ajax.php?action=listar_documentos&id_entrada=${idEntrada}`)
+            .then(res => res.json())
+            .then(data => {
+                const cont = document.getElementById('lista-documentos');
+                if (data.length === 0) {
+                    cont.innerHTML = '<em>No hay documentos.</em>';
+                } else {
+                    cont.innerHTML = `
+                    <table class="tabla-documentos">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Fecha Cargue</th>
+                                
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.map(doc => `
+                                <tr>
+                                    <td>
+                                        <a href="${doc.url}" target="_blank" download>${doc.nombre}</a>
+                                    </td>
+                                    <td>${doc.fecha || 'N/A'}</td>
+                                    
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                }
+            }).finally(hideLoaderDocumento);
+    }
+
+
+
+    function eliminarDocumento(idDoc, idEntrada) {
+        if (!confirm('¿Eliminar este documento?')) return;
+        fetch(`/wp-content/bitacoras/plugins/cliente/documentos-ajax.php?action=eliminar&id=${idDoc}`, {
+                method: 'POST'
+            })
+            .then(res => res.json())
+            .then(resp => {
+                if (resp.success) cargarListaDocumentos(idEntrada);
+                else alert('No se pudo eliminar');
+            });
     }
 </script>
+
+<!-- Modal para Documentos -->
+<div id="modal-documentos" class="modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index: index 1;; align-items:center; justify-content:center;">
+    <div style="background:#fff; padding:24px; border-radius:8px; min-width:350px; max-width:90vw; max-height:90vh; overflow:auto; position:relative;">
+        <button id="cerrar-modal-documentos" style="position:absolute; top:8px; right:8px;">&times;</button>
+        <h3>Documentos de la Entrada</h3>
+        <form id="form-subir-documento" >
+            <input type="file" name="archivo" required>
+            <input type="hidden" name="id_entrada" id="doc-id-entrada">
+            <button type="submit">Subir</button>
+            <div id="loader-overlay-documento">
+                <div class="spinner"></div>
+            </div>
+
+        </form>
+        <div id="lista-documentos" style="margin-top:16px;"></div>
+
+    </div>
+
+</div>

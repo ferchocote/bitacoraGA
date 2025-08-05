@@ -530,10 +530,10 @@ $tipos_entrada = $wpdb->get_results(
           </div>
 
           <!-- Subir Documentos -->
-          <div class="form-row">
+          <!-- <div class="form-row">
             <label for="documentos">Subir Documentos</label>
             <input type="file" id="documentos" name="documentos[]" multiple>
-          </div>
+          </div> -->
 
         </div>
 
@@ -658,13 +658,14 @@ $tipos_entrada = $wpdb->get_results(
       return;
     }
 
+    showLoader();
     fetch(ruta)
       .then(res => res.text())
       .then(html => {
         document.getElementById('formulario-popup-container-add').innerHTML = html;
 
 
-      })
+      }).finally(hideLoader)
       .catch(err => {
         console.error('Error cargando formulario:', err);
         document.getElementById('formulario-popup-container-add').innerHTML = '<p>Error al cargar formulario.</p>';

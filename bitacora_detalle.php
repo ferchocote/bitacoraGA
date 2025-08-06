@@ -253,15 +253,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
       'NombreClienteProveedor'   => sanitize_text_field($_POST['NombreClienteProveedor']),
       'IdEntradaBitacora'       => $new_id,
       'FechaDocumento'       => sanitize_text_field($_POST['FechaDocumento']),
-      'FechaIngresoSistema'         => sanitize_text_field($_POST['FechaIngresoSistema']),
-      'FechaVencimiento'     => sanitize_text_field($_POST['FechaVencimiento']),
       'IdTipoDocumento' => sanitize_text_field($_POST['IdTipoDocumento']),
       'IdTipoDocumentoContabilidad' => sanitize_text_field($_POST['IdTipoDocumentoContabilidad']),
     ];
 
     // Auditoría
+    $dataDetalle['FechaIngresoSistema'] = current_time('mysql');
+    $dataDetalle['FechaVencimiento'] = current_time('mysql');
     $dataDetalle['FechaCreacion'] = current_time('mysql');
-    $dataDetalle['Activo']     = 1;
+    $dataDetalle['Activo'] = 1;
 
     // Insertar
     $wpdb->show_errors(); // Activar errores SQL

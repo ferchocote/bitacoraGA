@@ -100,7 +100,7 @@ function formatearNombrePagina($archivo) {
             </svg>
             Roles
         </a>
-        <a href="?view=drive_test">
+        <!-- <a href="?view=drive_test">
             <svg fill="#ffffff" height="18px" width="18px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
             	 viewBox="0 0 31.004 31.004" xml:space="preserve">
             <g>
@@ -111,7 +111,7 @@ function formatearNombrePagina($archivo) {
             </g>
             </svg>
             Drive Test
-        </a>
+        </a> -->
         <?php endif; ?>        
         <a href="<?php echo wp_logout_url(); ?>">
             <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24">

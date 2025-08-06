@@ -101,9 +101,10 @@ $select_sql = "
     ep.Descripcion         AS EstadoDescripcion,
     ep.Color               AS EstadoColor,
     p.FechaCreacion,
-    ( p.DiasLibres
-      - DATEDIFF(CURDATE(), DATE(p.FechaCreacion)) 
-    ) AS DiasRestantes
+    CASE 
+      WHEN p.ETA IS NULL OR p.ETA = '' THEN 0
+      ELSE (p.DiasLibres - DATEDIFF(CURDATE(), DATE(p.FechaCreacion)))
+    END AS DiasRestantes
   FROM bc_proceso p
   LEFT JOIN {$wpdb->prefix}users u ON u.ID = p.IdUserCreation
   LEFT JOIN bc_estado_proceso ep ON ep.Id = p.IdEstadoProceso
@@ -229,9 +230,7 @@ if (
                 <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS') : ?>
                 <th>Gestionar</th>
                 <?php endif; ?>
-                <?php if ($usuario->rol_codigo !== 'CLI') : ?>
                 <th>Detalle</th>
-                <?php endif; ?>
             </tr>
         </thead>
         <tbody>
@@ -272,7 +271,6 @@ if (
                   </label>
                 </td>
                 <?php endif; ?>
-                <?php if ($usuario->rol_codigo !== 'CLI') : ?>
                 <td class="col-detalle">
                   <a 
                     href="?view=bitacora_detalle&id=<?= esc_attr($p->Id) ?>" 
@@ -302,7 +300,6 @@ if (
                     </svg>
                   </a>
                 </td>
-                <?php endif; ?>
             </tr>
             <?php endforeach; ?>
             <?php endif; ?>

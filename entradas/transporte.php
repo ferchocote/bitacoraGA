@@ -5,15 +5,6 @@
         <input type="hidden" id="IdEntradaBitacora" name="idEntradaBitacora" />
         <input type="hidden" id="Id" name="id" />
 
-
-        <div class="form-row">
-            <label>Descripción</label>
-            <textarea id="Descripcion" name="descripcion" rows="4" style="resize: vertical; width: 100%;"></textarea>
-        </div>
-        <div class="form-row">
-            <label>Documentación</label>
-            <textarea id="Documentacion" name="documentacion" rows="4" style="resize: vertical; width: 100%;"></textarea>
-        </div>
         <div class="form-row">
             <label>Cobro Cliente</label>
             <input type="number" id="CobroCliente" name="cobroCliente" step="0.01" />
@@ -57,6 +48,14 @@
         <div class="form-row">
             <label>Fecha Entrega Unidad Vacia</label>
             <input type="date" id="FechaEntregaUnidadVacia" name="fechaEntregaUnidadVacia" />
+        </div>
+        <div class="form-row">
+            <label>Descripción</label>
+            <textarea id="Descripcion" name="descripcion" rows="4" style="resize: vertical; width: 100%;"></textarea>
+        </div>
+        <div class="form-row">
+            <label>Tiquete de Devolución</label>
+            <textarea id="Documentacion" name="documentacion" rows="4" style="resize: vertical; width: 100%;"></textarea>
         </div>
 
     </form>

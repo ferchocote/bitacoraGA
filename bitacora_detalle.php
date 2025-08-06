@@ -498,12 +498,14 @@ $tipos_entrada = $wpdb->get_results(
           <input type="checkbox" id="ArchivoFisico" name="ArchivoFisico" value="1" <?= !empty($detalle->ArchivoFisico) ? 'checked' : '' ?>>
         </div>
         <!-- Acciones -->
-         <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS') : ?>
+         
         <div class="popup-actions" style="grid-column:1 / -1; display:flex; justify-content:flex-end; gap:10px;">
-          <label for="popup-toggle-edit" class="btn close">Cancelar</label>
+          <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS') : ?>
+            <label for="popup-toggle-edit" class="btn close">Cancelar</label>
+          <?php endif; ?>
           <button type="submit" class="btn">Guardar</button>
         </div>
-        <?php endif; ?>
+        
       </form>
     </div>
   </div>
@@ -555,8 +557,10 @@ $tipos_entrada = $wpdb->get_results(
   </div>
 
   <ul class="tabs">
-    <li data-tab="tab-contabilidad" data-tipo="CTB" class="active">Contabilidad</li>
-    <li data-tab="tab-giros" data-tipo="GRO">Giros</li>
+    <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'GIRO' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CONT') : ?>
+      <li data-tab="tab-contabilidad" data-tipo="CTB" class="active">Contabilidad</li>
+      <li data-tab="tab-giros" data-tipo="GRO">Giros</li>
+    <?php endif; ?>
     <li data-tab="tab-transporte" data-tipo="TRS">Transporte</li>
   </ul>
 

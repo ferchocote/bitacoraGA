@@ -6,10 +6,6 @@
     <input type="hidden" id="Id" name="id" />
 
     <div class="form-row">
-     <label>Descripción</label>
-     <textarea id="Descripcion" name="descripcion" rows="4" style="resize: vertical; width: 100%;"></textarea>
-   </div>
-    <div class="form-row">
       <label for="ComprobanteSiigo">Comprobante SIIGO</label>
       <input type="text" id="ComprobanteSiigo" name="ComprobanteSiigo" />
     </div>
@@ -22,7 +18,7 @@
       <input type="text" id="NombreTercero" name="NombreTercero" />
     </div>
     <div class="form-row">
-      <label for="DescripcionMovimiento">Descripción Movimiento</label>
+      <label for="DescripcionMovimiento">Descripción Giros</label>
       <input type="text" id="DescripcionMovimiento" name="DescripcionMovimiento" />
     </div>
     <div class="form-row">
@@ -37,10 +33,10 @@
       <label for="Estado">Estado</label>
       <input type="text" id="Estado" name="Estado" />
     </div>
-    <div class="form-row">
+    <!-- <div class="form-row">
       <label for="DO">DO</label>
       <input type="text" id="DO" name="DO" />
-    </div>
+    </div> -->
     <div class="form-row">
       <label for="NumeroDeclaracion">Número Declaración</label>
       <input type="text" id="NumeroDeclaracion" name="NumeroDeclaracion" />
@@ -65,6 +61,10 @@
       <label for="Proveedor">Proveedor</label>
       <input type="text" id="Proveedor" name="Proveedor" />
     </div>
+    <div class="form-row">
+     <label>Descripción</label>
+     <textarea id="Descripcion" name="descripcion" rows="4" style="resize: vertical; width: 100%;"></textarea>
+   </div>
   </form>
   <div style="margin-top: 10px;">
     <label for="popup-toggle" class="btn">Cerrar</label>

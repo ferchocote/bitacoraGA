@@ -1,10 +1,6 @@
    <input type="hidden" id="IdEntradaBitacora" name="idEntradaBitacora" />
 
    <div class="form-row">
-     <label>Descripción</label>
-     <textarea id="Descripcion" name="descripcion" rows="4" style="resize: vertical; width: 100%;"></textarea>
-   </div>
-   <div class="form-row">
      <label for="ComprobanteSiigo">Comprobante SIIGO</label>
      <input type="text" id="ComprobanteSiigo" name="ComprobanteSiigo" />
    </div>
@@ -32,10 +28,10 @@
      <label for="Estado">Estado</label>
      <input type="text" id="Estado" name="Estado" />
    </div>
-   <div class="form-row">
+   <!-- <div class="form-row">
      <label for="DO">DO</label>
      <input type="text" id="DO" name="DO" />
-   </div>
+   </div> -->
    <div class="form-row">
      <label for="NumeroDeclaracion">Número Declaración</label>
      <input type="text" id="NumeroDeclaracion" name="NumeroDeclaracion" />
@@ -59,4 +55,8 @@
    <div class="form-row">
      <label for="Proveedor">Proveedor</label>
      <input type="text" id="Proveedor" name="Proveedor" />
+   </div>
+   <div class="form-row">
+     <label>Descripción</label>
+     <textarea id="Descripcion" name="descripcion" rows="4" style="resize: vertical; width: 100%;"></textarea>
    </div>

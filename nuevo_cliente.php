@@ -73,19 +73,91 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data['AplicaRetenciones']     = 0;
   }
 
-
   // Auditoría
 
   $data['IdUser']     = get_current_user_id();
   $data['FechaCreacion'] = current_time('mysql');
   $data['Activo']     = 1;
   
-
   // Insertar
   $inserted = $wpdb->insert($tabla, $data);
 
   if ($inserted) {
     $new_id = $wpdb->insert_id;
+    $message = '<div class="success">Cliente creado con ID: ' . $new_id . '</div>';
+
+    // === NUEVO: si es Cliente (checkbox NO marcado) creamos usuario y relación ===
+    $esCliente = isset($data['EsCliente']) ? (int)$data['EsCliente'] : 1; // por defecto 1 en tu código
+    if ($esCliente === 1) {
+        // 1) Preparar login/email/clave
+        $raw_login = !empty($data['NumeroDocumento']) ? $data['NumeroDocumento'] : $data['RazonSocial'];
+        $user_login = sanitize_user($raw_login, true);
+        if ($user_login === '') {
+            $user_login = 'cli_' . wp_generate_password(6, false, false);
+        }
+
+        // Evitar colisiones en username
+        $base_login = $user_login; $i = 1;
+        while (username_exists($user_login)) {
+          $user_login = $base_login . $i++;
+        }
+
+        $user_email = sanitize_email($data['CorreoElectronico']);
+        // fallback si email vacío o repetido
+        if (empty($user_email) || email_exists($user_email)) {
+            $user_email = $user_login . '@example.invalid';
+        }
+
+        $password = wp_generate_password(12, true, true);
+
+        $user_id = wp_insert_user([
+        'user_login'   => $user_login,
+        'user_pass'    => $password,
+        'user_email'   => $user_email,
+        'display_name' => !empty($data['RazonSocial']) ? $data['RazonSocial'] : $user_login,
+        'role'         => 'subscriber', // ajústalo si usas otro rol para clientes
+      ]);
+
+      if (!is_wp_error($user_id)) {
+        // 5) relación en bc_cliente_empresa
+        $wpdb->insert('bc_cliente_empresa', [
+          'IdUser'    => $user_id,
+          'IdCliente' => $new_id,
+        ]);
+
+        // 6) correo con credenciales
+        $login_url = wp_login_url();
+
+        // Habilitar HTML SOLO para este envío
+        $set_html = function () { return 'text/html; charset=UTF-8'; };
+        add_filter('wp_mail_content_type', $set_html);
+
+        $headers = [
+                'From: Tu Empresa <subgerencia@galogistic.com>',
+                'Reply-To: Soporte <solucionestegnologicasga@gmail.com>',
+            ];
+
+        $body = '
+          <p>Hola,</p>
+          <p>Se ha creado tu acceso al portal.</p>
+          <p><strong>Usuario:</strong> ' . esc_html($user_login) . '<br>
+             <strong>Contraseña temporal:</strong> ' . esc_html($password) . '</p>
+          <p>Puedes iniciar sesión aquí: <a href="' . esc_url($login_url) . '">' . esc_html($login_url) . '</a></p>
+          <p>Por seguridad, cambia tu contraseña al ingresar.</p>';
+
+        $sent = wp_mail($user_email, 'Acceso a la plataforma', $body, $headers);
+
+        remove_filter('wp_mail_content_type', $set_html);
+
+        if (!$sent) {
+          error_log('No se pudo enviar el correo de credenciales a ' . $user_email);
+        }
+      } else {
+        error_log('Error al crear usuario WP: ' . $user_id->get_error_message());
+      }
+    }
+    // === FIN NUEVO ===
+
     $message = '<div class="success">Cliente creado con ID: ' . $new_id . '</div>';
   } else {
     $message = '<div class="error">Error al crear el cliente.</div>';

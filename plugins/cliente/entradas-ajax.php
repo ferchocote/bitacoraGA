@@ -74,10 +74,12 @@ switch ($action) {
         $id_entrada = intval($_POST['id_entrada']);
         // Obtener datos de la entrada para DO y tipo
         $entrada = $wpdb->get_row($wpdb->prepare(
-            "SELECT P.DO, TE.Descripcion as TipoDescripcion
+            "SELECT P.DO, TE.Descripcion as TipoDescripcion, C.RazonSocial as Cliente, E.RazonSocial as Empresa
              FROM bc_entrada_bitacora EB
-             INNER JOIN bc_proceso P ON P.Id = EB.IdProceso
-             INNER JOIN bc_tipo_entrada TE ON TE.Id = EB.IdTipoEntrada
+             INNER JOIN bc_proceso P ON P.Id = EB.IdProceso             
+             INNER JOIN bc_tipo_entrada TE ON TE.Id = EB.IdTipoEntrada             
+             LEFT JOIN bc_cliente C ON C.Id = P.IdCliente
+             LEFT JOIN bc_cliente E ON E.Id = P.IdImportador
              WHERE EB.Id = %d",
             $id_entrada
         ));
@@ -85,19 +87,37 @@ switch ($action) {
             echo json_encode(['success' => false, 'msg' => 'Entrada no encontrada']);
             exit;
         }
+        
+       
         $do = $entrada->DO;
-        //         echo json_encode([
-        //     'success' => true,
-        //     'do' => $do,
-        //     // ...otros datos...
-        // ]);
         $tipoDescripcion = $entrada->TipoDescripcion;
+
+        // Para $empresa
+        if (isset($entrada->Empresa) && !empty($entrada->Empresa)) {
+            // La propiedad Empresa existe en $entrada y tiene un valor no vacío
+            $empresa = $entrada->Empresa;
+           
+        } else {
+            // La propiedad Empresa no existe, es null, o es una cadena vacía, 0, etc.
+            echo json_encode(['success' => false, 'msg' => 'Empresa no relacionada para cargar documentos']);
+            exit;
+        }
+
+        // Para $cliente
+        if (isset($entrada->Cliente) && !empty($entrada->Cliente)) {
+            $cliente = $entrada->Cliente;
+           
+        } else {
+            echo json_encode(['success' => false, 'msg' => 'Cliente no relacionada para cargar documentos']);
+            exit;
+        }
+
 
         if (!empty($_FILES['archivo']['name'])) {
             $nombre = $_FILES['archivo']['name'];
             $tmp = $_FILES['archivo']['tmp_name'];
 
-             // --- 1. Validar si el archivo ya existe en la base de datos para esta entrada ---
+            // --- 1. Validar si el archivo ya existe en la base de datos para esta entrada ---
             $existing_db_file_count = $wpdb->get_var($wpdb->prepare(
                 "SELECT COUNT(*) FROM $tabla_documentos WHERE IdEntradaBitacora = %d AND Nombre = %s AND Activo = 1",
                 $id_entrada,
@@ -116,17 +136,20 @@ switch ($action) {
             $client->setSubject('subgerencia@galogistic.com');
             $client->setScopes([Google_Service_Drive::DRIVE]);
             $driveService = new Google_Service_Drive($client);
+            $sharedDriveId = '0APg0nAAp2LMpUk9PVA'; // Ajusta si usas Shared Drives
 
             // Buscar o crear carpeta DO
-            $sharedDriveId = '0APg0nAAp2LMpUk9PVA'; // Ajusta si usas Shared Drives
-            $parentFolderId = buscarOCrearCarpeta($driveService, $do, $sharedDriveId, $sharedDriveId);
+
+            $parentFolderEmpresa = buscarOCrearCarpeta($driveService, $empresa, $sharedDriveId, $sharedDriveId);
             // Buscar o crear subcarpeta tipo
-            $childFolderId = buscarOCrearCarpeta($driveService, $tipoDescripcion, $sharedDriveId, $parentFolderId);
+            $childFolderCliente = buscarOCrearCarpeta($driveService, $cliente, $sharedDriveId, $parentFolderEmpresa);
+            $childFolderDO = buscarOCrearCarpeta($driveService, $do, $sharedDriveId, $childFolderCliente);
+            $childFolderTipoEntrda = buscarOCrearCarpeta($driveService, $tipoDescripcion, $sharedDriveId, $childFolderDO);
 
             // Subir archivo
             $fileMetadata = new Google_Service_Drive_DriveFile([
                 'name' => $nombre,
-                'parents' => [$childFolderId]
+                'parents' => [$childFolderTipoEntrda]
             ]);
             $content = file_get_contents($tmp);
             $file = $driveService->files->create($fileMetadata, [
@@ -147,7 +170,7 @@ switch ($action) {
                 'Activo'            => 1,
                 'FechaCreacion'     => current_time('mysql')
             ]);
-           
+
             echo json_encode(['success' => true, 'id' => $wpdb->insert_id, 'nombre' => $nombre, 'url' => 'https://drive.google.com/file/d/' . $idDrive . '/view?usp=sharing']);
         } else {
             echo json_encode(['success' => false]);

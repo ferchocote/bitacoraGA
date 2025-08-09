@@ -650,7 +650,7 @@ if (!isset($id)) {
                     .then(res => res.json())
                     .then(resp => {
                         if (resp.success) {
-                            
+                            hideLoaderDocumento();
                             cargarListaDocumentos(formData.get('id_entrada'));
                             this.reset();
                         } else {
@@ -662,7 +662,7 @@ if (!isset($id)) {
                                 text: resp.msg || 'Ocurrió un error inesperado.'
                             });
                         }
-                    }).finally(hideLoaderDocumento);
+                    });
             };
         }
 
@@ -670,7 +670,7 @@ if (!isset($id)) {
 
 
     function cargarListaDocumentos(idEntrada) {
-        hideLoaderDocumento();
+        
         showLoaderdocumento();
         fetch(`/wp-content/bitacoras/plugins/cliente/entradas-ajax.php?action=listar_documentos&id_entrada=${idEntrada}`)
             .then(res => res.json())

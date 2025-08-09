@@ -360,8 +360,9 @@ $tipos_entrada = $wpdb->get_results(
   <!-- Sección de resumen: una sola tarjeta con múltiples datos -->
   <input type="checkbox" id="popup-toggle-edit" hidden>
   <div class="summary-card single">
-
+  <?php if ($usuario->rol_codigo !== 'CLI') : ?>
     <label for="popup-toggle-edit" class="edit-icon" title="Editar Proceso">⚙️</label>
+  <?php endif; ?>
     <h2>Información del Proceso</h2>
     <div class="summary-grid">
       <div><strong>DO:</strong> <?= esc_html($proceso->DO) ?></div>
@@ -500,10 +501,12 @@ $tipos_entrada = $wpdb->get_results(
         <!-- Acciones -->
          
         <div class="popup-actions" style="grid-column:1 / -1; display:flex; justify-content:flex-end; gap:10px;">
+          
+          <label for="popup-toggle-edit" class="btn close">Cancelar</label>
+          
           <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS') : ?>
-            <label for="popup-toggle-edit" class="btn close">Cancelar</label>
-          <?php endif; ?>
           <button type="submit" class="btn">Guardar</button>
+          <?php endif; ?>
         </div>
         
       </form>

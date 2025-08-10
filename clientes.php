@@ -48,25 +48,25 @@ if ($usuario->rol_codigo != "ADMIN" && $usuario->rol_codigo != "RRHH") {
 $params = $_GET;
 
 // Capturamos el término de búsqueda
-$q = isset($_GET['q']) ? sanitize_text_field( $_GET['q'] ) : '';
+$q = isset($_GET['q']) ? sanitize_text_field($_GET['q']) : '';
 $where_clauses = [];
 $prepare_params = [];
 
 // Si hay búsqueda, añadimos cláusula
-if ( $q !== '' ) {
-    $like = '%' . $wpdb->esc_like( $q ) . '%';
+if ($q !== '') {
+    $like = '%' . $wpdb->esc_like($q) . '%';
     $where_clauses[] = "( td.Descripcion      LIKE %s
                           OR c.NumeroDocumento LIKE %s
                           OR c.RazonSocial     LIKE %s
                           OR c.Direccion       LIKE %s )";
     // empujamos 4 veces el mismo parámetro
-    array_push( $prepare_params, $like, $like, $like, $like );
+    array_push($prepare_params, $like, $like, $like, $like);
 }
 
 // Montamos la parte WHERE
 $where_sql = '';
-if ( ! empty( $where_clauses ) ) {
-    $where_sql = 'WHERE ' . implode( ' AND ', $where_clauses );
+if (! empty($where_clauses)) {
+    $where_sql = 'WHERE ' . implode(' AND ', $where_clauses);
 }
 
 // 1) Contar total para paginador (sin LIMIT)
@@ -76,19 +76,19 @@ $count_sql = "
       LEFT JOIN bc_tipo_documento td ON td.Id = c.IdTipoDocumento
     {$where_sql}
 ";
-if ( ! empty( $prepare_params ) ) {
+if (! empty($prepare_params)) {
     // si tenemos placeholders en WHERE, preparamos
-    $total_registros = (int) $wpdb->get_var( $wpdb->prepare( $count_sql, $prepare_params ) );
+    $total_registros = (int) $wpdb->get_var($wpdb->prepare($count_sql, $prepare_params));
 } else {
     // sin parámetros, ejecutamos directo
-    $total_registros = (int) $wpdb->get_var( $count_sql );
+    $total_registros = (int) $wpdb->get_var($count_sql);
 }
 
 // 2) Paginación
-$pagina_actual         = isset( $_GET['pg'] ) ? max(1,intval($_GET['pg'])) : 1;
+$pagina_actual         = isset($_GET['pg']) ? max(1, intval($_GET['pg'])) : 1;
 $registros_por_pagina  = 10;
 $offset                = ($pagina_actual - 1) * $registros_por_pagina;
-$total_paginas         = ceil( $total_registros / $registros_por_pagina );
+$total_paginas         = ceil($total_registros / $registros_por_pagina);
 
 // 3) Consulta paginada (añadimos LIMIT y OFFSET a los parámetros)
 $prepare_params[] = $registros_por_pagina;
@@ -117,14 +117,14 @@ $select_sql = "
     LIMIT %d OFFSET %d
 ";
 
-$Clientes = $wpdb->get_results( $wpdb->prepare( $select_sql, $prepare_params ) );
+$Clientes = $wpdb->get_results($wpdb->prepare($select_sql, $prepare_params));
 
 $roles = $wpdb->get_results("SELECT * FROM bc_roles");
 $tipoIdentificacion = $wpdb->get_results("SELECT * FROM bc_tipo_documento");
 $regimenes = $wpdb->get_results("SELECT * FROM bc_regimen");
 
 ?>
-
+<script src="/wp-content/bitacoras/assets/js/common-loader.js"></script>
 <!DOCTYPE html>
 <div class="toolbar" style="margin-bottom: 20px; display: flex; gap: 10px;">
     <!-- <h1>Clientes</h1> -->
@@ -241,7 +241,7 @@ $regimenes = $wpdb->get_results("SELECT * FROM bc_regimen");
                     <?php endforeach; ?>
                 </select>
             </div>
-             <div class="form-group">
+            <div class="form-group">
                 <label>Regimen</label>
                 <select id="IdRegimen" name="IdRegimen" required>
                     <option value="">Seleccione...</option>
@@ -292,9 +292,10 @@ $regimenes = $wpdb->get_results("SELECT * FROM bc_regimen");
             <button type="button" id="btn-guardar" class="btn" style="display: none;">Guardar</button>
         </div>
     </div>
-    <div id="loader-overlay">
-        <div class="spinner"></div>
-    </div>
+
+</div>
+<div id="loader-overlay">
+    <div class="spinner"></div>
 </div>
 
 
@@ -381,12 +382,30 @@ $regimenes = $wpdb->get_results("SELECT * FROM bc_regimen");
                 }
             }).finally(hideLoader);
     });
+    document.addEventListener('DOMContentLoaded', function() {
+        hideLoader();
+        // Selecciona todos los enlaces dentro del sidebar (tu menú principal)
+        const sidebarLinks = document.querySelectorAll('.toolbar a');
 
-    function showLoader() {
-        document.getElementById('loader-overlay').style.display = 'flex';
-    }
 
-    function hideLoader() {
-        document.getElementById('loader-overlay').style.display = 'none';
-    }
+
+        // Función auxiliar para añadir el evento de clic a una colección de enlaces
+        function addLoaderToLinks(links) {
+            links.forEach(function(link) {
+                // Añade un listener de clic a cada enlace
+                link.addEventListener('click', function() {
+                    // Llama a la función showLoader() que está en common-loader.js
+                    hideLoader();
+                    showLoader();
+                });
+            });
+        }
+
+        // Aplica la función a los enlaces del sidebar
+        addLoaderToLinks(sidebarLinks);
+
+
+    });
+
+
 </script>

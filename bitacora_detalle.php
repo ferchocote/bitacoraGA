@@ -344,6 +344,7 @@ $tipos_entrada = $wpdb->get_results(
 
 
 ?>
+<script src="/wp-content/bitacoras/assets/js/common-loader.js"></script>
 
 <!DOCTYPE html>
 <html lang="es">
@@ -647,6 +648,21 @@ $tipos_entrada = $wpdb->get_results(
       });
     });
 
+    const sidebarLinks = document.querySelectorAll('.form-buttons a'); 
+    addLoaderToLinks(sidebarLinks);
+
+    // Función auxiliar para añadir el evento de clic a una colección de enlaces
+    function addLoaderToLinks(links) {
+      links.forEach(function(link) {
+        // Añade un listener de clic a cada enlace
+        link.addEventListener('click', function() {
+          // Llama a la función showLoader() que está en common-loader.js
+          hideLoader();
+          showLoader();
+        });
+      });
+    }
+
     // Cargar primer tab automáticamente
     const initialTab = document.querySelector('.tabs li.active');
     if (initialTab) initialTab.click();
@@ -722,11 +738,4 @@ $tipos_entrada = $wpdb->get_results(
     }
   })();
 
-  function showLoader() {
-    document.getElementById('loader-overlay').style.display = 'flex';
-  }
-
-  function hideLoader() {
-    document.getElementById('loader-overlay').style.display = 'none';
-  }
 </script>

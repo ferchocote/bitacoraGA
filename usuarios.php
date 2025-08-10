@@ -36,7 +36,7 @@ $bitacoras = $wpdb->get_results(
 
 $roles = $wpdb->get_results("SELECT * FROM bc_roles");
 ?>
-
+<script src="/wp-content/bitacoras/assets/js/common-loader.js"></script>
 <!DOCTYPE html>
 <h1>Usuarios</h1>
 
@@ -73,7 +73,7 @@ $roles = $wpdb->get_results("SELECT * FROM bc_roles");
     </table>
 
     <!-- Navegación de páginas -->
-    <div style="margin-top: 20px;">
+    <div class="form-buttons" style="margin-top: 20px;">
         <?php
         // Botón Anterior
         if ($pagina_actual > 1) {
@@ -90,69 +90,92 @@ $roles = $wpdb->get_results("SELECT * FROM bc_roles");
         }
         ?>
     </div>
+    <div id="loader-overlay">
+        <div class="spinner"></div>
+    </div>
 <?php endif; ?>
 
 <!-- POPUP DE MODIFICAR ROL -->
 <input type="checkbox" id="popup-toggle">
 <div class="overlay">
-<div class="popup">
-  <h3>Selecciona un Rol</h3>
-      <div class="custom-select">
-        <select id="rol" name="rol">
-            <option value="">Seleccione un rol</option>
-            <?php foreach ($roles as $rol): ?>
-                <option value="<?= esc_attr($rol->Codigo); ?>">
-                    <?= esc_html($rol->Nombre) ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-      </div>
-    <label for="popup-toggle" class="close">Cerrar</label>
-    <label for="popup-toggle" id="aceptar" class="btn">Aceptar</label>
-</div>
+    <div class="popup">
+        <h3>Selecciona un Rol</h3>
+        <div class="custom-select">
+            <select id="rol" name="rol">
+                <option value="">Seleccione un rol</option>
+                <?php foreach ($roles as $rol): ?>
+                    <option value="<?= esc_attr($rol->Codigo); ?>">
+                        <?= esc_html($rol->Nombre) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <label for="popup-toggle" class="close">Cerrar</label>
+        <label for="popup-toggle" id="aceptar" class="btn">Aceptar</label>
+    </div>
 </div>
 
 <script>
     const ajaxUrl = "<?= admin_url('admin-ajax.php'); ?>";
     const ajaxNonce = "<?= wp_create_nonce('modificar_rol_nonce'); ?>";
 
-    document.addEventListener('DOMContentLoaded', function () {
+
+    document.addEventListener('DOMContentLoaded', function() {
         let userId = null;
-        
-        document.querySelectorAll('.modificar-rol').forEach(function (btn) {
-            btn.addEventListener('click', function () {
+
+        document.querySelectorAll('.modificar-rol').forEach(function(btn) {
+            btn.addEventListener('click', function() {
                 userId = this.dataset.user;
             });
         });
-        
-        document.querySelector('#aceptar').addEventListener('click', function () {
+
+        document.querySelector('#aceptar').addEventListener('click', function() {
             const select = document.querySelector('#rol');
             const rolCodigo = select.value;
             modificarRol(rolCodigo);
         })
-    
+        // Selecciona todos los enlaces dentro del sidebar (tu menú principal)
+        const sidebarLinks = document.querySelectorAll('.form-buttons a');
+
+
+
+        // Función auxiliar para añadir el evento de clic a una colección de enlaces
+        function addLoaderToLinks(links) {
+            links.forEach(function(link) {
+                // Añade un listener de clic a cada enlace
+                link.addEventListener('click', function() {
+                    // Llama a la función showLoader() que está en common-loader.js
+                    hideLoader();
+                    showLoader();
+                });
+            });
+        }
+
+        // Aplica la función a los enlaces del sidebar
+        addLoaderToLinks(sidebarLinks);
+
         function modificarRol(rolCodigo) {
             fetch(ajaxUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({
-                    action: 'modificar_rol_usuario',
-                    security: ajaxNonce,
-                    userId: userId,
-                    rolCodigo: rolCodigo
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        action: 'modificar_rol_usuario',
+                        security: ajaxNonce,
+                        userId: userId,
+                        rolCodigo: rolCodigo
+                    })
                 })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Rol modificado correctamente');
-                    location.reload();
-                } else {
-                    alert('Error: ' + data.data);
-                }
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Rol modificado correctamente');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.data);
+                    }
+                });
         }
     });
 </script>

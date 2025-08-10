@@ -167,7 +167,7 @@ $tipoIdentificacion = $wpdb->get_results("SELECT * FROM bc_tipo_documento");
 $regimenes = $wpdb->get_results("SELECT * FROM bc_regimen");
 $paises = $wpdb->get_results("SELECT * FROM bc_pais");
 ?>
-
+<script src="/wp-content/bitacoras/assets/js/common-loader.js"></script>
 <!DOCTYPE html>
 <html lang="es">
 
@@ -309,12 +309,30 @@ $paises = $wpdb->get_results("SELECT * FROM bc_pais");
         });
       }).finally(hideLoader);
   });
+   document.addEventListener('DOMContentLoaded', function() {
+        hideLoader();
+        // Selecciona todos los enlaces dentro del sidebar (tu menú principal)
+        const sidebarLinks = document.querySelectorAll('.form-buttons a');
 
-  function showLoader() {
-    document.getElementById('loader-overlay').style.display = 'flex';
-  }
 
-  function hideLoader() {
-    document.getElementById('loader-overlay').style.display = 'none';
-  }
+
+        // Función auxiliar para añadir el evento de clic a una colección de enlaces
+        function addLoaderToLinks(links) {
+            links.forEach(function(link) {
+                // Añade un listener de clic a cada enlace
+                link.addEventListener('click', function() {
+                    // Llama a la función showLoader() que está en common-loader.js
+                    hideLoader();
+                    showLoader();
+                });
+            });
+        }
+
+        // Aplica la función a los enlaces del sidebar
+        addLoaderToLinks(sidebarLinks);
+
+
+    });
+
+ 
 </script>

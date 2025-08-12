@@ -59,8 +59,8 @@
         </div>
 
     </form>
-    <div style="margin-top: 10px;">
-        <label for="popup-toggle" class="btn">Cerrar</label>
+    <div style="margin-top: 10px;" class="form-buttons">
+        <label for="popup-toggle" class="close btn">Cerrar</label>
         <button type="button" id="btn-guardar" class="btn" style="display: none;">Guardar</button>
     </div>
 </div>

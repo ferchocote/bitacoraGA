@@ -5,7 +5,6 @@ body {
     background-color: #f5f6fa;
     color: #333;
     font-size: 14px;
-    font-size: 14px;
 }
 
 .dashboard-container {
@@ -14,34 +13,77 @@ body {
 }
 
 .sidebar {
-    width: 220px;
-    background-color: #2c3e50;
+    transition: width 0.2s ease;
+    width: 180px;
+    background: #0b1b2b;
+    background: linear-gradient(45deg, rgba(11, 27, 43, 1) 16%, rgba(44, 62, 80, 1) 79%);
     color: white;
     padding: 20px;
 }
 
+.sidebar.collapsed {
+    padding: 12px;
+    width: 40px;
+}
+
+.sidebar.collapsed .menu-option-span, .sidebar.collapsed h2 {
+    display: none;
+}
+
+.sidebar.collapsed #toggleSidebarBtn {
+    margin: auto;
+}
+
+.sidebar.collapsed a {
+    padding: 12px 2px;
+    justify-content: center;
+}
+
+.sidebar-header{
+    display:flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.sidebar-header span {
+    cursor: pointer;
+    font-size: 24px;
+}
+
 .sidebar h2 {
-    margin-top: 0;
+    margin: 0;
+    font-weight: 300;
 }
 
 .sidebar a {
-    display: flex; /* hace que los hijos (icono y texto) estén en fila */
-    align-items: center; /* alinea verticalmente */
-    gap: 8px; /* espacio entre el ícono y el texto */
-    color: #ecf0f1;
-    text-decoration: none;
-    margin: 10px 0;
-    padding: 8px;
-    border-radius: 4px;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 12px 20px;
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.1s ease;
 }
 
-.sidebar a:hover {
-    background-color: #34495e;
+.sidebar a:hover,
+.sidebar a.active {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-left: 4px solid #38bdf8;
 }
 
-.sidebar a svg {
-    flex-shrink: 0; /* evita que el ícono se reduzca si el texto es largo */
-    margin-top: -2px;
+.sidebar a i {
+  margin-right: 10px;
+  font-size: 16px;
+}
+
+.sidebar hr {
+  border: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 10px 0;
 }
 
 .main-content {
@@ -134,6 +176,10 @@ th {
 
 .btn:hover, button:hover {
     background-color: #3498db;
+}
+
+.close:hover {
+    background-color: #bc3527;
 }
 
 .btn-icon {
@@ -232,12 +278,16 @@ th {
 
 .close {
   display: inline-block;
-  margin-top: 10px;
-  padding: 5px 10px;
   background: #e74c3c;
   color: white;
   border-radius: 5px;
   cursor: pointer;
+}
+
+.form-buttons {
+    display: flex; 
+    justify-content: flex-end; 
+    gap: 10px; 
 }
 
 /* Select personalizado */
@@ -315,9 +365,10 @@ table tbody tr:nth-child(even) {
     font-weight: bold;
     margin-bottom: 4px;
     font-size: 14px;
+    text-align: left;
 }
 
-.form-row input {
+.form-row input  {
     padding: 6px 10px;
     font-size: 14px;
     border: 1px solid #ccc;
@@ -331,32 +382,40 @@ table tbody tr:nth-child(even) {
 }
 
 .form-group label {
+  text-align: left;
   margin-bottom: 5px;
   font-weight: 600;
   color: #34495e;
 }
 
-.form-group input {
+.form-group input, .form-group textarea, .form-group select, .form-row textarea {
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 1em;
-  width: 95%;
+  width: 100%;
 }
 
-.form-group select {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 1em;
-  width: 95%;
+.form-group textarea {
+  max-width: 100%;
+  min-width: 100%; 
+  max-height: 200px;
+  min-height: 40px;
 }
 
-/* Ajuste botón al final: que ocupe ambas columnas */
-.form-grid > .form-group:last-child {
+.form-grid:has(> .form-group:nth-child(2)) > .form-group:last-child {
   grid-column: 1 / -1;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.form-grid:not(:has(> .form-group:nth-child(2))) > .form-group:last-child {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: end;
+  flex-direction: row;
+  gap: 10px;
 }
 
 .success, $1
@@ -391,13 +450,6 @@ table tbody tr:nth-child(even) {
   border: 1px solid #ddd;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-/* Ajuste del botón: ocupa 50% y centrado */
-.form-container button {
-  width: 50%;
-  /* margin: 20px auto 0 auto; */
-  display: block;
 }
 
 /* Leyenda debajo de la tabla */
@@ -474,38 +526,6 @@ table tbody tr:nth-child(even) {
   width: 100%;
 }
 
-/* Columna “Gestión” */
-.table-container th.col-gestion,
-.table-container td.col-gestion {
-  width: 60px;
-  max-width: 60px;
-  text-align: center;
-}
-
-/* Columna “Detalle” */
-.table-container th.col-detalle,
-.table-container td.col-detalle {
-  width: 60px;
-  max-width: 60px;
-  text-align: center;
-}
-
-/* Columna “Gestión” (penúltima) 
-.table-container th:nth-last-child(2),
-.table-container td:nth-last-child(2) {
-  width: 60px;        
-  max-width: 60px;
-  text-align: center; 
-}*/
-
-/* Columna “Detalle” (última) 
-.table-container th:nth-last-child(1),
-.table-container td:nth-last-child(1) {
-  width: 60px;
-  max-width: 60px;
-  text-align: center;
-}*/
-
 /* Asegura que los enlaces/iconos no desborden */
 .table-container td a {
   display: inline-block;
@@ -517,6 +537,7 @@ table tbody tr:nth-child(even) {
 .table-container td {
   overflow: visible !important;
   white-space: normal !important;
+  word-wrap: break-word;
 }
 
 /* Fijar ancho de los labels de estado y recortar exceso */
@@ -550,13 +571,17 @@ table tbody tr:nth-child(even) {
   table-layout: fixed;
 }
 
+.col-gestion, .col-detalle{
+    text-align: center;
+}
+
 /* 2) Fijamos la 6ª columna (Estado) */
 .table-container th:nth-child(6),
 .table-container td:nth-child(6) {
-  width: 120px;       /* ajusta el ancho que necesites */
+  width: 120px; 
   min-width: 120px;
   max-width: 120px;
-  white-space: nowrap;    /* que no rompa el texto */
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -838,6 +863,7 @@ table tbody tr:nth-child(even) {
   border-color: #2980b9;
   color: #2980b9;
   font-weight: bold;
+  
 }
 
 /* ==== CONTENIDO DE PESTAÑAS ==== */

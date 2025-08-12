@@ -288,7 +288,7 @@ $regimenes = $wpdb->get_results("SELECT * FROM bc_regimen");
 
         </form>
         <div style="margin-top: 10px;">
-            <label for="popup-toggle" class="btn">Cerrar</label>
+            <label for="popup-toggle" class="btn close">Cerrar</label>
             <button type="button" id="btn-guardar" class="btn" style="display: none;">Guardar</button>
         </div>
     </div>

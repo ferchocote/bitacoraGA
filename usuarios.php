@@ -110,7 +110,7 @@ $roles = $wpdb->get_results("SELECT * FROM bc_roles");
                 <?php endforeach; ?>
             </select>
         </div>
-        <label for="popup-toggle" class="close">Cerrar</label>
+        <label for="popup-toggle" class="btn close">Cerrar</label>
         <label for="popup-toggle" id="aceptar" class="btn">Aceptar</label>
     </div>
 </div>

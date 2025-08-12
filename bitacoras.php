@@ -221,16 +221,18 @@ if (
             value="<?= esc_attr($q) ?>"
             placeholder="Filtrar por DO, Usuario, BL o Contenedor">
           <button type="submit" class="icon-btn" title="Buscar">🔍</button>
-          <!-- <button type="button" onclick="window.location='?view=bitacora_detalle'" class="icon-btn" title="Limpiar">✕</button> -->
         </div>
       </div>
     </div>
   </form>
   <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR') : ?>
-    <a href="?view=nueva_bitacora" class="btn">➕ Nuevo Registro</a>
+      <a href="?view=nueva_bitacora" class="btn btn-icon">
+        <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5" />
+        </svg>
+        Nuevo Registro
+    </a>
   <?php endif; ?>
-  <!-- <button type="button" class="btn" onclick="editarSeleccionado()">✏️ Editar</button>
-    <button type="button" class="btn" onclick="exportarCSV()">📁 Exportar CSV</button>-->
 </div>
 
 <?php if (empty($procesos)): ?>
@@ -247,7 +249,7 @@ if (
           <!-- <th>Contenedor</th> -->
           <th>Días Libres</th>
           <th>Fecha de Creación</th>
-          <th>Estado</th>
+          <th><span style="width: 120px; display:block">Estado</span></th>
           <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS') : ?>
             <th>Gestionar</th>
           <?php endif; ?>

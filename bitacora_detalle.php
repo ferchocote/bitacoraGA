@@ -385,7 +385,12 @@ $tipos_entrada = $wpdb->get_results(
   <input type="checkbox" id="popup-toggle-add" hidden>
 <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'GIRO' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CONT') : ?>
   <div class="toolbar" style="display:flex; justify-content:flex-end; gap:10px; margin-bottom:20px;">
-    <label for="popup-toggle-add" class="btn">➕ Nueva Entrada</label>
+    <label for="popup-toggle-add" class="btn" style="display: flex; align-items: center; gap: 5px;">        
+        <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5" />
+        </svg> 
+        <div>Nueva Entrada</div>
+        </label>
   </div>
 <?php endif; ?>
   <!-- Popup de edición/formulario completo -->
@@ -552,9 +557,9 @@ $tipos_entrada = $wpdb->get_results(
 
 
       </form>
-      <div class="form-buttons" style="display: flex; justify-content: center; gap: 20px; ">
-        <a href="?view=bitacora_detalle&id=<?= $id ?>" class="btn" style="width: 150px; text-align: center;">Cerrar</a>
-        <button id="btn-add-guardar" class="btn" style="width: 150px;">Crear</button>
+      <div class="form-buttons">
+        <a href="?view=bitacora_detalle&id=<?= $id ?>" class="btn close">Cerrar</a>
+        <button id="btn-add-guardar" class="btn">Crear</button>
       </div>
 
     </div>

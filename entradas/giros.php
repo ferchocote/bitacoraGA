@@ -66,8 +66,8 @@
      <textarea id="Descripcion" name="descripcion" rows="4" style="resize: vertical; width: 100%;"></textarea>
    </div>
   </form>
-  <div style="margin-top: 10px;">
-    <label for="popup-toggle" class="btn">Cerrar</label>
+  <div class="form-buttons" style="margin-top: 10px;">
+    <label for="popup-toggle" class="btn close">Cerrar</label>
     <button type="button" id="btn-guardar" class="btn" style="display: none;">Guardar</button>
   </div>
 </div>

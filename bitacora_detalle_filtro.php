@@ -148,13 +148,11 @@ if (!isset($id)) {
                 return;
             }
 
-
             // Mostrar el popup
             document.getElementById('popup-toggle').checked = true;
 
             const modo = detalle ? 'detalle' : 'editar';
             document.getElementById('popup-title').textContent = modo === 'detalle' ? 'Detalle Transporte' : 'Editar Transporte';
-
 
             // Mostrar u ocultar botón guardar
             document.getElementById('btn-guardar').style.display = modo === 'editar' ? 'inline-block' : 'none';
@@ -165,8 +163,6 @@ if (!isset($id)) {
                     window.inicializarFormulario(entrada, modo);
                 }
             }, 100);
-
-
         } else if (editar) {
             const entradaRaw = editar.getAttribute('data-entrada');
             let entrada;
@@ -723,12 +719,15 @@ if (!isset($id)) {
 <!-- Modal para Documentos -->
 <div id="modal-documentos" class="modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index: index 1;; align-items:center; justify-content:center;">
     <div style="background:#fff; padding:24px; border-radius:8px; min-width:350px; max-width:90vw; max-height:90vh; overflow:auto; position:relative;">
-        <button id="cerrar-modal-documentos" style="position:absolute; top:8px; right:8px;">&times;</button>
         <h3>Documentos de la Entrada</h3>
         <form id="form-subir-documento" >
             <input type="file" name="archivo" required>
             <input type="hidden" name="id_entrada" id="doc-id-entrada">
-            <button type="submit">Subir</button>
+            
+            <div class="form-buttons" style="margin-top:10px">
+                <button id="cerrar-modal-documentos" class="btn close">Cerrar</button>
+                <button type="submit">Subir</button>
+            </div>
             <div id="loader-overlay-documento">
                 <div class="spinner"></div>
             </div>

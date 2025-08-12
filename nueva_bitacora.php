@@ -142,6 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <?php endforeach; ?>
 
       <div class="form-group last">
+        <a href="?view=bitacoras" class="btn close">Cerrar</a>
         <button type="submit" class="btn">Crear Proceso</button>
       </div>
     </form>

@@ -262,9 +262,9 @@ $paises = $wpdb->get_results("SELECT * FROM bc_pais");
         </div>
       <?php endforeach; ?>
 
-      <div class="form-buttons" style="display: flex; justify-content: center; gap: 20px; ">
-        <a href="?view=clientes" class="btn" style="width: 150px; text-align: center;">Cerrar</a>
-        <button type="submit" class="btn" style="width: 150px;">Crear</button>
+      <div class="form-buttons">
+        <a href="?view=clientes" class="btn close">Cerrar</a>
+        <button type="submit" class="btn">Crear</button>
       </div>
 
     </form>

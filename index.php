@@ -127,7 +127,7 @@ function formatearNombrePagina($archivo)
                 Drive Test
             </a> -->
                 <?php endif; ?>
-                <a href="<?php echo wp_logout_url(); ?>">
+                <a href="<?php echo wp_logout_url(home_url('/wp-content/bitacoras/login.php')); ?>">
                     <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24">
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H8m12 0-4 4m4-4-4-4M9 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h2" />
                     </svg>

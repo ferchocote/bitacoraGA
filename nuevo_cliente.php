@@ -126,24 +126,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
 
         // 6) correo con credenciales
-        $login_url = wp_login_url();
+        $login_url = 'https://galogistic.com/iniciar-sesion/';
 
         // Habilitar HTML SOLO para este envío
         $set_html = function () { return 'text/html; charset=UTF-8'; };
         add_filter('wp_mail_content_type', $set_html);
 
         $headers = [
-                'From: Tu Empresa <subgerencia@galogistic.com>',
+                'From: GA LOGISTIC <subgerencia@galogistic.com>',
                 'Reply-To: Soporte <solucionestegnologicasga@gmail.com>',
             ];
 
-        $body = '
-          <p>Hola,</p>
-          <p>Se ha creado tu acceso al portal.</p>
-          <p><strong>Usuario:</strong> ' . esc_html($user_login) . '<br>
-             <strong>Contraseña temporal:</strong> ' . esc_html($password) . '</p>
-          <p>Puedes iniciar sesión aquí: <a href="' . esc_url($login_url) . '">' . esc_html($login_url) . '</a></p>
-          <p>Por seguridad, cambia tu contraseña al ingresar.</p>';
+        $body = sprintf(
+              '<p>Hola,</p>
+              <p>Se ha creado tu acceso al portal.</p>
+              <p><strong>Usuario:</strong> %s<br>
+                  <strong>Contraseña temporal:</strong> %s</p>
+              <p>Puedes iniciar sesión aquí: <a href="%s">%s</a></p>
+              <p>Si necesitas cambiar tu contraseña o tienes cualquier duda, por favor comunícate con el administrador respondiendo a este correo.</p>',
+              esc_html($user_login),
+              esc_html($password),
+              esc_url($login_url),
+              esc_html($login_url)
+            );
 
         $sent = wp_mail($user_email, 'Acceso a la plataforma', $body, $headers);
 

@@ -27,7 +27,7 @@ $tabla_roles     = 'bc_roles';           // o "{$wpdb->prefix}bc_rol" si usas pr
 $cliente_rol_id  = (int) $wpdb->get_var("
     SELECT Id 
     FROM {$tabla_roles} 
-    WHERE Codigo = 'CLIE'
+    WHERE Codigo = 'CLI'
     LIMIT 1
 ");
 
@@ -60,9 +60,31 @@ if (! empty($_GET['q'])) {
 }
 
 if ($is_cliente_custom) {
-  $where_clauses[] = 'p.IDCliente = %d';
-  $params[]        = $current_user_id;
+  // IDs de cliente relacionados al usuario actual
+  $cliente_ids = $wpdb->get_col(
+    $wpdb->prepare(
+      "SELECT IdCliente 
+       FROM bc_cliente_empresa 
+       WHERE IdUser = %d",
+      $current_user_id
+    )
+  );
+
+  // Limpieza y normalización
+  $cliente_ids = array_map('intval', array_unique(array_filter($cliente_ids)));
+
+  if (!empty($cliente_ids)) {
+    $ph = implode(',', array_fill(0, count($cliente_ids), '%d'));
+    // Solo por IdCliente
+    $where_clauses[] = "p.IdCliente IN ($ph)";
+    // OJO: agregamos los IDs UNA VEZ
+    $params = array_merge($params, $cliente_ids);
+  } else {
+    // Sin relación => sin resultados
+    $where_clauses[] = "1=0";
+  }
 }
+
 
 $where_sql = $where_clauses
   ? 'WHERE ' . implode(' AND ', $where_clauses)

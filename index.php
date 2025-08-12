@@ -63,7 +63,7 @@ function formatearNombrePagina($archivo)
             </svg>
             Inicio
         </a> -->
-            <a href="<?php echo admin_url(); ?>">
+            <!-- <a href="<?php echo admin_url(); ?>">
                 <svg class="w-[18px] h-[18px]" width="18" height="18" viewBox="0 0 122.52 122.523" xmlns="http://www.w3.org/2000/svg">
                     <g fill="#ffffff">
                         <path d="m8.708 61.26c0 20.802 12.089 38.779 29.619 47.298l-25.069-68.686c-2.916 6.536-4.55 13.769-4.55 21.388z" />
@@ -75,7 +75,7 @@ function formatearNombrePagina($archivo)
                 </svg>
 
                 Panel de Wordpress
-            </a>
+            </a> -->
             <?php if ($usuario->rol_codigo != "RRHH"): ?>
                 <a href="?view=bitacoras">
                     <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24">

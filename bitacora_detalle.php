@@ -566,7 +566,7 @@ $tipos_entrada = $wpdb->get_results(
   </div>
 
   <ul class="tabs">
-    <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'GIRO' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CONT') : ?>
+    <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'GIRO' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CONT' || $usuario->rol_codigo === 'IMPOR') : ?>
       <li data-tab="tab-contabilidad" data-tipo="CTB" class="active">Contabilidad</li>
       <li data-tab="tab-giros" data-tipo="GRO">Giros</li>
     <?php endif; ?>

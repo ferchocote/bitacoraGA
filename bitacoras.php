@@ -123,6 +123,7 @@ $select_sql = "
     ep.Descripcion         AS EstadoDescripcion,
     ep.Color               AS EstadoColor,
     p.FechaCreacion,
+    p.ETA,
     CASE 
       WHEN p.ETA IS NULL OR p.ETA = '' THEN 0
       ELSE (p.DiasLibres - DATEDIFF(CURDATE(), DATE(p.FechaCreacion)))
@@ -242,13 +243,14 @@ if (
     <table>
       <thead>
         <tr>
+          <th>Fecha de Creación</th>
           <th>DO</th>
           <th>Encargado</th>
           <th>Importador</th>
           <th>Numero BL</th>
           <!-- <th>Contenedor</th> -->
           <th>Días Libres</th>
-          <th>Fecha de Creación</th>
+          <th>ETA</th>
           <th><span style="width: 120px; display:block">Estado</span></th>
           <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS') : ?>
             <th>Gestionar</th>
@@ -264,15 +266,19 @@ if (
         <?php else: ?>
           <?php foreach ($procesos as $p): ?>
             <tr>
+              <td><?= esc_html(date('d/m/Y', strtotime($p->FechaCreacion))) ?></td>
               <td><?= esc_html($p->DO) ?></td>
               <td><?= esc_html($p->creador) ?></td>
               <td><?= esc_html($p->RazonSocial) ?></td>
               <td><?= esc_html($p->NumeroBL) ?></td>
               <!-- <td><?= esc_html($p->Contenedor) ?></td> -->
               <td>
-                <?= intval($p->DiasRestantes) ?>
+                <?php $dias = (int)$p->DiasRestantes; ?>
+                <span class="days-chip <?= $dias < 0 ? 'neg' : '' ?>">
+                  <?= $dias ?>
+                </span>
               </td>
-              <td><?= esc_html(date('d/m/Y', strtotime($p->FechaCreacion))) ?></td>
+              <td><?= esc_html(date('d/m/Y', strtotime($p->ETA))) ?></td>
               <td>
                 <span class="status-label status-<?= strtolower($p->EstadoCodigo) ?>">
                   <?= esc_html($p->EstadoDescripcion) ?>

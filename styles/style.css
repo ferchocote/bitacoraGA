@@ -606,13 +606,13 @@ table tbody tr:nth-child(even) {
 
 /* “En revisión” – Naranja claro */
 .status-selfis {
-  background-color: #FF8F00; /* un naranja más suave */
+  background-color: #E53935; /* un naranja más suave */
   color: #fff;
 }
 
 /* “Orden recibido” – Rojo anaranjado */
 .status-ordret {
-  background-color: #E53935; /* rojizo con toque anaranjado */
+  background-color: #FF8F00; /* rojizo con toque anaranjado */
   color: #fff;
 }
 
@@ -1269,3 +1269,12 @@ table tbody tr:nth-child(even) {
 }
 .popup-actions .close { background-color: #e74c3c; }
 
+/* Chip para Días Libres */
+.days-chip{
+  display:inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+.days-chip.neg{ background:#E53935; color:#fff; }   /* rojo + texto blanco */

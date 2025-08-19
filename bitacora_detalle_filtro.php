@@ -289,13 +289,13 @@ if (!isset($id)) {
                                 <path fill-rule="evenodd" d="M14 4.182A4.136 4.136 0 0 1 16.9 3c1.087 0 2.13.425 2.899 1.182A4.01 4.01 0 0 1 21 7.037c0 1.068-.43 2.092-1.194 2.849L18.5 11.214l-5.8-5.71 1.287-1.31.012-.012Zm-2.717 2.763L6.186 12.13l2.175 2.141 5.063-5.218-2.141-2.108Zm-6.25 6.886-1.98 5.849a.992.992 0 0 0 .245 1.026 1.03 1.03 0 0 0 1.043.242L10.282 19l-5.25-5.168Zm6.954 4.01 5.096-5.186-2.218-2.183-5.063 5.218 2.185 2.15Z" clip-rule="evenodd" />
                                 </svg>
                             </a>
-                            
+                            <?php endif; ?>
                              <a href="javascript:void(0);" class="documentos-entrada" data-entrada='${JSON.stringify(item).replace(/'/g, "&apos;")}' style="color: #2cd857ff; text-decoration: none" title="Gestionar Documentos">
                                 <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                                   <path fill-rule="evenodd" d="M6 2a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.828A2 2 0 0 0 19.414 7.414l-4.828-4.828A2 2 0 0 0 12.172 2H6zm6 1.414L18.586 10H13a1 1 0 0 1-1-1V3.414zM6 4h5v5a3 3 0 0 0 3 3h5v10a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4z" clip-rule="evenodd"/>
                                 </svg>
                             </a>
-                            <?php endif; ?>
+                            
                             </td>
                         </tr>
                     `).join('')}
@@ -621,10 +621,19 @@ if (!isset($id)) {
     }
 
     function mostrarModalDocumentos(entrada) {
-        document.getElementById('modal-documentos').style.display = 'flex';
-        document.getElementById('doc-id-entrada').value = entrada.IdEntradaBitacora;
+        const modal = document.getElementById('modal-documentos');
+        modal.style.display = 'flex';
+
+        // este input solo existe si el form de subida está visible (por roles)
+        const idHidden = document.getElementById('doc-id-entrada');
+        if (idHidden) {
+            idHidden.value = entrada.IdEntradaBitacora;
+        }
+
+        // SIEMPRE carga la lista, exista o no el formulario
         cargarListaDocumentos(entrada.IdEntradaBitacora);
     }
+
 
     document.addEventListener('DOMContentLoaded', function() {
         const btnCerrar = document.getElementById('cerrar-modal-documentos');
@@ -714,25 +723,46 @@ if (!isset($id)) {
                 else alert('No se pudo eliminar');
             });
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('modal-documentos');
+    const btnCerrarX = document.getElementById('modal-docs-x');
+
+    if (btnCerrarX) {
+        btnCerrarX.onclick = function () {
+        modal.style.display = 'none';
+        };
+    }
+
+    // Cerrar al hacer clic fuera del contenido
+    modal.addEventListener('click', function(e){
+        if (e.target === modal) {
+        modal.style.display = 'none';
+        }
+    });
+    });
 </script>
 
 <!-- Modal para Documentos -->
-<div id="modal-documentos" class="modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index: index 1;; align-items:center; justify-content:center;">
+<div id="modal-documentos" class="modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index: index 5; align-items:center; justify-content:center;">
     <div style="background:#fff; padding:24px; border-radius:8px; min-width:350px; max-width:90vw; max-height:90vh; overflow:auto; position:relative;">
+        <button type="button" id="modal-docs-x" class="modal-close-x" aria-label="Cerrar">×</button>
         <h3>Documentos de la Entrada</h3>
+        <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'GIRO' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CONT' || $usuario->rol_codigo === 'IMPOR') : ?>
         <form id="form-subir-documento" >
             <input type="file" name="archivo" required>
             <input type="hidden" name="id_entrada" id="doc-id-entrada">
             
             <div class="form-buttons" style="margin-top:10px">
-                <button id="cerrar-modal-documentos" class="btn close">Cerrar</button>
+                <button type="button" id="cerrar-modal-documentos" class="btn close">Cerrar</button>
                 <button type="submit">Subir</button>
-            </div>
-            <div id="loader-overlay-documento">
-                <div class="spinner"></div>
             </div>
 
         </form>
+        <?php endif; ?>
+        <div id="loader-overlay-documento">
+            <div class="spinner"></div>
+        </div>
         <div id="lista-documentos" style="margin-top:16px;"></div>
 
     </div>

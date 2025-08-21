@@ -284,6 +284,7 @@ if (
                   <?= esc_html($p->EstadoDescripcion) ?>
                 </span>
               </td>
+
               <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CLI') : ?>
                 <td class="col-gestion">
                   <label
@@ -406,9 +407,7 @@ if (
           <button type="submit" class="btn">Guardar</button>
         </div>
       </form>
-      <div id="loader-overlay">
-        <div class="spinner"></div>
-      </div>
+
     <?php else: ?>
       <div class="popup-actions" style="justify-content: flex-end; margin-bottom: 16px;">
         <label for="gestionar-toggle" class="btn close">Cancelar</label>
@@ -423,6 +422,9 @@ if (
         </div>
       </div>
     </div>
+    <div id="loader-overlay">
+      <div class="spinner"></div>
+    </div>
   </div>
 </div>
 
@@ -434,9 +436,9 @@ if (
   // 1) Definimos las transiciones válidas
   const transiciones = {
     'Creado': ['Selectividad Auto', 'Selectividad Fisica'],
-    'Selectividad Auto': ['Orden de Retiro'], // si SelectAuto -> Fisica
+    'Selectividad Auto': ['Transporte'], // si SelectAuto -> Fisica
     'Selectividad Fisica': ['Orden de Retiro'],
-    'Orden de Retiro': ['Selectividad Fisica','Transporte'],
+    'Orden de Retiro': ['Transporte'],
     'Transporte': ['Completado'],
   };
 
@@ -447,7 +449,10 @@ if (
 
       // a) Guardamos el Id del proceso
       const id = btn.dataset.id;
-      document.getElementById('IdProceso').value = id;
+      const idProcesoInput = document.getElementById('IdProceso');
+      if (idProcesoInput) {
+        idProcesoInput.value = id;
+      }
 
       // b) Encontramos el estado actual en esa misma fila
       const fila = btn.closest('tr');
@@ -457,19 +462,20 @@ if (
       // c) Calculamos las opciones permitidas
       const permitidos = transiciones[estadoActual] || [];
 
-      // d) Filtramos el <select id="NuevoEstado">
+      // d) Filtramos el <select id="NuevoEstado"> y reiniciamos campos solo si existen (no para clientes)
       const select = document.getElementById('NuevoEstado');
-      Array.from(select.options).forEach(opt => {
-        // La primera opción vacía siempre se deja visible
-        if (!opt.value) return opt.hidden = false;
-
-        // Mostrar solo si su texto coincide con uno de los permitidos
-        opt.hidden = !permitidos.includes(opt.textContent.trim());
-      });
-
-      // e) Reiniciamos selección y observación
-      select.value = '';
-      document.getElementById('ObservacionCambio').value = '';
+      if (select) {
+        Array.from(select.options).forEach(opt => {
+          // La primera opción vacía siempre se deja visible
+          if (!opt.value) return opt.hidden = false;
+          // Mostrar solo si su texto coincide con uno de los permitidos
+          opt.hidden = !permitidos.includes(opt.textContent.trim());
+        });
+        // e) Reiniciamos selección y observación
+        select.value = '';
+        const obs = document.getElementById('ObservacionCambio');
+        if (obs) obs.value = '';
+      }
 
       // f) Abrimos el modal
       document.getElementById('gestionar-toggle').checked = true;

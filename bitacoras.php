@@ -252,7 +252,7 @@ if (
           <th>Días Libres</th>
           <th>ETA</th>
           <th><span style="width: 120px; display:block">Estado</span></th>
-          <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS') : ?>
+          <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CLI') : ?>
             <th>Gestionar</th>
           <?php endif; ?>
           <th>Detalle</th>
@@ -284,7 +284,7 @@ if (
                   <?= esc_html($p->EstadoDescripcion) ?>
                 </span>
               </td>
-              <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS') : ?>
+              <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CLI') : ?>
                 <td class="col-gestion">
                   <label
                     for="gestionar-toggle"

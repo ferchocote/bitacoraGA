@@ -726,28 +726,46 @@ if (!isset($id)) {
 
     document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('modal-documentos');
+    if (!modal) return; // nada que hacer si no existe
+
     const btnCerrarX = document.getElementById('modal-docs-x');
 
-    if (btnCerrarX) {
-        btnCerrarX.onclick = function () {
+    const closeModal = (e) => {
+        if (e) e.preventDefault();
         modal.style.display = 'none';
-        };
+    };
+
+    // Botón X
+    if (btnCerrarX) {
+        // por si está dentro de un form
+        if (btnCerrarX.tagName === 'BUTTON' && !btnCerrarX.hasAttribute('type')) {
+        btnCerrarX.setAttribute('type', 'button');
+        }
+        btnCerrarX.addEventListener('click', closeModal);
     }
 
-    // Cerrar al hacer clic fuera del contenido
-    modal.addEventListener('click', function(e){
-        if (e.target === modal) {
-        modal.style.display = 'none';
+    // Clic fuera del contenido (overlay)
+    modal.addEventListener('click', function (e) {
+        if (e.target === modal) closeModal(e);
+    });
+
+    // Cerrar con ESC (opcional)
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && modal.style.display !== 'none') {
+        closeModal(e);
         }
     });
     });
+
 </script>
 
 <!-- Modal para Documentos -->
-<div id="modal-documentos" class="modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index: index 5; align-items:center; justify-content:center;">
-    <div style="background:#fff; padding:24px; border-radius:8px; min-width:350px; max-width:90vw; max-height:90vh; overflow:auto; position:relative;">
-        <button type="button" id="modal-docs-x" class="modal-close-x" aria-label="Cerrar">×</button>
-        <h3>Documentos de la Entrada</h3>
+<div id="modal-documentos" class="modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:10050; align-items:center; justify-content:center;">
+  <div class="modal-box" style="background:#fff; padding:24px; border-radius:8px; min-width:350px; max-width:90vw; max-height:90vh; overflow:auto; position:relative;">
+    <div class="modal-header">
+      <h3>Documentos de la Entrada</h3>
+      <button id="modal-docs-x" class="modal-close-x" type="button" aria-label="Cerrar">×</button>
+    </div>
         <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'GIRO' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CONT' || $usuario->rol_codigo === 'IMPOR') : ?>
         <form id="form-subir-documento" >
             <input type="file" name="archivo" required>

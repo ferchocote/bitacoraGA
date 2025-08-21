@@ -1300,3 +1300,47 @@ table tbody tr:nth-child(even) {
   line-height: 1;
 }
 .days-chip.neg{ background:#E53935; color:#fff; }   /* rojo + texto blanco */
+
+/* Modal Documentos */
+#modal-documentos { display:none; }
+#modal-documentos .modal-box { position:relative; }
+
+#modal-documentos .modal-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between; /* título izq, X der */
+  gap:12px;
+  margin-bottom:12px;
+}
+
+#modal-documentos .modal-close-x{
+  border:none;
+  background:transparent;
+  font-size:22px;
+  line-height:1;
+  cursor:pointer;
+  padding:4px 8px;
+}
+#modal-documentos .modal-close-x:hover{ opacity:.75; }
+
+/* Botonera del formulario a la derecha */
+#modal-documentos .form-buttons{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+}
+
+/* Dentro del modal, la X no hereda estilos de button/btn */
+.modal .modal-close-x {
+  all: unset;                 /* ¡borra estilos heredados del botón! */
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  border-radius: 50%;
+  background: rgba(0,0,0,.05);
+  cursor: pointer;
+  line-height: 1;
+}
+.modal .modal-close-x:hover { background: rgba(0,0,0,.12); }

@@ -137,9 +137,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $dataDetalle['Activo']     = 1;
     //echo "<script>console.log(" . json_encode($dataDetalle) . ");</script>";
 
-
-
-
     // Insertar
     $wpdb->show_errors(); // Activar errores SQL
     $inserted = $wpdb->insert($tabla, $dataDetalle);
@@ -344,14 +341,23 @@ $tipos_entrada = $wpdb->get_results(
 );
 
 function disabled_if_24h_passed($datetime) {
+    // Si no hay fecha, el campo sigue editable
     if (empty($datetime)) {
         return '';
     }
+
     $filled_time = strtotime($datetime);
+    if ($filled_time === false) {
+        return ''; // valor inválido, no bloquea
+    }
+
     $now = time();
+
+    // Si han pasado 24 horas o más → bloquear
     if ($now - $filled_time >= 24 * 3600) {
         return 'readonly disabled';
     }
+
     return '';
 }
 ?>

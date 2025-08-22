@@ -31,6 +31,24 @@ $message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     check_admin_referer('crear_proceso_action', 'crear_proceso_nonce');
 
+    // Normaliza y valida DO primero
+    $do_ingresado = sanitize_text_field($_POST['DO']);
+    $do_normalizado = trim($do_ingresado);
+
+    // Valida existencia (case-insensitive y sin espacios en extremos)
+    $ya_existe = (int) $wpdb->get_var(
+        $wpdb->prepare(
+            "SELECT COUNT(*) 
+             FROM {$tabla} 
+             WHERE UPPER(TRIM(DO)) = UPPER(TRIM(%s))",
+            $do_normalizado
+        )
+    );
+
+    if ($ya_existe > 0) {
+        $message = '<div class="error">El DO <strong>' . esc_html($do_ingresado) . '</strong> ya existe en el sistema.</div>';
+    } else {
+
     // Campos que vienen del formulario
     $data = [];
     $data['DO']               = sanitize_text_field($_POST['DO']);
@@ -67,6 +85,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $message = '<div class="error">Error al crear el proceso.</div>';
     }
+  }
+}
+
+// Helpers para “valores antiguos” (sticky form)
+function old($key, $default = '') {
+  return isset($_POST[$key]) ? esc_attr(wp_unslash($_POST[$key])) : $default;
+}
+// Para <select> (comparación segura)
+function old_is($key, $value) {
+  if (!isset($_POST[$key])) return false;
+  // compara como string para evitar falsos negativos
+  return (string) $_POST[$key] === (string) $value;
+}
+// Para inputs datetime-local (el navegador espera YYYY-MM-DDTHH:MM)
+function old_dt($key, $default = '') {
+  if (!isset($_POST[$key]) || $_POST[$key] === '') return esc_attr($default);
+  // Asumimos que ya viene en formato correcto porque lo reinyectamos tal cual
+  return esc_attr(wp_unslash($_POST[$key]));
 }
 ?>
 
@@ -89,7 +125,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <select id="IdEmpresa" name="IdEmpresa" required>
           <option value="">Selecciona un cliente</option>
           <?php foreach($clientes as $c): ?>
-            <option value="<?= esc_attr($c->Id) ?>"><?= esc_html($c->RazonSocial) ?></option>
+            <option value="<?= esc_attr($c->Id) ?>" <?= old_is('IdEmpresa', $c->Id) ? 'selected' : '' ?>>
+              <?= esc_html($c->RazonSocial) ?>
+            </option>
           <?php endforeach; ?>
         </select>
       </div>
@@ -99,37 +137,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <select id="IdImportador" name="IdImportador" required>
           <option value="">Selecciona un importador</option>
           <?php foreach($importadores as $imp): ?>
-            <option value="<?= esc_attr($imp->Id) ?>"><?= esc_html($imp->RazonSocial) ?></option>
+            <option value="<?= esc_attr($imp->Id) ?>" <?= old_is('IdImportador', $imp->Id) ? 'selected' : '' ?>>
+              <?= esc_html($imp->RazonSocial) ?>
+            </option>
           <?php endforeach; ?>
         </select>
       </div>
 
       <div class="form-group">
         <label for="DO">DO:</label>
-        <input type="text" id="DO" name="DO" required>
+        <input type="text" id="DO" name="DO" required value="<?= old('DO') ?>">
       </div>
 
       <div class="form-group">
         <label for="TipoProceso">Tipo de Proceso:</label>
-        <input type="text" id="TipoProceso" name="TipoProceso" required>
+        <input type="text" id="TipoProceso" name="TipoProceso" required value="<?= old('TipoProceso') ?>">
       </div>
 
       <div class="form-group">
         <label for="DOAgencia">DO Agencia:</label>
-        <input type="text" id="DOAgencia" name="DOAgencia">
+        <input type="text" id="DOAgencia" name="DOAgencia" value="<?= old('DOAgencia') ?>">
       </div>
 
       <div class="form-group">
         <label for="AgenteCarga">Agente de Carga:</label>
-        <input type="text" id="AgenteCarga" name="AgenteCarga">
+        <input type="text" id="AgenteCarga" name="AgenteCarga" value="<?= old('AgenteCarga') ?>">
       </div>
 
       <div class="form-group">
         <label for="ETA">ETA:</label>
-        <input type="datetime-local" id="ETA" name="ETA">
+        <input type="datetime-local" id="ETA" name="ETA" value="<?= old_dt('ETA') ?>">
       </div>
 
-      <!-- Resto de campos -->
       <?php foreach([
         'DiasLibres'=>'Días Libres','DigitacionRevision'=>'Digitación/Revisión','Aduana'=>'Aduana',
         'Producto'=>'Producto','NumeroBL'=>'Número BL','Contenedor'=>'Contenedor','Puerto'=>'Puerto',
@@ -137,7 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       ] as $field => $label): ?>
         <div class="form-group">
           <label for="<?= $field ?>"><?= $label ?>:</label>
-          <input type="text" id="<?= $field ?>" name="<?= $field ?>">
+          <input type="text" id="<?= $field ?>" name="<?= $field ?>" value="<?= old($field) ?>">
         </div>
       <?php endforeach; ?>
 

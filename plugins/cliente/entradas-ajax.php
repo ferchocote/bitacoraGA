@@ -16,6 +16,41 @@ if (!is_user_logged_in()) {
 $action = $_GET['action'] ?? '';
 
 switch ($action) {
+    case 'historial_estados':
+        $id_proceso = intval($_GET['id_proceso'] ?? 0);
+        if (!$id_proceso) {
+            echo json_encode([]);
+            break;
+        }
+        // Traer historial con nombres de usuario y descripciones de estado
+        $historial = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT h.Id, h.IdProceso, h.EstadoAnteriorId, h.EstadoNuevoId, h.Observacion, h.IdUsuarioCambio, h.FechaCambio,
+                        ea.Descripcion AS estado_anterior,
+                        en.Descripcion AS estado_nuevo,
+                        u.display_name AS usuario
+                 FROM bc_proceso_estado_historial h
+                 LEFT JOIN bc_estado_proceso ea ON ea.Id = h.EstadoAnteriorId
+                 LEFT JOIN bc_estado_proceso en ON en.Id = h.EstadoNuevoId
+                 LEFT JOIN wp_users u ON u.ID = h.IdUsuarioCambio
+                 WHERE h.IdProceso = %d
+                 ORDER BY h.FechaCambio DESC",
+                $id_proceso
+            )
+        );
+        $result = array_map(function($row) {
+            return [
+                'id'               => $row->Id,
+                'id_proceso'       => $row->IdProceso,
+                'estado_anterior'  => $row->estado_anterior,
+                'estado_nuevo'     => $row->estado_nuevo,
+                'usuario'          => $row->usuario,
+                'fecha'            => $row->FechaCambio,
+                'observacion'      => $row->Observacion
+            ];
+        }, $historial);
+        echo json_encode($result);
+        break;
     case 'get_entradas_transporte':
         $id_proceso = intval($_GET['id_proceso']);
         $entradas = $wpdb->get_results("SELECT TE.Descripcion as TEDescripcion,TE.Codigo as TECodigo,BT.FechaCreacion as BTFechaCreacion, EB.*,BT.*,U.* FROM `bc_entrada_bitacora` EB 

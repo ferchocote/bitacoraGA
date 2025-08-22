@@ -55,10 +55,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
   // Insertar o actualizar detalle
   $detalle_id = !empty($_POST['detalle_id']) ? intval($_POST['detalle_id']) : 0;
   $data_d = [
+    'PagoNaviera'          => !empty($_POST['PagoNaviera']) ? date('Y-m-d H:i:s', strtotime($_POST['PagoNaviera'])) : null,
     'Liberacion'          => !empty($_POST['Liberacion']) ? date('Y-m-d H:i:s', strtotime($_POST['Liberacion'])) : null,
     'Aceptacion'          => !empty($_POST['Aceptacion']) ? date('Y-m-d H:i:s', strtotime($_POST['Aceptacion'])) : null,
     'Selectividad'        => !empty($_POST['Selectividad']) ? date('Y-m-d H:i:s', strtotime($_POST['Selectividad'])) : null,
-    'Levante'       => !empty($_POST['Levantamiento']) ? date('Y-m-d H:i:s', strtotime($_POST['Levantamiento'])) : null,
+    'Levante'       => !empty($_POST['Levante']) ? date('Y-m-d H:i:s', strtotime($_POST['Levante'])) : null,
     'EntregaTransporte'   => !empty($_POST['EntregaTransporte']) ? date('Y-m-d H:i:s', strtotime($_POST['EntregaTransporte'])) : null,
     'Pago'                => !empty($_POST['Pago']) ? date('Y-m-d H:i:s', strtotime($_POST['Pago'])) : null,
     'Deposito'            => sanitize_text_field($_POST['Deposito']),
@@ -135,9 +136,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $dataDetalle['FechaCreacion'] = current_time('mysql');
     $dataDetalle['Activo']     = 1;
     //echo "<script>console.log(" . json_encode($dataDetalle) . ");</script>";
-
-
-
 
     // Insertar
     $wpdb->show_errors(); // Activar errores SQL
@@ -342,7 +340,23 @@ $tipos_entrada = $wpdb->get_results(
    ORDER BY Descripcion"
 );
 
+function dt_local_value($val) {
+    if (empty($val) || $val === '0000-00-00 00:00:00') return '';
+    $ts = strtotime($val);
+    if ($ts === false) return '';
+    return date('Y-m-d\TH:i', $ts);
+}
 
+function disabled_if_24h_passed($datetime) {
+    if (empty($datetime) || $datetime === '0000-00-00 00:00:00') {
+        return ''; // no bloquear si está vacío
+    }
+    $filled_time = strtotime($datetime);
+    if ($filled_time && (time() - $filled_time >= 24 * 3600)) {
+        return 'readonly';
+    }
+    return '';
+}
 ?>
 <script src="/wp-content/bitacoras/assets/js/common-loader.js"></script>
 
@@ -398,19 +412,45 @@ $tipos_entrada = $wpdb->get_results(
   <div class="overlay-edit">
     <div class="modal-container">
       <h3>Editar Proceso</h3>
+      <?php
+      $is_admin = ($usuario->rol_codigo === 'ADMIN');
+      $rd_attr  = $is_admin ? '' : 'readonly'; // para inputs
+      $ds_attr  = $is_admin ? '' : 'disabled'; // para selects
+      ?>
+
       <form method="post" action="?view=bitacora_detalle&id=<?= esc_attr($proceso->Id) ?>" class="popup-grid-5">
         <?php wp_nonce_field('editar_proceso_action', 'editar_proceso_nonce'); ?>
 
         <!-- Campos principales -->
         <input type="hidden" name="detalle_id" value="<?= esc_attr($detalle ? $detalle->Id : '') ?>">
         <div class="form-group"><label for="DO">DO:</label>
-          <input readonly type="text" id="DO" name="DO" value="<?= esc_attr($proceso->DO) ?>">
+          <input readonly type="text" id="DO" name="DO" value="<?= esc_attr($proceso->DO) ?>" <?= $rd_attr ?>>
         </div>
-        <div class="form-group"><label for="IdCliente">Cliente:</label>
-          <select id="IdCliente" name="IdCliente"><?php foreach ($clientes as $c): ?><option value="<?= $c->Id ?>" <?= selected($proceso->IdCliente, $c->Id, false) ?>><?= esc_html($c->RazonSocial) ?></option><?php endforeach; ?></select>
+        <div class="form-group">
+          <label for="IdCliente">Cliente:</label>
+          <select id="IdCliente" name="IdCliente" <?= $ds_attr ?>>
+            <?php foreach ($clientes as $c): ?>
+              <option value="<?= $c->Id ?>" <?= selected($proceso->IdCliente, $c->Id, false) ?>>
+                <?= esc_html($c->RazonSocial) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+          <?php if (!$is_admin): ?>
+            <input type="hidden" name="IdCliente" value="<?= esc_attr($proceso->IdCliente) ?>">
+          <?php endif; ?>
         </div>
-        <div class="form-group"><label for="IdImportador">Importador:</label>
-          <select id="IdImportador" name="IdImportador"><?php foreach ($importadores as $imp): ?><option value="<?= $imp->Id ?>" <?= selected($proceso->IdImportador, $imp->Id, false) ?>><?= esc_html($imp->RazonSocial) ?></option><?php endforeach; ?></select>
+        <div class="form-group">
+          <label for="IdImportador">Importador:</label>
+          <select id="IdImportador" name="IdImportador" <?= $ds_attr ?>>
+            <?php foreach ($importadores as $imp): ?>
+              <option value="<?= $imp->Id ?>" <?= selected($proceso->IdImportador, $imp->Id, false) ?>>
+                <?= esc_html($imp->RazonSocial) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+          <?php if (!$is_admin): ?>
+            <input type="hidden" name="IdImportador" value="<?= esc_attr($proceso->IdImportador) ?>">
+          <?php endif; ?>
         </div>
         <div class="form-group">
           <label for="IdEstadoProceso">Estado:</label>
@@ -428,21 +468,21 @@ $tipos_entrada = $wpdb->get_results(
         </div>
 
         <div class="form-group"><label for="FechaCreacion">Fecha Creación:</label>
-          <input readonly type="date" id="FechaCreacion" name="FechaCreacion" value="<?= esc_attr(date('Y-m-d', strtotime($proceso->FechaCreacion))) ?>">
+          <input readonly type="date" id="FechaCreacion" name="FechaCreacion" value="<?= esc_attr(date('Y-m-d', strtotime($proceso->FechaCreacion))) ?>" <?= $rd_attr ?>>
         </div>
 
         <!-- Campos adicionales -->
         <div class="form-group"><label for="TipoProceso">Tipo Proceso:</label>
-          <input type="text" id="TipoProceso" name="TipoProceso" value="<?= esc_attr($proceso->TipoProceso) ?>">
+          <input type="text" id="TipoProceso" name="TipoProceso" value="<?= esc_attr($proceso->TipoProceso) ?>" <?= $rd_attr ?>>
         </div>
         <div class="form-group"><label for="DOAgencia">DO Agencia:</label>
-          <input type="text" id="DOAgencia" name="DOAgencia" value="<?= esc_attr($proceso->DOAgencia) ?>">
+          <input type="text" id="DOAgencia" name="DOAgencia" value="<?= esc_attr($proceso->DOAgencia) ?>" <?= $rd_attr ?>>
         </div>
         <div class="form-group"><label for="AgenteCarga">Agente Carga:</label>
-          <input type="text" id="AgenteCarga" name="AgenteCarga" value="<?= esc_attr($proceso->AgenteCarga) ?>">
+          <input type="text" id="AgenteCarga" name="AgenteCarga" value="<?= esc_attr($proceso->AgenteCarga) ?>" <?= $rd_attr ?>>
         </div>
         <div class="form-group"><label for="ETA">ETA:</label>
-          <input type="datetime-local" id="ETA" name="ETA" value="<?= esc_attr(date('Y-m-d\TH:i', strtotime($proceso->ETA))) ?>">
+          <input type="datetime-local" id="ETA" name="ETA" value="<?= esc_attr(date('Y-m-d\TH:i', strtotime($proceso->ETA))) ?>" <?= $rd_attr ?>>
         </div>
 
         <!-- Resto de campos -->
@@ -463,28 +503,52 @@ $tipos_entrada = $wpdb->get_results(
         ): ?>
           <div class="form-group">
             <label for="<?= $field ?>"><?= $prop ?>:</label>
-            <input type="text" id="<?= $field ?>" name="<?= $field ?>" value="<?= esc_attr($proceso->$prop) ?>">
+            <input type="text" id="<?= $field ?>" name="<?= $field ?>" value="<?= esc_attr($proceso->$prop) ?>" <?= $rd_attr ?>>
           </div>
         <?php endforeach; ?>
 
         <!-- Campos de detalle: siempre se muestran -->
-        <div class="form-group"><label for="Liberacion">Liberación:</label>
-          <input type="datetime-local" id="Liberacion" name="Liberacion" value="<?= esc_attr($detalle ? date('Y-m-d\TH:i', strtotime($detalle->Liberacion)) : '') ?>">
+        <div class="form-group">
+          <label for="PagoNaviera">Fecha Pago Naviera:</label>
+          <input type="datetime-local" id="PagoNaviera" name="PagoNaviera"
+                value="<?= esc_attr(dt_local_value($detalle->PagoNaviera ?? null)) ?>"
+                <?= disabled_if_24h_passed($detalle->PagoNaviera ?? null) ?>>
         </div>
-        <div class="form-group"><label for="Aceptacion">Aceptación:</label>
-          <input type="datetime-local" id="Aceptacion" name="Aceptacion" value="<?= esc_attr($detalle ? date('Y-m-d\TH:i', strtotime($detalle->Aceptacion)) : '') ?>">
+        <div class="form-group">
+          <label for="Liberacion">Liberación:</label>
+          <input type="datetime-local" id="Liberacion" name="Liberacion"
+                value="<?= esc_attr(dt_local_value($detalle->Liberacion ?? null)) ?>"
+                <?= disabled_if_24h_passed($detalle->Liberacion ?? null) ?>>
         </div>
-        <div class="form-group"><label for="Pago">Pago:</label>
-          <input type="datetime-local" id="Pago" name="Pago" value="<?= esc_attr($detalle ? date('Y-m-d\TH:i', strtotime($detalle->Pago)) : '') ?>">
+        <div class="form-group">
+          <label for="Pago">Pago Impuestos:</label>
+          <input type="datetime-local" id="Pago" name="Pago"
+                value="<?= esc_attr(dt_local_value($detalle->Pago ?? null)) ?>"
+                <?= disabled_if_24h_passed($detalle->Pago ?? null) ?>>
         </div>
-        <div class="form-group"><label for="Selectividad">Selectividad:</label>
-          <input type="datetime-local" id="Selectividad" name="Selectividad" value="<?= esc_attr($detalle ? date('Y-m-d\TH:i', strtotime($detalle->Selectividad)) : '') ?>">
+        <div class="form-group">
+          <label for="Aceptacion">Aceptación:</label>
+          <input type="datetime-local" id="Aceptacion" name="Aceptacion"
+                value="<?= esc_attr(dt_local_value($detalle->Aceptacion ?? null)) ?>"
+                <?= disabled_if_24h_passed($detalle->Aceptacion ?? null) ?>>
         </div>
-        <div class="form-group"><label for="Levante">Levante:</label>
-          <input type="datetime-local" id="Levante" name="Levante" value="<?= esc_attr($detalle ? date('Y-m-d\TH:i', strtotime($detalle->Levante)) : '') ?>">
+        <div class="form-group">
+          <label for="Selectividad">Selectividad:</label>
+          <input type="datetime-local" id="Selectividad" name="Selectividad"
+                value="<?= esc_attr(dt_local_value($detalle->Selectividad ?? null)) ?>"
+                <?= disabled_if_24h_passed($detalle->Selectividad ?? null) ?>>
         </div>
-        <div class="form-group"><label for="EntregaTransporte">Entrega Transporte:</label>
-          <input type="datetime-local" id="EntregaTransporte" name="EntregaTransporte" value="<?= esc_attr($detalle ? date('Y-m-d\TH:i', strtotime($detalle->EntregaTransporte)) : '') ?>">
+        <div class="form-group">
+          <label for="Levante">Levante:</label>
+          <input type="datetime-local" id="Levante" name="Levante"
+                value="<?= esc_attr(dt_local_value($detalle->Levante ?? null)) ?>"
+                <?= disabled_if_24h_passed($detalle->Levante ?? null) ?>>
+        </div>
+        <div class="form-group">
+          <label for="EntregaTransporte">Entrega Transporte:</label>
+          <input type="datetime-local" id="EntregaTransporte" name="EntregaTransporte"
+                value="<?= esc_attr(dt_local_value($detalle->EntregaTransporte ?? null)) ?>"
+                <?= disabled_if_24h_passed($detalle->EntregaTransporte ?? null) ?>>
         </div>
         <div class="form-group"><label for="Manifiesto">Manifiesto:</label>
           <input type="text" id="Manifiesto" name="Manifiesto" value="<?= esc_attr($detalle->Manifiesto ?? '') ?>">
@@ -495,8 +559,11 @@ $tipos_entrada = $wpdb->get_results(
         <div class="form-group"><label for="Deposito">Depósito:</label>
           <input type="text" id="Deposito" name="Deposito" value="<?= esc_attr($detalle->Deposito ?? '') ?>">
         </div>
-        <div class="form-group"><label for="DevolucionUnidad">Devolución Unidad:</label>
-          <input type="datetime-local" id="DevolucionUnidad" name="DevolucionUnidad" value="<?= esc_attr(!empty($detalle->DevolucionUnidad) ? date('Y-m-d\TH:i', strtotime($detalle->DevolucionUnidad)) : '') ?>">
+        <div class="form-group">
+          <label for="DevolucionUnidad">Devolución Unidad:</label>
+          <input type="datetime-local" id="DevolucionUnidad" name="DevolucionUnidad"
+                value="<?= esc_attr(dt_local_value($detalle->DevolucionUnidad ?? null)) ?>"
+                <?= disabled_if_24h_passed($detalle->DevolucionUnidad ?? null) ?>>
         </div>
         <div class="form-group">
           <label for="ArchivoFisico">Archivo Físico:</label>
@@ -567,7 +634,7 @@ $tipos_entrada = $wpdb->get_results(
   </div>
 
   <ul class="tabs">
-    <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'GIRO' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CONT') : ?>
+    <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'GIRO' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CONT' || $usuario->rol_codigo === 'IMPOR') : ?>
       <li data-tab="tab-contabilidad" data-tipo="CTB" class="active">Contabilidad</li>
       <li data-tab="tab-giros" data-tipo="GRO">Giros</li>
     <?php endif; ?>

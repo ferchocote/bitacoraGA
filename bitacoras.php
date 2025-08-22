@@ -123,6 +123,7 @@ $select_sql = "
     ep.Descripcion         AS EstadoDescripcion,
     ep.Color               AS EstadoColor,
     p.FechaCreacion,
+    p.ETA,
     CASE 
       WHEN p.ETA IS NULL OR p.ETA = '' THEN 0
       ELSE (p.DiasLibres - DATEDIFF(CURDATE(), DATE(p.FechaCreacion)))
@@ -226,11 +227,11 @@ if (
     </div>
   </form>
   <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR') : ?>
-      <a href="?view=nueva_bitacora" class="btn btn-icon">
-        <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5" />
-        </svg>
-        Nuevo Registro
+    <a href="?view=nueva_bitacora" class="btn btn-icon">
+      <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5" />
+      </svg>
+      Nuevo Registro
     </a>
   <?php endif; ?>
 </div>
@@ -242,15 +243,16 @@ if (
     <table>
       <thead>
         <tr>
+          <th>Fecha de Creación</th>
           <th>DO</th>
           <th>Encargado</th>
           <th>Importador</th>
           <th>Numero BL</th>
           <!-- <th>Contenedor</th> -->
           <th>Días Libres</th>
-          <th>Fecha de Creación</th>
+          <th>ETA</th>
           <th><span style="width: 120px; display:block">Estado</span></th>
-          <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS') : ?>
+          <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CLI') : ?>
             <th>Gestionar</th>
           <?php endif; ?>
           <th>Detalle</th>
@@ -264,21 +266,26 @@ if (
         <?php else: ?>
           <?php foreach ($procesos as $p): ?>
             <tr>
+              <td><?= esc_html(date('d/m/Y', strtotime($p->FechaCreacion))) ?></td>
               <td><?= esc_html($p->DO) ?></td>
               <td><?= esc_html($p->creador) ?></td>
               <td><?= esc_html($p->RazonSocial) ?></td>
               <td><?= esc_html($p->NumeroBL) ?></td>
               <!-- <td><?= esc_html($p->Contenedor) ?></td> -->
               <td>
-                <?= intval($p->DiasRestantes) ?>
+                <?php $dias = (int)$p->DiasRestantes; ?>
+                <span class="days-chip <?= $dias < 0 ? 'neg' : '' ?>">
+                  <?= $dias ?>
+                </span>
               </td>
-              <td><?= esc_html(date('d/m/Y', strtotime($p->FechaCreacion))) ?></td>
+              <td><?= esc_html(date('d/m/Y', strtotime($p->ETA))) ?></td>
               <td>
                 <span class="status-label status-<?= strtolower($p->EstadoCodigo) ?>">
                   <?= esc_html($p->EstadoDescripcion) ?>
                 </span>
               </td>
-              <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS') : ?>
+
+              <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CLI') : ?>
                 <td class="col-gestion">
                   <label
                     for="gestionar-toggle"
@@ -366,37 +373,58 @@ if (
 
 <input type="checkbox" id="gestionar-toggle" hidden>
 
+
+
 <!-- Overlay / modal de gestión -->
 <div class="overlay-manage">
-  <div class="popup-manage">
+  <div class="popup-manage" style="min-width:800px; max-width:1100px; width:100%;">
     <h3>Gestionar Estado</h3>
-    <form id="form-gestionar" method="post" action="">
-      <?php wp_nonce_field('gestionar_proceso', 'gestionar_nonce'); ?>
-      <input type="hidden" name="IdProceso" id="IdProceso">
+    <?php if (!$is_cliente_custom): ?>
+      <form id="form-gestionar" method="post" action="" onsubmit="showLoader()">
+        <?php wp_nonce_field('gestionar_proceso', 'gestionar_nonce'); ?>
+        <input type="hidden" name="IdProceso" id="IdProceso">
 
-      <div class="form-group">
-        <label for="NuevoEstado">Nuevo Estado:</label>
-        <select name="NuevoEstado" id="NuevoEstado" required>
-          <option value="">— Seleccione —</option>
-          <?php foreach ($estadosList as $st): ?>
-            <option value="<?= esc_attr($st->Id) ?>">
-              <?= esc_html($st->Descripcion) ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-      </div>
+        <div class="form-group">
+          <label for="NuevoEstado">Nuevo Estado:</label>
+          <select name="NuevoEstado" id="NuevoEstado" required>
+            <option value="">— Seleccione —</option>
+            <?php foreach ($estadosList as $st): ?>
+              <option value="<?= esc_attr($st->Id) ?>">
+                <?= esc_html($st->Descripcion) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
 
-      <div class="form-group">
-        <label for="ObservacionCambio">Observación (opcional):</label>
-        <textarea name="ObservacionCambio" id="ObservacionCambio" rows="2"></textarea>
-      </div>
+        <div class="form-group">
+          <label for="ObservacionCambio">Observación (opcional):</label>
+          <textarea name="ObservacionCambio" id="ObservacionCambio" rows="2"></textarea>
+        </div>
 
-      <div class="popup-actions">
-        <!-- este label desmarca el checkbox y cierra el modal -->
+        <div class="popup-actions">
+          <!-- este label desmarca el checkbox y cierra el modal -->
+          <label for="gestionar-toggle" class="btn close">Cancelar</label>
+          <button type="submit" class="btn">Guardar</button>
+        </div>
+      </form>
+
+    <?php else: ?>
+      <div class="popup-actions" style="justify-content: flex-end; margin-bottom: 16px;">
         <label for="gestionar-toggle" class="btn close">Cancelar</label>
-        <button type="submit" class="btn">Guardar</button>
       </div>
-    </form>
+    <?php endif; ?>
+    <!-- Tabla de historial de estados -->
+    <div style="margin-top: 32px;">
+      <h4>Historial de Estados</h4>
+      <div style="overflow-x:auto;">
+        <div id="historial-estados-container">
+          <div style="text-align:center; color:#888;">Cargando historial...</div>
+        </div>
+      </div>
+    </div>
+    <div id="loader-overlay">
+      <div class="spinner"></div>
+    </div>
   </div>
 </div>
 
@@ -421,7 +449,10 @@ if (
 
       // a) Guardamos el Id del proceso
       const id = btn.dataset.id;
-      document.getElementById('IdProceso').value = id;
+      const idProcesoInput = document.getElementById('IdProceso');
+      if (idProcesoInput) {
+        idProcesoInput.value = id;
+      }
 
       // b) Encontramos el estado actual en esa misma fila
       const fila = btn.closest('tr');
@@ -431,24 +462,70 @@ if (
       // c) Calculamos las opciones permitidas
       const permitidos = transiciones[estadoActual] || [];
 
-      // d) Filtramos el <select id="NuevoEstado">
+      // d) Filtramos el <select id="NuevoEstado"> y reiniciamos campos solo si existen (no para clientes)
       const select = document.getElementById('NuevoEstado');
-      Array.from(select.options).forEach(opt => {
-        // La primera opción vacía siempre se deja visible
-        if (!opt.value) return opt.hidden = false;
-
-        // Mostrar solo si su texto coincide con uno de los permitidos
-        opt.hidden = !permitidos.includes(opt.textContent.trim());
-      });
-
-      // e) Reiniciamos selección y observación
-      select.value = '';
-      document.getElementById('ObservacionCambio').value = '';
+      if (select) {
+        Array.from(select.options).forEach(opt => {
+          // La primera opción vacía siempre se deja visible
+          if (!opt.value) return opt.hidden = false;
+          // Mostrar solo si su texto coincide con uno de los permitidos
+          opt.hidden = !permitidos.includes(opt.textContent.trim());
+        });
+        // e) Reiniciamos selección y observación
+        select.value = '';
+        const obs = document.getElementById('ObservacionCambio');
+        if (obs) obs.value = '';
+      }
 
       // f) Abrimos el modal
       document.getElementById('gestionar-toggle').checked = true;
+
+      // g) Cargar historial de estados
+      cargarHistorialEstados(id);
     });
   });
+
+  // Función para cargar historial de estados por proceso
+  function cargarHistorialEstados(idProceso) {
+    const cont = document.getElementById('historial-estados-container');
+    cont.innerHTML = '<div style="text-align:center; color:#888;">Cargando historial...</div>';
+    showLoader();
+    fetch(`/wp-content/bitacoras/plugins/cliente/entradas-ajax.php?action=historial_estados&id_proceso=${idProceso}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!Array.isArray(data) || data.length === 0) {
+          cont.innerHTML = '<em>No hay historial de estados.</em>';
+          return;
+        }
+        cont.innerHTML = `
+          <table class="tabla-historial-estados" style="width:100%; margin-top:10px;">
+            <thead>
+              <tr>
+                <th>Estado Anterior</th>
+                <th>Estado Nuevo</th>
+                <th>Usuario</th>
+                <th>Fecha</th>
+                <th>Observación</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.map(est => `
+                <tr>
+                  <td>${est.estado_anterior || '-'}</td>
+                  <td>${est.estado_nuevo || '-'}</td>
+                  <td>${est.usuario || '-'}</td>
+                  <td>${est.fecha ? new Date(est.fecha).toLocaleString() : '-'}</td>
+                  <td>${est.observacion || ''}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      }).finally(hideLoader)
+      .catch(() => {
+        cont.innerHTML = '<em>Error al cargar historial.</em>';
+      });
+  }
   document.addEventListener('DOMContentLoaded', function() {
     hideLoader();
     // Selecciona todos los enlaces dentro del sidebar (tu menú principal)

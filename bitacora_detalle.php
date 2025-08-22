@@ -17,6 +17,22 @@ if (!is_user_logged_in()) {
 
 global $wpdb;
 
+add_action('phpmailer_init', function($phpmailer) {
+    // Forzar SMTP
+    $phpmailer->isSMTP();
+    $phpmailer->Host       = 'smtp.hostinger.com';   // servidor SMTP de tu hosting
+    $phpmailer->SMTPAuth   = true;
+    $phpmailer->Port       = 465;                    // 465 (SSL) o 587 (TLS)
+    $phpmailer->SMTPSecure = 'ssl';                  // o 'tls'
+    
+    // Credenciales de la cuenta en tu dominio
+    $phpmailer->Username   = 'no-reply@clscolombia.com';
+    $phpmailer->Password   = 'Soluciones25*';
+    
+    // Dirección del remitente
+    $phpmailer->setFrom('no-reply@clscolombia.com', 'CLS-COLOMBIA');
+});
+
 // Tablas
 $tabla = 'bc_' . 'proceso';
 $tabla_clientes = 'bc_' . 'cliente';
@@ -30,6 +46,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
   $id = intval($_GET['id']);
   // Actualizar bc_proceso
   $tabla_proceso = $tabla;
+  
+  $sql = $wpdb->prepare(
+    "SELECT p.* FROM bc_proceso p WHERE p.Id = %d", $id
+  );
+    
+  $proceso = $wpdb->get_row($sql);
+  
+  $sqlDetalle = $wpdb->prepare(
+    "SELECT d.* FROM bc_detalle_proceso d WHERE d.Id = %d", $id
+  );
+    
+  $detalle = $wpdb->get_row($sqlDetalle);
+  $detalle->PagoNaviera = $detalle->PagoNaviera ? date('Y-m-d H:i:s', strtotime($_POST['PagoNaviera'])) : null;
+  $detalle->Liberacion = $detalle->Liberacion ? date('Y-m-d H:i:s', strtotime($_POST['Liberacion'])) : null;
+  $detalle->Aceptacion = $detalle->Aceptacion ? date('Y-m-d H:i:s', strtotime($_POST['Aceptacion'])) : null;
+  $detalle->Selectividad = $detalle->Selectividad ? date('Y-m-d H:i:s', strtotime($_POST['Selectividad'])) : null;
+  $detalle->Levante = $detalle->Levante ? date('Y-m-d H:i:s', strtotime($_POST['Levante'])) : null;
+  $detalle->EntregaTransporte = $detalle->EntregaTransporte ? date('Y-m-d H:i:s', strtotime($_POST['EntregaTransporte'])) : null;
+  $detalle->DevolucionUnidad = $detalle->DevolucionUnidad ? date('Y-m-d H:i:s', strtotime($_POST['DevolucionUnidad'])) : null;
+  $detalle->Pago = $detalle->Pago ? date('Y-m-d H:i:s', strtotime($_POST['Pago'])) : null;
+  $detalle->Deposito = sanitize_text_field($_POST['Deposito']);
+  $detalle->Manifiesto = sanitize_text_field($_POST['Manifiesto']);
+  $detalle->Observaciones = sanitize_text_field($_POST['Observaciones']);
+  
   $data_p = [
     'TipoProceso'         => sanitize_text_field($_POST['TipoProceso']),
     'DOAgencia'           => sanitize_text_field($_POST['DOAgencia']),
@@ -55,18 +95,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
   // Insertar o actualizar detalle
   $detalle_id = !empty($_POST['detalle_id']) ? intval($_POST['detalle_id']) : 0;
   $data_d = [
-    'PagoNaviera'          => !empty($_POST['PagoNaviera']) ? date('Y-m-d H:i:s', strtotime($_POST['PagoNaviera'])) : null,
+    'PagoNaviera'         => !empty($_POST['PagoNaviera']) ? date('Y-m-d H:i:s', strtotime($_POST['PagoNaviera'])) : null,
     'Liberacion'          => !empty($_POST['Liberacion']) ? date('Y-m-d H:i:s', strtotime($_POST['Liberacion'])) : null,
     'Aceptacion'          => !empty($_POST['Aceptacion']) ? date('Y-m-d H:i:s', strtotime($_POST['Aceptacion'])) : null,
     'Selectividad'        => !empty($_POST['Selectividad']) ? date('Y-m-d H:i:s', strtotime($_POST['Selectividad'])) : null,
-    'Levante'       => !empty($_POST['Levante']) ? date('Y-m-d H:i:s', strtotime($_POST['Levante'])) : null,
+    'Levante'             => !empty($_POST['Levante']) ? date('Y-m-d H:i:s', strtotime($_POST['Levante'])) : null,
     'EntregaTransporte'   => !empty($_POST['EntregaTransporte']) ? date('Y-m-d H:i:s', strtotime($_POST['EntregaTransporte'])) : null,
+    'DevolucionUnidad'    => !empty($_POST['DevolucionUnidad']) ? date('Y-m-d H:i:s', strtotime($_POST['DevolucionUnidad'])) : null,
     'Pago'                => !empty($_POST['Pago']) ? date('Y-m-d H:i:s', strtotime($_POST['Pago'])) : null,
     'Deposito'            => sanitize_text_field($_POST['Deposito']),
-    'DevolucionUnidad'    => !empty($_POST['DevolucionUnidad']) ? date('Y-m-d H:i:s', strtotime($_POST['DevolucionUnidad'])) : null,
-    'Manifiesto'              => sanitize_text_field($_POST['Manifiesto']),
+    'Manifiesto'          => sanitize_text_field($_POST['Manifiesto']),
     'Observaciones'       => sanitize_text_field($_POST['Observaciones']),
-    'ArchivoFisico' => $_POST['ArchivoFisico'],
+    'ArchivoFisico'       => $_POST['ArchivoFisico'],
     'IdProceso'           => $id,
   ];
 
@@ -78,6 +118,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
     $data_d['IdUserCreation']  = get_current_user_id();
     $wpdb->insert($tabla_detalle, $data_d);
   }
+  
+    $cambios = [];
+
+
+    foreach ($data_p as $campo => $valor_nuevo) {
+        $valor_actual = $proceso->$campo ?? null;
+        if ($valor_actual != $valor_nuevo) {
+            $cambios[] = [
+                'tabla' => 'Proceso',
+                'campo' => $campo,
+                'antes' => $valor_actual,
+                'despues' => $valor_nuevo
+            ];
+        }
+    }
+
+    // Comparar cambios en Detalle
+    foreach ($data_d as $campo => $valor_nuevo) {
+        $valor_actual = $detalle->$campo ?? null;
+        if ($campo != 'IdProceso' && $valor_actual != $valor_nuevo) {
+            $cambios[] = [
+                'tabla' => 'Detalle',
+                'campo' => $campo,
+                'antes' => $valor_actual,
+                'despues' => $valor_nuevo
+            ];
+        }
+    }
+    
+    // Si hubo cambios, enviar correo
+    if (!empty($cambios)) {
+        $to = ["solucionestegnologicasga@gmail.com", "gerencia@galogistic.com"];
+        $subject = "Cambios en el proceso ID: $id";
+    
+        $mensaje = "<h3>Se detectaron cambios en el proceso #$id</h3>"; 
+        $mensaje .= "<h4>Hora de edición: " . date("Y-m-d H:i:s") . "</h4>\n";
+        $mensaje .= "<table border='1' cellspacing='0' cellpadding='5'>
+                        <tr><th>Tabla</th><th>Campo</th><th>Antes</th><th>Después</th></tr>";
+        foreach ($cambios as $c) {
+            $mensaje .= "<tr>
+                            <td>{$c['tabla']}</td>
+                            <td>{$c['campo']}</td>
+                            <td>{$c['antes']}</td>
+                            <td>{$c['despues']}</td>
+                         </tr>";
+        }
+        $mensaje .= "</table>";
+    
+        $headers = ['Content-Type: text/html; charset=UTF-8'];
+        wp_mail($to, $subject, $mensaje, $headers);
+    }
 
   // Redirigir para evitar reenvío
   wp_safe_redirect(add_query_arg(['view' => 'bitacora_detalle', 'id' => $id], $_SERVER['PHP_SELF']));
@@ -126,7 +217,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
       'FechaElaboracion' => sanitize_text_field($_POST['fechaElaboracion']),
       'FechaSalidaPuerto' => sanitize_text_field($_POST['fechaSalidaPuerto']),
       'FechaEntregaUnidadVacia' => sanitize_text_field($_POST['fechaEntregaUnidadVacia'])
-
     ];
 
 
@@ -287,10 +377,6 @@ if (!$id) {
   return;
 }
 
-$bitacoras = $wpdb->get_results("SELECT * FROM wp_users ");
-
-
-
 // Consultar datos del proceso (incluye creador, cliente, importador y estado)
 $sql = $wpdb->prepare(
   "SELECT
@@ -383,9 +469,8 @@ function disabled_if_24h_passed($datetime) {
       <div><strong>DO:</strong> <?= esc_html($proceso->DO) ?></div>
       <div><strong>Cliente:</strong> <?= esc_html($proceso->Cliente) ?></div>
       <div><strong>Importador:</strong> <?= esc_html($proceso->Importador) ?></div>
-      <div style="display: flex; flex-direction: row; align-items: center;">
-        <strong>Estado:</strong> <span class="status-label" style="color: #fff; padding: 2px 6px; border-radius: 12px; background-color: <?= esc_attr($proceso->EstadoColor) ?>;"><?= esc_html($proceso->EstadoDescripcion) ?></span></div>      <div><strong>Creado el:</strong> <?= date('d/m/Y', strtotime($proceso->FechaCreacion)) ?>
-      </div>
+      <div><strong>Estado:</strong> <span class="status-label" style="background-color: <?= esc_attr($proceso->EstadoColor) ?>;"><?= esc_html($proceso->EstadoDescripcion) ?></span></div>
+      <div><strong>Creado el:</strong> <?= date('d/m/Y', strtotime($proceso->FechaCreacion)) ?></div>
       <div><strong>Creador:</strong> <?= esc_html($proceso->creador) ?></div>
       <div><strong>Tipo Proceso:</strong> <?= esc_html($proceso->TipoProceso) ?></div>
       <div><strong>DO Agencia:</strong> <?= esc_html($proceso->DOAgencia) ?></div>

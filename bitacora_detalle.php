@@ -369,8 +369,9 @@ $tipos_entrada = $wpdb->get_results(
       <div><strong>DO:</strong> <?= esc_html($proceso->DO) ?></div>
       <div><strong>Cliente:</strong> <?= esc_html($proceso->Cliente) ?></div>
       <div><strong>Importador:</strong> <?= esc_html($proceso->Importador) ?></div>
-      <div><strong>Estado:</strong> <span class="status-label" style="background-color: <?= esc_attr($proceso->EstadoColor) ?>;"><?= esc_html($proceso->EstadoDescripcion) ?></span></div>
-      <div><strong>Creado el:</strong> <?= date('d/m/Y', strtotime($proceso->FechaCreacion)) ?></div>
+      <div style="display: flex; flex-direction: row; align-items: center;">
+        <strong>Estado:</strong> <span class="status-label" style="color: #fff; padding: 2px 6px; border-radius: 12px; background-color: <?= esc_attr($proceso->EstadoColor) ?>;"><?= esc_html($proceso->EstadoDescripcion) ?></span></div>      <div><strong>Creado el:</strong> <?= date('d/m/Y', strtotime($proceso->FechaCreacion)) ?>
+      </div>
       <div><strong>Creador:</strong> <?= esc_html($proceso->creador) ?></div>
       <div><strong>Tipo Proceso:</strong> <?= esc_html($proceso->TipoProceso) ?></div>
       <div><strong>DO Agencia:</strong> <?= esc_html($proceso->DOAgencia) ?></div>

@@ -172,6 +172,7 @@ th {
     cursor: pointer;
     transition: background-color 0.3s ease;
     height: fit-content;
+    user-select: none;
 }
 
 .btn:hover, button:hover {
@@ -294,7 +295,7 @@ th {
 .custom-select {
     position: relative;
     display: inline-block;
-    width: 250px;
+    width: 100%;
 }
 
 .custom-select select {
@@ -418,8 +419,6 @@ table tbody tr:nth-child(even) {
   gap: 10px;
 }
 
-.success, $1
-
 /* Responsive para móviles */
 @media (max-width: 768px) {
   .dashboard-container { flex-direction: column; }
@@ -516,7 +515,7 @@ table tbody tr:nth-child(even) {
 
 .table-container {
   border-radius: 8px;
-  overflow: hidden;        /* para que la tabla recorte su parte trasera, no los badges */
+  overflow: auto;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
@@ -524,6 +523,7 @@ table tbody tr:nth-child(even) {
 .table-container table {
   border-collapse: collapse;
   width: 100%;
+  min-width: 1200px;
 }
 
 /* Asegura que los enlaces/iconos no desborden */
@@ -542,12 +542,12 @@ table tbody tr:nth-child(even) {
 
 /* Fijar ancho de los labels de estado y recortar exceso */
 .status-label {
-  display: inline-block;       /* permite dar ancho fijo */
-  width: 120px;                /* ancho fijo, ajústalo a tu gusto */
-  text-align: center;          /* opcional: centra el texto */
-  white-space: nowrap;         /* evita saltos de línea */
-  overflow: hidden;            /* oculta el contenido sobrante */
-  text-overflow: ellipsis;     /* muestra “…” al recortar */
+  display: inline-block;
+  width: 120px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* El badge de estado puede envolver texto y mantiene padding / border-radius */

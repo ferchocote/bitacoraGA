@@ -98,7 +98,7 @@ $roles = $wpdb->get_results("SELECT * FROM bc_roles");
 <!-- POPUP DE MODIFICAR ROL -->
 <input type="checkbox" id="popup-toggle">
 <div class="overlay">
-    <div class="popup">
+    <div class="popup" style="max-width: 380px;">
         <h3>Selecciona un Rol</h3>
         <div class="custom-select">
             <select id="rol" name="rol">
@@ -110,8 +110,10 @@ $roles = $wpdb->get_results("SELECT * FROM bc_roles");
                 <?php endforeach; ?>
             </select>
         </div>
-        <label for="popup-toggle" class="btn close">Cerrar</label>
-        <label for="popup-toggle" id="aceptar" class="btn">Aceptar</label>
+        <div class="form-buttons" style="margin-top: 10px;">
+            <label for="popup-toggle" class="btn close">Cerrar</label>
+            <label for="popup-toggle" id="aceptar" class="btn">Aceptar</label>
+        </div>
     </div>
 </div>
 

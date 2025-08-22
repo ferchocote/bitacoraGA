@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
     'Liberacion'          => !empty($_POST['Liberacion']) ? date('Y-m-d H:i:s', strtotime($_POST['Liberacion'])) : null,
     'Aceptacion'          => !empty($_POST['Aceptacion']) ? date('Y-m-d H:i:s', strtotime($_POST['Aceptacion'])) : null,
     'Selectividad'        => !empty($_POST['Selectividad']) ? date('Y-m-d H:i:s', strtotime($_POST['Selectividad'])) : null,
-    'Levante'       => !empty($_POST['Levantamiento']) ? date('Y-m-d H:i:s', strtotime($_POST['Levantamiento'])) : null,
+    'Levante'       => !empty($_POST['Levante']) ? date('Y-m-d H:i:s', strtotime($_POST['Levante'])) : null,
     'EntregaTransporte'   => !empty($_POST['EntregaTransporte']) ? date('Y-m-d H:i:s', strtotime($_POST['EntregaTransporte'])) : null,
     'Pago'                => !empty($_POST['Pago']) ? date('Y-m-d H:i:s', strtotime($_POST['Pago'])) : null,
     'Deposito'            => sanitize_text_field($_POST['Deposito']),
@@ -340,24 +340,21 @@ $tipos_entrada = $wpdb->get_results(
    ORDER BY Descripcion"
 );
 
+function dt_local_value($val) {
+    if (empty($val) || $val === '0000-00-00 00:00:00') return '';
+    $ts = strtotime($val);
+    if ($ts === false) return '';
+    return date('Y-m-d\TH:i', $ts);
+}
+
 function disabled_if_24h_passed($datetime) {
-    // Si no hay fecha, el campo sigue editable
-    if (empty($datetime)) {
-        return '';
+    if (empty($datetime) || $datetime === '0000-00-00 00:00:00') {
+        return ''; // no bloquear si está vacío
     }
-
     $filled_time = strtotime($datetime);
-    if ($filled_time === false) {
-        return ''; // valor inválido, no bloquea
+    if ($filled_time && (time() - $filled_time >= 24 * 3600)) {
+        return 'readonly';
     }
-
-    $now = time();
-
-    // Si han pasado 24 horas o más → bloquear
-    if ($now - $filled_time >= 24 * 3600) {
-        return 'readonly disabled';
-    }
-
     return '';
 }
 ?>
@@ -510,26 +507,47 @@ function disabled_if_24h_passed($datetime) {
         <?php endforeach; ?>
 
         <!-- Campos de detalle: siempre se muestran -->
-         <div class="form-group"><label for="PagoNaviera">Fecha Pago Naviera:</label>
-          <input type="datetime-local" id="PagoNaviera" name="PagoNaviera" value="<?= esc_attr($detalle ? date('Y-m-d\TH:i', strtotime($detalle->PagoNaviera)) : '') ?>" <?= disabled_if_24h_passed($detalle->PagoNaviera ?? null) ?>>
+        <div class="form-group">
+          <label for="PagoNaviera">Fecha Pago Naviera:</label>
+          <input type="datetime-local" id="PagoNaviera" name="PagoNaviera"
+                value="<?= esc_attr(dt_local_value($detalle->PagoNaviera ?? null)) ?>"
+                <?= disabled_if_24h_passed($detalle->PagoNaviera ?? null) ?>>
         </div>
-        <div class="form-group"><label for="Liberacion">Liberación:</label>
-          <input type="datetime-local" id="Liberacion" name="Liberacion" value="<?= esc_attr($detalle ? date('Y-m-d\TH:i', strtotime($detalle->Liberacion)) : '') ?>" <?= disabled_if_24h_passed($detalle->Liberacion ?? null) ?>>
+        <div class="form-group">
+          <label for="Liberacion">Liberación:</label>
+          <input type="datetime-local" id="Liberacion" name="Liberacion"
+                value="<?= esc_attr(dt_local_value($detalle->Liberacion ?? null)) ?>"
+                <?= disabled_if_24h_passed($detalle->Liberacion ?? null) ?>>
         </div>
-        <div class="form-group"><label for="Pago">Pago Impuestos:</label>
-          <input type="datetime-local" id="Pago" name="Pago" value="<?= esc_attr($detalle ? date('Y-m-d\TH:i', strtotime($detalle->Pago)) : '') ?>" <?= disabled_if_24h_passed($detalle->Pago ?? null) ?>>
+        <div class="form-group">
+          <label for="Pago">Pago Impuestos:</label>
+          <input type="datetime-local" id="Pago" name="Pago"
+                value="<?= esc_attr(dt_local_value($detalle->Pago ?? null)) ?>"
+                <?= disabled_if_24h_passed($detalle->Pago ?? null) ?>>
         </div>
-        <div class="form-group"><label for="Aceptacion">Aceptación:</label>
-          <input type="datetime-local" id="Aceptacion" name="Aceptacion" value="<?= esc_attr($detalle ? date('Y-m-d\TH:i', strtotime($detalle->Aceptacion)) : '') ?>" <?= disabled_if_24h_passed($detalle->Aceptacion ?? null) ?>>
+        <div class="form-group">
+          <label for="Aceptacion">Aceptación:</label>
+          <input type="datetime-local" id="Aceptacion" name="Aceptacion"
+                value="<?= esc_attr(dt_local_value($detalle->Aceptacion ?? null)) ?>"
+                <?= disabled_if_24h_passed($detalle->Aceptacion ?? null) ?>>
         </div>
-        <div class="form-group"><label for="Selectividad">Selectividad:</label>
-          <input type="datetime-local" id="Selectividad" name="Selectividad" value="<?= esc_attr($detalle ? date('Y-m-d\TH:i', strtotime($detalle->Selectividad)) : '') ?>" <?= disabled_if_24h_passed($detalle->Selectividad ?? null) ?>>
+        <div class="form-group">
+          <label for="Selectividad">Selectividad:</label>
+          <input type="datetime-local" id="Selectividad" name="Selectividad"
+                value="<?= esc_attr(dt_local_value($detalle->Selectividad ?? null)) ?>"
+                <?= disabled_if_24h_passed($detalle->Selectividad ?? null) ?>>
         </div>
-        <div class="form-group"><label for="Levante">Levante:</label>
-          <input type="datetime-local" id="Levante" name="Levante" value="<?= esc_attr($detalle ? date('Y-m-d\TH:i', strtotime($detalle->Levante)) : '') ?>" <?= disabled_if_24h_passed($detalle->Levante ?? null) ?>>
+        <div class="form-group">
+          <label for="Levante">Levante:</label>
+          <input type="datetime-local" id="Levante" name="Levante"
+                value="<?= esc_attr(dt_local_value($detalle->Levante ?? null)) ?>"
+                <?= disabled_if_24h_passed($detalle->Levante ?? null) ?>>
         </div>
-        <div class="form-group"><label for="EntregaTransporte">Entrega Transporte:</label>
-          <input type="datetime-local" id="EntregaTransporte" name="EntregaTransporte" value="<?= esc_attr($detalle ? date('Y-m-d\TH:i', strtotime($detalle->EntregaTransporte)) : '') ?>" <?= disabled_if_24h_passed($detalle->EntregaTransporte ?? null) ?>>
+        <div class="form-group">
+          <label for="EntregaTransporte">Entrega Transporte:</label>
+          <input type="datetime-local" id="EntregaTransporte" name="EntregaTransporte"
+                value="<?= esc_attr(dt_local_value($detalle->EntregaTransporte ?? null)) ?>"
+                <?= disabled_if_24h_passed($detalle->EntregaTransporte ?? null) ?>>
         </div>
         <div class="form-group"><label for="Manifiesto">Manifiesto:</label>
           <input type="text" id="Manifiesto" name="Manifiesto" value="<?= esc_attr($detalle->Manifiesto ?? '') ?>">
@@ -540,8 +558,11 @@ function disabled_if_24h_passed($datetime) {
         <div class="form-group"><label for="Deposito">Depósito:</label>
           <input type="text" id="Deposito" name="Deposito" value="<?= esc_attr($detalle->Deposito ?? '') ?>">
         </div>
-        <div class="form-group"><label for="DevolucionUnidad">Devolución Unidad:</label>
-          <input type="datetime-local" id="DevolucionUnidad" name="DevolucionUnidad" value="<?= esc_attr(!empty($detalle->DevolucionUnidad) ? date('Y-m-d\TH:i', strtotime($detalle->DevolucionUnidad)) : '') ?>" <?= disabled_if_24h_passed($detalle->DevolucionUnidad ?? null) ?>>
+        <div class="form-group">
+          <label for="DevolucionUnidad">Devolución Unidad:</label>
+          <input type="datetime-local" id="DevolucionUnidad" name="DevolucionUnidad"
+                value="<?= esc_attr(dt_local_value($detalle->DevolucionUnidad ?? null)) ?>"
+                <?= disabled_if_24h_passed($detalle->DevolucionUnidad ?? null) ?>>
         </div>
         <div class="form-group">
           <label for="ArchivoFisico">Archivo Físico:</label>

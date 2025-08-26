@@ -436,9 +436,9 @@ if (
   // 1) Definimos las transiciones válidas
   const transiciones = {
     'Creado': ['Selectividad Auto', 'Selectividad Fisica'],
-    'Selectividad Auto': ['Transporte'], // si SelectAuto -> Fisica
+    'Selectividad Auto': ['Orden de Retiro'],
     'Selectividad Fisica': ['Orden de Retiro'],
-    'Orden de Retiro': ['Transporte'],
+    'Orden de Retiro': ['Selectividad Fisica','Transporte'],
     'Transporte': ['Completado'],
   };
 

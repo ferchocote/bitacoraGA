@@ -50,13 +50,14 @@ if (! empty($_GET['q'])) {
   $like = '%' . $wpdb->esc_like($searchTerm) . '%';
 
   $where_clauses[] = "(
-    p.DO           LIKE %s
-    OR u.user_login LIKE %s
+    p.DO             LIKE %s
+    OR u.user_login  LIKE %s
     OR p.NumeroBL    LIKE %s
     OR p.Contenedor  LIKE %s
+    OR ep.Descripcion LIKE %s
   )";
   // rellenamos los parámetros con la versión con %…
-  array_push($params, $like, $like, $like, $like);
+  array_push($params, $like, $like, $like, $like, $like);
 }
 
 if ($is_cliente_custom) {
@@ -134,7 +135,7 @@ $select_sql = "
   LEFT JOIN {$tabla_cliente} c
       ON c.ID = p.IdImportador
   {$where_sql}
-  ORDER BY DiasRestantes ASC
+  ORDER BY (ep.Codigo = 'COM') ASC, DiasRestantes ASC
   LIMIT %d OFFSET %d
 ";
 
@@ -220,7 +221,7 @@ if (
             id="q"
             name="q"
             value="<?= esc_attr($q) ?>"
-            placeholder="Filtrar por DO, Usuario, BL o Contenedor">
+          placeholder="Filtrar por DO, Usuario, BL, Contenedor o Estado">
           <button type="submit" class="icon-btn" title="Buscar">🔍</button>
         </div>
       </div>

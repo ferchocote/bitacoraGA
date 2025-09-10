@@ -1344,3 +1344,9 @@ table tbody tr:nth-child(even) {
   line-height: 1;
 }
 .modal .modal-close-x:hover { background: rgba(0,0,0,.12); }
+
+td.observacion-cell {
+  white-space: normal !important;
+  word-wrap: break-word;
+  max-width: 300px;
+}

@@ -516,7 +516,7 @@ if (
                   <td>${est.estado_nuevo || '-'}</td>
                   <td>${est.usuario || '-'}</td>
                   <td>${est.fecha ? new Date(est.fecha).toLocaleString() : '-'}</td>
-                  <td>${est.observacion || ''}</td>
+                  <td class="observacion-cell">${est.observacion || ''}</td>
                 </tr>
               `).join('')}
             </tbody>

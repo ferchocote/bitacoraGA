@@ -24,6 +24,12 @@ $tabla_clientes = 'bc_' . 'cliente';
 $clientes = $wpdb->get_results("SELECT Id, RazonSocial FROM {$tabla_clientes} WHERE Activo=1 AND EsCliente=1 ORDER BY RazonSocial");
 $importadores = $wpdb->get_results("SELECT Id, RazonSocial FROM {$tabla_clientes} WHERE Activo=1 AND EsCliente=0 ORDER BY RazonSocial");
 
+$aduanas = $wpdb->get_results("SELECT Id, Descripcion FROM bc_catalogo WHERE Tipo='Aduana' AND Activo=1 ORDER BY Descripcion");
+$pies    = $wpdb->get_results("SELECT Id, Descripcion FROM bc_catalogo WHERE Tipo='Pies' AND Activo=1 ORDER BY Descripcion");
+$puertos = $wpdb->get_results("SELECT Id, Descripcion FROM bc_catalogo WHERE Tipo='Puerto' AND Activo=1 ORDER BY Descripcion");
+$tipos   = $wpdb->get_results("SELECT Id, Descripcion FROM bc_catalogo WHERE Tipo='TipoProceso' AND Activo=1 ORDER BY Descripcion");
+$digitaciones = $wpdb->get_results("SELECT Id, Descripcion FROM bc_catalogo WHERE Tipo='DigitacionRevision' AND Activo=1 ORDER BY Descripcion");
+
 // ID del estado "Creado"
 $estado_creado_id = $wpdb->get_var("SELECT Id FROM {$tabla_estados} WHERE Codigo='CREA' AND Activo=1");
 
@@ -55,21 +61,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data['Encargado']        = $current_user->user_login;
     $data['IdCliente']        = intval($_POST['IdEmpresa']);
     $data['IdImportador']     = intval($_POST['IdImportador']);
-    $data['TipoProceso']      = sanitize_text_field($_POST['TipoProceso']);
     $data['DOAgencia']        = sanitize_text_field($_POST['DOAgencia']);
     $data['AgenteCarga']      = sanitize_text_field($_POST['AgenteCarga']);
     $data['ETA']              = date('Y-m-d H:i:s', strtotime($_POST['ETA']));
     $data['DiasLibres']       = sanitize_text_field($_POST['DiasLibres']);
-    $data['DigitacionRevision']= sanitize_text_field($_POST['DigitacionRevision']);
-    $data['Aduana']           = sanitize_text_field($_POST['Aduana']);
     $data['Producto']         = sanitize_text_field($_POST['Producto']);
     $data['NumeroBL']         = sanitize_text_field($_POST['NumeroBL']);
     $data['Contenedor']       = sanitize_text_field($_POST['Contenedor']);
-    $data['Puerto']           = sanitize_text_field($_POST['Puerto']);
-    $data['Pies']             = sanitize_text_field($_POST['Pies']);
     $data['Bulto']            = sanitize_text_field($_POST['Bulto']);
     $data['PesoBruto']        = sanitize_text_field($_POST['PesoBruto']);
     $data['Bandera']          = sanitize_text_field($_POST['Bandera']);
+    $data['IdTipoProceso']        = intval($_POST['IdTipoProceso']);
+    $data['IdDigitacionRevision'] = intval($_POST['IdDigitacionRevision']);
+    $data['IdAduana']             = intval($_POST['IdAduana']);
+    $data['IdPies']               = intval($_POST['IdPies']);
+    $data['IdPuerto']             = intval($_POST['IdPuerto']);
 
     // Estado y auditoría
     $data['IdEstadoProceso'] = intval($estado_creado_id);
@@ -150,8 +156,15 @@ function old_dt($key, $default = '') {
       </div>
 
       <div class="form-group">
-        <label for="TipoProceso">Tipo de Proceso:</label>
-        <input type="text" id="TipoProceso" name="TipoProceso" required value="<?= old('TipoProceso') ?>">
+        <label for="IdTipoProceso">Tipo de Proceso:</label>
+        <select id="IdTipoProceso" name="IdTipoProceso" required>
+          <option value="">Selecciona tipo</option>
+          <?php foreach($tipos as $t): ?>
+            <option value="<?= esc_attr($t->Id) ?>" <?= old_is('IdTipoProceso', $t->Id) ? 'selected' : '' ?>>
+              <?= esc_html($t->Descripcion) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
       </div>
 
       <div class="form-group">
@@ -169,16 +182,88 @@ function old_dt($key, $default = '') {
         <input type="datetime-local" id="ETA" name="ETA" value="<?= old_dt('ETA') ?>">
       </div>
 
-      <?php foreach([
-        'DiasLibres'=>'Días Libres','DigitacionRevision'=>'Digitación/Revisión','Aduana'=>'Aduana',
-        'Producto'=>'Producto','NumeroBL'=>'Número BL','Contenedor'=>'Contenedor','Puerto'=>'Puerto',
-        'Pies'=>'Pies','Bulto'=>'Bulto','PesoBruto'=>'Peso Bruto','Bandera'=>'Bandera'
-      ] as $field => $label): ?>
-        <div class="form-group">
-          <label for="<?= $field ?>"><?= $label ?>:</label>
-          <input type="text" id="<?= $field ?>" name="<?= $field ?>" value="<?= old($field) ?>">
-        </div>
-      <?php endforeach; ?>
+      <div class="form-group">
+        <label for="DiasLibres">Días Libres:</label>
+        <input type="text" id="DiasLibres" name="DiasLibres" value="<?= old('DiasLibres') ?>">
+      </div>
+
+      <div class="form-group">
+        <label for="IdDigitacionRevision">Digitación/Revisión:</label>
+        <select id="IdDigitacionRevision" name="IdDigitacionRevision" required>
+          <option value="">Selecciona opción</option>
+          <?php foreach($digitaciones as $d): ?>
+            <option value="<?= esc_attr($d->Id) ?>" <?= old_is('IdDigitacionRevision', $d->Id) ? 'selected' : '' ?>>
+              <?= esc_html($d->Descripcion) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="IdAduana">Aduana:</label>
+        <select id="IdAduana" name="IdAduana" required>
+          <option value="">Selecciona aduana</option>
+          <?php foreach($aduanas as $a): ?>
+            <option value="<?= esc_attr($a->Id) ?>" <?= old_is('IdAduana', $a->Id) ? 'selected' : '' ?>>
+              <?= esc_html($a->Descripcion) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="Producto">Producto:</label>
+        <input type="text" id="Producto" name="Producto" value="<?= old('Producto') ?>">
+      </div>
+
+      <div class="form-group">
+        <label for="NumeroBL">Número BL:</label>
+        <input type="text" id="NumeroBL" name="NumeroBL" value="<?= old('NumeroBL') ?>">
+      </div>
+
+      <div class="form-group">
+        <label for="Contenedor">Contenedor:</label>
+        <input type="text" id="Contenedor" name="Contenedor" value="<?= old('Contenedor') ?>">
+      </div>
+
+      <div class="form-group">
+        <label for="IdPies">Pies:</label>
+        <select id="IdPies" name="IdPies" required>
+          <option value="">Selecciona pies</option>
+          <?php foreach($pies as $p): ?>
+            <option value="<?= esc_attr($p->Id) ?>" <?= old_is('IdPies', $p->Id) ? 'selected' : '' ?>>
+              <?= esc_html($p->Descripcion) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="IdPuerto">Puerto:</label>
+        <select id="IdPuerto" name="IdPuerto" required>
+          <option value="">Selecciona puerto</option>
+          <?php foreach($puertos as $pt): ?>
+            <option value="<?= esc_attr($pt->Id) ?>" <?= old_is('IdPuerto', $pt->Id) ? 'selected' : '' ?>>
+              <?= esc_html($pt->Descripcion) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="Bulto">Bulto:</label>
+        <input type="text" id="Bulto" name="Bulto" value="<?= old('Bulto') ?>">
+      </div>
+
+      <div class="form-group">
+        <label for="PesoBruto">Peso Bruto:</label>
+        <input type="text" id="PesoBruto" name="PesoBruto" value="<?= old('PesoBruto') ?>">
+      </div>
+
+      <div class="form-group">
+        <label for="Bandera">Bandera:</label>
+        <input type="text" id="Bandera" name="Bandera" value="<?= old('Bandera') ?>">
+      </div>
 
       <div class="form-group last">
         <a href="?view=bitacoras" class="btn close">Cerrar</a>

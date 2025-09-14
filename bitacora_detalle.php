@@ -58,31 +58,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
   );
     
   $detalle = $wpdb->get_row($sqlDetalle);
-  $detalle->PagoNaviera = $detalle->PagoNaviera ? date('Y-m-d H:i:s', strtotime($_POST['PagoNaviera'])) : null;
-  $detalle->Liberacion = $detalle->Liberacion ? date('Y-m-d H:i:s', strtotime($_POST['Liberacion'])) : null;
-  $detalle->Aceptacion = $detalle->Aceptacion ? date('Y-m-d H:i:s', strtotime($_POST['Aceptacion'])) : null;
-  $detalle->Selectividad = $detalle->Selectividad ? date('Y-m-d H:i:s', strtotime($_POST['Selectividad'])) : null;
-  $detalle->Levante = $detalle->Levante ? date('Y-m-d H:i:s', strtotime($_POST['Levante'])) : null;
-  $detalle->EntregaTransporte = $detalle->EntregaTransporte ? date('Y-m-d H:i:s', strtotime($_POST['EntregaTransporte'])) : null;
-  $detalle->DevolucionUnidad = $detalle->DevolucionUnidad ? date('Y-m-d H:i:s', strtotime($_POST['DevolucionUnidad'])) : null;
-  $detalle->Pago = $detalle->Pago ? date('Y-m-d H:i:s', strtotime($_POST['Pago'])) : null;
-  $detalle->Deposito = sanitize_text_field($_POST['Deposito']);
-  $detalle->Manifiesto = sanitize_text_field($_POST['Manifiesto']);
-  $detalle->Observaciones = sanitize_text_field($_POST['Observaciones']);
+  if ($detalle) {
+    $detalle->PagoNaviera = $detalle->PagoNaviera ? date('Y-m-d H:i:s', strtotime($_POST['PagoNaviera'])) : null;
+    $detalle->Liberacion = $detalle->Liberacion ? date('Y-m-d H:i:s', strtotime($_POST['Liberacion'])) : null;
+    $detalle->Aceptacion = $detalle->Aceptacion ? date('Y-m-d H:i:s', strtotime($_POST['Aceptacion'])) : null;
+    $detalle->Selectividad = $detalle->Selectividad ? date('Y-m-d H:i:s', strtotime($_POST['Selectividad'])) : null;
+    $detalle->Levante = $detalle->Levante ? date('Y-m-d H:i:s', strtotime($_POST['Levante'])) : null;
+    $detalle->EntregaTransporte = $detalle->EntregaTransporte ? date('Y-m-d H:i:s', strtotime($_POST['EntregaTransporte'])) : null;
+    $detalle->DevolucionUnidad = $detalle->DevolucionUnidad ? date('Y-m-d H:i:s', strtotime($_POST['DevolucionUnidad'])) : null;
+    $detalle->Pago = $detalle->Pago ? date('Y-m-d H:i:s', strtotime($_POST['Pago'])) : null;
+    $detalle->Deposito = sanitize_text_field($_POST['Deposito']);
+    $detalle->Manifiesto = sanitize_text_field($_POST['Manifiesto']);
+    $detalle->Observaciones = sanitize_text_field($_POST['Observaciones']);
+}
   
   $data_p = [
-    'TipoProceso'         => sanitize_text_field($_POST['TipoProceso']),
     'DOAgencia'           => sanitize_text_field($_POST['DOAgencia']),
     'AgenteCarga'         => sanitize_text_field($_POST['AgenteCarga']),
     'ETA'                 => date('Y-m-d H:i:s', strtotime($_POST['ETA'])),
     'DiasLibres'          => intval($_POST['DiasLibres']),
-    'DigitacionRevision'  => sanitize_text_field($_POST['DigitacionRevision']),
-    'Aduana'              => sanitize_text_field($_POST['Aduana']),
     'Producto'            => sanitize_text_field($_POST['Producto']),
     'NumeroBL'            => sanitize_text_field($_POST['NumeroBL']),
     'Contenedor'          => sanitize_text_field($_POST['Contenedor']),
-    'Puerto'              => sanitize_text_field($_POST['Puerto']),
-    'Pies'                => sanitize_text_field($_POST['Pies']),
     'Bulto'               => sanitize_text_field($_POST['Bulto']),
     'PesoBruto'           => sanitize_text_field($_POST['PesoBruto']),
     'Bandera'             => sanitize_text_field($_POST['Bandera']),
@@ -90,6 +87,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
     'IdCliente'           => intval($_POST['IdCliente']),
     'IdImportador'        => intval($_POST['IdImportador']),
   ];
+  $data_p['IdTipoProceso']        = intval($_POST['IdTipoProceso']);
+  $data_p['IdDigitacionRevision'] = intval($_POST['IdDigitacionRevision']);
+  $data_p['IdAduana']             = intval($_POST['IdAduana']);
+  $data_p['IdPies']               = intval($_POST['IdPies']);
+  $data_p['IdPuerto']             = intval($_POST['IdPuerto']);
+
+
   $wpdb->update($tabla_proceso, $data_p, ['Id' => $id]);
 
   // Insertar o actualizar detalle
@@ -385,7 +389,12 @@ $sql = $wpdb->prepare(
           c1.RazonSocial AS Cliente,
           c2.RazonSocial AS Importador,
           ep.Descripcion AS EstadoDescripcion,
-          ep.Color       AS EstadoColor
+          ep.Color       AS EstadoColor,
+          cat_tipo.Descripcion AS TipoProcesoDesc,
+          cat_dig.Descripcion AS DigitacionRevisionDesc,
+          cat_aduana.Descripcion AS AduanaDesc,
+          cat_pies.Descripcion AS PiesDesc,
+          cat_puerto.Descripcion AS PuertoDesc
       FROM {$tabla} p
       LEFT JOIN {$wpdb->prefix}users u
         ON u.ID = p.IdUserCreation
@@ -395,6 +404,16 @@ $sql = $wpdb->prepare(
         ON c2.Id = p.IdImportador
       LEFT JOIN {$tabla_estados} ep
         ON ep.Id = p.IdEstadoProceso
+      LEFT JOIN bc_catalogo cat_tipo
+        ON cat_tipo.Id = p.IdTipoProceso
+      LEFT JOIN bc_catalogo cat_dig
+        ON cat_dig.Id = p.IdDigitacionRevision
+      LEFT JOIN bc_catalogo cat_aduana
+        ON cat_aduana.Id = p.IdAduana
+      LEFT JOIN bc_catalogo cat_pies
+        ON cat_pies.Id = p.IdPies
+      LEFT JOIN bc_catalogo cat_puerto
+        ON cat_puerto.Id = p.IdPuerto
       WHERE p.Id = %d",
   $id
 );
@@ -418,6 +437,12 @@ $detalle = ! empty($detalles) ? $detalles[0] : null;
 $clientes = $wpdb->get_results("SELECT Id, RazonSocial FROM {$tabla_clientes} WHERE Activo=1 ORDER BY RazonSocial");
 $importadores = $clientes; // mismos registros, diferencia según flujo
 $estadosList = $wpdb->get_results("SELECT Id, Descripcion FROM {$tabla_estados} WHERE Activo=1 ORDER BY Id");
+
+$tipos = $wpdb->get_results("SELECT Id, Descripcion FROM bc_catalogo WHERE Tipo='TipoProceso' AND Activo=1 ORDER BY Descripcion");
+$digitaciones = $wpdb->get_results("SELECT Id, Descripcion FROM bc_catalogo WHERE Tipo='DigitacionRevision' AND Activo=1 ORDER BY Descripcion");
+$aduanas = $wpdb->get_results("SELECT Id, Descripcion FROM bc_catalogo WHERE Tipo='Aduana' AND Activo=1 ORDER BY Descripcion");
+$pies = $wpdb->get_results("SELECT Id, Descripcion FROM bc_catalogo WHERE Tipo='Pies' AND Activo=1 ORDER BY Descripcion");
+$puertos = $wpdb->get_results("SELECT Id, Descripcion FROM bc_catalogo WHERE Tipo='Puerto' AND Activo=1 ORDER BY Descripcion");
 
 $tipos_entrada = $wpdb->get_results(
   "SELECT Id, Descripcion 
@@ -472,12 +497,12 @@ function disabled_if_24h_passed($datetime) {
       <div><strong>Estado:</strong> <span class="status-label" style="background-color: <?= esc_attr($proceso->EstadoColor) ?>;"><?= esc_html($proceso->EstadoDescripcion) ?></span></div>
       <div><strong>Creado el:</strong> <?= date('d/m/Y', strtotime($proceso->FechaCreacion)) ?></div>
       <div><strong>Creador:</strong> <?= esc_html($proceso->creador) ?></div>
-      <div><strong>Tipo Proceso:</strong> <?= esc_html($proceso->TipoProceso) ?></div>
+      <div><strong>Tipo Proceso:</strong> <?= esc_html($proceso->TipoProcesoDesc) ?></div>
       <div><strong>DO Agencia:</strong> <?= esc_html($proceso->DOAgencia) ?></div>
       <div><strong>Agente Carga:</strong> <?= esc_html($proceso->AgenteCarga) ?></div>
       <div><strong>ETA:</strong> <?= date('d/m/Y', strtotime($proceso->ETA)) ?></div>
       <div><strong>Días Libres:</strong> <?= esc_html($proceso->DiasLibres) ?></div>
-      <div><strong>Digitación/Revision:</strong> <?= esc_html($proceso->DigitacionRevision) ?></div>
+      <div><strong>Digitación/Revision:</strong> <?= esc_html($proceso->DigitacionRevisionDesc) ?></div>
     </div>
   </div>
 
@@ -557,8 +582,18 @@ function disabled_if_24h_passed($datetime) {
         </div>
 
         <!-- Campos adicionales -->
-        <div class="form-group"><label for="TipoProceso">Tipo Proceso:</label>
-          <input type="text" id="TipoProceso" name="TipoProceso" value="<?= esc_attr($proceso->TipoProceso) ?>" <?= $rd_attr ?>>
+        <div class="form-group"><label for="IdTipoProceso">Tipo Proceso:</label>
+          <select id="IdTipoProceso" name="IdTipoProceso" <?= $ds_attr ?>>
+            <option value="">Seleccione...</option>
+            <?php foreach($tipos as $t): ?>
+              <option value="<?= $t->Id ?>" <?= selected($proceso->IdTipoProceso, $t->Id, false) ?>>
+                <?= esc_html($t->Descripcion) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+          <?php if (!$is_admin): ?>
+            <input type="hidden" name="IdTipoProceso" value="<?= esc_attr($proceso->IdTipoProceso) ?>">
+          <?php endif; ?>
         </div>
         <div class="form-group"><label for="DOAgencia">DO Agencia:</label>
           <input type="text" id="DOAgencia" name="DOAgencia" value="<?= esc_attr($proceso->DOAgencia) ?>" <?= $rd_attr ?>>
@@ -570,27 +605,89 @@ function disabled_if_24h_passed($datetime) {
           <input type="datetime-local" id="ETA" name="ETA" value="<?= esc_attr(date('Y-m-d\TH:i', strtotime($proceso->ETA))) ?>" <?= $rd_attr ?>>
         </div>
 
-        <!-- Resto de campos -->
-        <?php foreach (
-          [
-            'DiasLibres' => 'DiasLibres',
-            'DigitacionRevision' => 'DigitacionRevision',
-            'Aduana' => 'Aduana',
-            'Producto' => 'Producto',
-            'NumeroBL' => 'NumeroBL',
-            'Contenedor' => 'Contenedor',
-            'Puerto' => 'Puerto',
-            'Pies' => 'Pies',
-            'Bulto' => 'Bulto',
-            'PesoBruto' => 'PesoBruto',
-            'Bandera' => 'Bandera'
-          ] as $field => $prop
-        ): ?>
-          <div class="form-group">
-            <label for="<?= $field ?>"><?= $prop ?>:</label>
-            <input type="text" id="<?= $field ?>" name="<?= $field ?>" value="<?= esc_attr($proceso->$prop) ?>" <?= $rd_attr ?>>
-          </div>
-        <?php endforeach; ?>
+        <div class="form-group"><label for="DiasLibres">Días Libres:</label>
+          <input type="text" id="DiasLibres" name="DiasLibres" value="<?= esc_attr($proceso->DiasLibres) ?>" <?= $rd_attr ?>>
+        </div>
+
+        <div class="form-group"><label for="IdDigitacionRevision">Digitación/Revisión:</label>
+          <select id="IdDigitacionRevision" name="IdDigitacionRevision" <?= $ds_attr ?>>
+            <option value="">Seleccione...</option>
+            <?php foreach($digitaciones as $d): ?>
+              <option value="<?= $d->Id ?>" <?= selected($proceso->IdDigitacionRevision, $d->Id, false) ?>>
+                <?= esc_html($d->Descripcion) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+          <?php if (!$is_admin): ?>
+            <input type="hidden" name="IdDigitacionRevision" value="<?= esc_attr($proceso->IdDigitacionRevision) ?>">
+          <?php endif; ?>
+        </div>
+
+        <div class="form-group"><label for="IdAduana">Aduana:</label>
+          <select id="IdAduana" name="IdAduana" <?= $ds_attr ?>>
+            <option value="">Seleccione...</option>
+            <?php foreach($aduanas as $a): ?>
+              <option value="<?= $a->Id ?>" <?= selected($proceso->IdAduana, $a->Id, false) ?>>
+                <?= esc_html($a->Descripcion) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+          <?php if (!$is_admin): ?>
+            <input type="hidden" name="IdAduana" value="<?= esc_attr($proceso->IdAduana) ?>">
+          <?php endif; ?>
+        </div>
+
+        <div class="form-group"><label for="Producto">Producto:</label>
+          <input type="text" id="Producto" name="Producto" value="<?= esc_attr($proceso->Producto) ?>" <?= $rd_attr ?>>
+        </div>
+
+        <div class="form-group"><label for="NumeroBL">Número BL:</label>
+          <input type="text" id="NumeroBL" name="NumeroBL" value="<?= esc_attr($proceso->NumeroBL) ?>" <?= $rd_attr ?>>
+        </div>
+
+        <div class="form-group"><label for="Contenedor">Contenedor:</label>
+          <input type="text" id="Contenedor" name="Contenedor" value="<?= esc_attr($proceso->Contenedor) ?>" <?= $rd_attr ?>>
+        </div>
+
+        <div class="form-group"><label for="IdPuerto">Puerto:</label>
+          <select id="IdPuerto" name="IdPuerto" <?= $ds_attr ?>>
+            <option value="">Seleccione...</option>
+            <?php foreach($puertos as $pt): ?>
+              <option value="<?= $pt->Id ?>" <?= selected($proceso->IdPuerto, $pt->Id, false) ?>>
+                <?= esc_html($pt->Descripcion) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+          <?php if (!$is_admin): ?>
+            <input type="hidden" name="IdPuerto" value="<?= esc_attr($proceso->IdPuerto) ?>">
+          <?php endif; ?>
+        </div>
+
+        <div class="form-group"><label for="IdPies">Pies:</label>
+          <select id="IdPies" name="IdPies" <?= $ds_attr ?>>
+            <option value="">Seleccione...</option>
+            <?php foreach($pies as $p): ?>
+              <option value="<?= $p->Id ?>" <?= selected($proceso->IdPies, $p->Id, false) ?>>
+                <?= esc_html($p->Descripcion) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+          <?php if (!$is_admin): ?>
+            <input type="hidden" name="IdPies" value="<?= esc_attr($proceso->IdPies) ?>">
+          <?php endif; ?>
+        </div>
+
+        <div class="form-group"><label for="Bulto">Bulto:</label>
+          <input type="text" id="Bulto" name="Bulto" value="<?= esc_attr($proceso->Bulto) ?>" <?= $rd_attr ?>>
+        </div>
+
+        <div class="form-group"><label for="PesoBruto">Peso Bruto:</label>
+          <input type="text" id="PesoBruto" name="PesoBruto" value="<?= esc_attr($proceso->PesoBruto) ?>" <?= $rd_attr ?>>
+        </div>
+
+        <div class="form-group"><label for="Bandera">Bandera:</label>
+          <input type="text" id="Bandera" name="Bandera" value="<?= esc_attr($proceso->Bandera) ?>" <?= $rd_attr ?>>
+        </div>
 
         <!-- Campos de detalle: siempre se muestran -->
         <div class="form-group">

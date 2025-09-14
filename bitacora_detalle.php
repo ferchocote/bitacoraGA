@@ -598,7 +598,7 @@ function disabled_if_24h_passed($datetime) {
         <div class="form-group"><label for="DOAgencia">DO Agencia:</label>
           <input type="text" id="DOAgencia" name="DOAgencia" value="<?= esc_attr($proceso->DOAgencia) ?>" <?= $rd_attr ?>>
         </div>
-        <div class="form-group"><label for="AgenteCarga">Agente Carga:</label>
+        <div class="form-group"><label for="AgenteCarga">Agente de carga/Naviera:</label>
           <input type="text" id="AgenteCarga" name="AgenteCarga" value="<?= esc_attr($proceso->AgenteCarga) ?>" <?= $rd_attr ?>>
         </div>
         <div class="form-group"><label for="ETA">ETA:</label>
@@ -703,17 +703,17 @@ function disabled_if_24h_passed($datetime) {
                 <?= disabled_if_24h_passed($detalle->Liberacion ?? null) ?>>
         </div>
         <div class="form-group">
-          <label for="Pago">Pago Impuestos:</label>
-          <input type="datetime-local" id="Pago" name="Pago"
-                value="<?= esc_attr(dt_local_value($detalle->Pago ?? null)) ?>"
-                <?= disabled_if_24h_passed($detalle->Pago ?? null) ?>>
-        </div>
-        <div class="form-group">
           <label for="Aceptacion">Aceptación:</label>
           <input type="datetime-local" id="Aceptacion" name="Aceptacion"
                 value="<?= esc_attr(dt_local_value($detalle->Aceptacion ?? null)) ?>"
                 <?= disabled_if_24h_passed($detalle->Aceptacion ?? null) ?>>
         </div>
+        <div class="form-group">
+          <label for="Pago">Pago Impuestos:</label>
+          <input type="datetime-local" id="Pago" name="Pago"
+                value="<?= esc_attr(dt_local_value($detalle->Pago ?? null)) ?>"
+                <?= disabled_if_24h_passed($detalle->Pago ?? null) ?>>
+        </div>        
         <div class="form-group">
           <label for="Selectividad">Selectividad:</label>
           <input type="datetime-local" id="Selectividad" name="Selectividad"

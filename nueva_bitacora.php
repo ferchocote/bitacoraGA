@@ -173,7 +173,7 @@ function old_dt($key, $default = '') {
       </div>
 
       <div class="form-group">
-        <label for="AgenteCarga">Agente de Carga:</label>
+        <label for="AgenteCarga">Agente de carga/Naviera:</label>
         <input type="text" id="AgenteCarga" name="AgenteCarga" value="<?= old('AgenteCarga') ?>">
       </div>
 

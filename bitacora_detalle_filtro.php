@@ -58,7 +58,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         'Debito' => sanitize_text_field($_POST['Debito']),
         'DOCruzado' => sanitize_text_field($_POST['DOCruzado']),
         'IdEstado' => sanitize_text_field($_POST['Estado']),
-        'DO' => sanitize_text_field($_POST['DO']),
         'NumeroDeclaracion' => sanitize_text_field($_POST['NumeroDeclaracion']),
         'USDFOB' => sanitize_text_field($_POST['USDFOB']),
         'USDDeclaradoConFlete' => sanitize_text_field($_POST['USDDeclaradoConFlete']),
@@ -608,7 +607,7 @@ if (!isset($id)) {
     const select = document.getElementById('Estado');
     if (!select) {
         // Si aún no existe, intenta de nuevo en 100 ms
-        return setTimeout(() => cargarEstadosGiros(valorSeleccionado), 100);
+        return setTimeout(() => cargarEstadosGiros(valorSeleccionado), 10);
     }
 
     fetch('/wp-content/bitacoras/plugins/cliente/entradas-ajax.php?action=get_estados_giros')

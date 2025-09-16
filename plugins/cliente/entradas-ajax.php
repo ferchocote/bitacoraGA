@@ -65,11 +65,24 @@ switch ($action) {
 
     case 'get_entradas_giros':
         $id_proceso = intval($_GET['id_proceso']);
-        $entradas = $wpdb->get_results("SELECT TE.Descripcion as TEDescripcion,TE.Codigo as TECodigo,BT.FechaCreacion as BTFechaCreacion, EB.*,BT.*,U.* FROM `bc_entrada_bitacora` EB 
-                                         INNER JOIN `bc_tipo_entrada` TE ON TE.Id = EB.IdTipoEntrada
-                                         INNER JOIN `bc_entrada_bitacora_giro` BT ON BT.IdEntradaBitacora = EB.Id
-                                         INNER JOIN `wp_users` U On U.ID = EB.IdUser
-                                         WHERE EB.IdProceso = $id_proceso");
+        $sql = "
+            SELECT 
+                TE.Descripcion AS TEDescripcion,
+                TE.Codigo AS TECodigo,
+                BT.FechaCreacion AS BTFechaCreacion,
+                EB.*,
+                BT.*,
+                U.*,
+                cat.Id       AS Estado,
+                cat.Descripcion AS EstadoCatalogoDescripcion
+            FROM bc_entrada_bitacora EB
+            INNER JOIN bc_tipo_entrada TE ON TE.Id = EB.IdTipoEntrada
+            INNER JOIN bc_entrada_bitacora_giro BT ON BT.IdEntradaBitacora = EB.Id
+            INNER JOIN wp_users U ON U.ID = EB.IdUser
+            LEFT JOIN bc_catalogo cat ON cat.Id = BT.IdEstado  -- ajusta el campo si usa otro nombre
+            WHERE EB.IdProceso = %d
+        ";
+        $entradas = $wpdb->get_results( $wpdb->prepare($sql, $id_proceso) );
 
 
         echo json_encode($entradas);
@@ -224,6 +237,17 @@ switch ($action) {
             echo json_encode(['success' => false]);
         }
         break;
+        
+    case 'get_estados_giros':
+    $sql = "
+        SELECT Id, Descripcion
+        FROM bc_catalogo
+        WHERE Tipo = %s AND Activo = 1
+        ORDER BY Descripcion
+    ";
+    $estados = $wpdb->get_results($wpdb->prepare($sql, 'EstadoGiros'));
+    echo json_encode($estados);
+    break;
 
     default:
         echo json_encode(['error' => 'Acción no reconocida']);

@@ -282,8 +282,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
       'DescripcionMovimiento'     => sanitize_text_field($_POST['DescripcionMovimiento']),
       'Debito' => sanitize_text_field($_POST['Debito']),
       'DOCruzado' => sanitize_text_field($_POST['DOCruzado']),
-      'Estado' => sanitize_text_field($_POST['Estado']),
-      'DO' => sanitize_text_field($_POST['DO']),
+      'IdEstado' => sanitize_text_field($_POST['Estado']),
       'NumeroDeclaracion' => sanitize_text_field($_POST['NumeroDeclaracion']),
       'USDFOB' => sanitize_text_field($_POST['USDFOB']),
       'USDDeclaradoConFlete' => sanitize_text_field($_POST['USDDeclaradoConFlete']),
@@ -941,7 +940,9 @@ function disabled_if_24h_passed($datetime) {
       .then(res => res.text())
       .then(html => {
         document.getElementById('formulario-popup-container-add').innerHTML = html;
-
+        if (tipoTab === 'GRO') {
+            setTimeout(() => cargarEstadosGiros(), 50);
+          }
 
       }).finally(hideLoader)
       .catch(err => {

@@ -22,7 +22,7 @@
       <input type="text" id="DescripcionMovimiento" name="DescripcionMovimiento" />
     </div>
     <div class="form-row">
-      <label for="Debito">Débito</label>
+      <label for="Debito">Valor</label>
       <input type="number" step="0.01" id="Debito" name="Debito" />
     </div>
     <div class="form-row">
@@ -31,7 +31,9 @@
     </div>
     <div class="form-row">
       <label for="Estado">Estado</label>
-      <input type="text" id="Estado" name="Estado" />
+      <select id="Estado" name="Estado">
+        <option value="">Cargando…</option>
+      </select>
     </div>
     <!-- <div class="form-row">
       <label for="DO">DO</label>

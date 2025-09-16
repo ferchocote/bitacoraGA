@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         'DescripcionMovimiento'     => sanitize_text_field($_POST['DescripcionMovimiento']),
         'Debito' => sanitize_text_field($_POST['Debito']),
         'DOCruzado' => sanitize_text_field($_POST['DOCruzado']),
-        'Estado' => sanitize_text_field($_POST['Estado']),
+        'IdEstado' => sanitize_text_field($_POST['Estado']),
         'DO' => sanitize_text_field($_POST['DO']),
         'NumeroDeclaracion' => sanitize_text_field($_POST['NumeroDeclaracion']),
         'USDFOB' => sanitize_text_field($_POST['USDFOB']),
@@ -519,6 +519,8 @@ if (!isset($id)) {
         }
 
         popupToggle.checked = true;
+
+        cargarEstadosGiros(data.Estado || '');
     }
 
     function cargarDatosContabilidad(data, modo) {
@@ -601,6 +603,29 @@ if (!isset($id)) {
 
         popupToggle.checked = true;
     }
+
+    function cargarEstadosGiros(valorSeleccionado = '') {
+    const select = document.getElementById('Estado');
+    if (!select) {
+        // Si aún no existe, intenta de nuevo en 100 ms
+        return setTimeout(() => cargarEstadosGiros(valorSeleccionado), 100);
+    }
+
+    fetch('/wp-content/bitacoras/plugins/cliente/entradas-ajax.php?action=get_estados_giros')
+        .then(res => res.json())
+        .then(estados => {
+        select.innerHTML = '<option value="">Seleccione…</option>';
+        estados.forEach(e => {
+            const opt = document.createElement('option');
+            opt.value = e.Id;
+            opt.textContent = e.Descripcion;
+            select.appendChild(opt);
+        });
+        if (valorSeleccionado) select.value = valorSeleccionado;
+        })
+        .catch(err => console.error('No se pudieron cargar los estados de giros:', err));
+    }
+
 
     function showLoaderdocumento() { // Mantengo el nombre que ya usabas
         console.log('Mostrando loader de documentos...');

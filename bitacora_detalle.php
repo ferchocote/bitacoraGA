@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
     $detalle->Deposito = sanitize_text_field($_POST['Deposito']);
     $detalle->Manifiesto = sanitize_text_field($_POST['Manifiesto']);
     $detalle->Observaciones = sanitize_text_field($_POST['Observaciones']);
-}
+  }
   
   $data_p = [
     'DOAgencia'           => sanitize_text_field($_POST['DOAgencia']),
@@ -107,12 +107,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
     'EntregaTransporte'   => !empty($_POST['EntregaTransporte']) ? date('Y-m-d H:i:s', strtotime($_POST['EntregaTransporte'])) : null,
     'DevolucionUnidad'    => !empty($_POST['DevolucionUnidad']) ? date('Y-m-d H:i:s', strtotime($_POST['DevolucionUnidad'])) : null,
     'Pago'                => !empty($_POST['Pago']) ? date('Y-m-d H:i:s', strtotime($_POST['Pago'])) : null,
-    'Deposito'            => sanitize_text_field($_POST['Deposito']),
     'Manifiesto'          => sanitize_text_field($_POST['Manifiesto']),
     'Observaciones'       => sanitize_text_field($_POST['Observaciones']),
     'ArchivoFisico'       => $_POST['ArchivoFisico'],
     'IdProceso'           => $id,
   ];
+
+  $depositoActivo = !empty($_POST['DepositoActivo']);
+
+  $data_d['DescripcionDeposito'] = $depositoActivo ? sanitize_text_field($_POST['DescripcionDeposito']) : null;
+  $data_d['IdDeposito']          = $depositoActivo ? intval($_POST['IdDeposito']) : null;
+  $data_d['FechaDeposito'] = $depositoActivo
+    ? (!empty($_POST['FechaDeposito'])
+        ? date('Y-m-d H:i:s', strtotime($_POST['FechaDeposito']))
+        : current_time('mysql'))
+    : null;
+
 
   if ($detalle_id) {
     $wpdb->update($tabla_detalle, $data_d, ['Id' => $detalle_id]);
@@ -425,7 +435,14 @@ if (!$proceso) {
 // Detalles relacionados
 $detalles = $wpdb->get_results(
   $wpdb->prepare(
-    "SELECT * FROM {$tabla_detalle} WHERE IdProceso = %d ORDER BY Id",
+    "SELECT d.*,
+            cat.Descripcion AS DepositoCatalogo
+     FROM {$tabla_detalle} d
+     LEFT JOIN bc_catalogo cat
+            ON cat.Id = d.IdDeposito
+           AND cat.Tipo = 'Deposito'
+     WHERE d.IdProceso = %d
+     ORDER BY d.Id",
     $id
   )
 );
@@ -442,6 +459,14 @@ $digitaciones = $wpdb->get_results("SELECT Id, Descripcion FROM bc_catalogo WHER
 $aduanas = $wpdb->get_results("SELECT Id, Descripcion FROM bc_catalogo WHERE Tipo='Aduana' AND Activo=1 ORDER BY Descripcion");
 $pies = $wpdb->get_results("SELECT Id, Descripcion FROM bc_catalogo WHERE Tipo='Pies' AND Activo=1 ORDER BY Descripcion");
 $puertos = $wpdb->get_results("SELECT Id, Descripcion FROM bc_catalogo WHERE Tipo='Puerto' AND Activo=1 ORDER BY Descripcion");
+
+$depositos = $wpdb->get_results("
+    SELECT Id, Descripcion
+    FROM bc_catalogo
+    WHERE Tipo = 'Deposito' AND Activo = 1
+    ORDER BY Descripcion
+");
+
 
 $tipos_entrada = $wpdb->get_results(
   "SELECT Id, Descripcion 
@@ -737,9 +762,50 @@ function disabled_if_24h_passed($datetime) {
         <div class="form-group"><label for="Observaciones">Observaciones:</label>
           <input type="text" id="Observaciones" name="Observaciones" value="<?= esc_attr($detalle->Observaciones ?? '') ?>">
         </div>
-        <div class="form-group"><label for="Deposito">Depósito:</label>
-          <input type="text" id="Deposito" name="Deposito" value="<?= esc_attr($detalle->Deposito ?? '') ?>">
+
+        <div class="form-group">
+          <label for="DepositoActivo">Depósito</label>
+          <input type="hidden" name="DepositoActivo" value="0">
+          <input
+            type="checkbox"
+            id="DepositoActivo"
+            name="DepositoActivo"
+            value="1"
+            <?= !empty($detalle->IdDeposito) ? 'checked' : '' ?>
+          >
         </div>
+        <div class="form-row">
+          <label for="IdDeposito">Estado Depósito</label>
+          <select id="IdDeposito" name="IdDeposito" <?= empty($detalle->IdDeposito) ? 'disabled' : '' ?>>
+              <option value="">Seleccione…</option>
+              <?php foreach ($depositos as $dep): ?>
+                  <option
+                      value="<?= esc_attr($dep->Id) ?>"
+                      <?= isset($detalle->IdDeposito) && (int)$detalle->IdDeposito === (int)$dep->Id ? 'selected' : '' ?>
+                  >
+                      <?= esc_html($dep->Descripcion) ?>
+                  </option>
+              <?php endforeach; ?>
+          </select>
+
+        </div>
+        <div class="form-row">
+          <label for="DescripcionDeposito">Descripción Depósito</label>
+          <input
+              type="text"
+              id="DescripcionDeposito"
+              name="DescripcionDeposito"
+              value="<?= isset($detalle->DescripcionDeposito) ? esc_attr($detalle->DescripcionDeposito) : '' ?>"
+              <?= empty($detalle->IdDeposito) ? 'disabled' : '' ?>
+          >
+
+        </div>
+        <!-- <div class="form-row">
+          <label for="FechaDeposito">Fecha Depósito</label>
+          <input type="date" id="FechaDeposito" name="FechaDeposito" disabled>
+        </div> -->
+
+
         <div class="form-group">
           <label for="DevolucionUnidad">Devolución Unidad:</label>
           <input type="datetime-local" id="DevolucionUnidad" name="DevolucionUnidad"
@@ -993,5 +1059,31 @@ function disabled_if_24h_passed($datetime) {
       formAdd.reset();
     }
   })();
+
+  const chkDeposito = document.getElementById('DepositoActivo');
+  const selDeposito = document.getElementById('IdDeposito');
+  const txtDeposito = document.getElementById('DescripcionDeposito');
+  //const fechaDeposito = document.getElementById('FechaDeposito');
+
+  function toggleDeposito(checked) {
+    selDeposito.disabled = !checked;
+    txtDeposito.disabled = !checked;
+    //fechaDeposito.disabled = !checked;
+
+    if (checked) {
+      // poner la fecha actual si no tenía valor
+          // if (!fechaDeposito.value) {
+          //   const hoy = new Date().toISOString().split('T')[0];
+          //   fechaDeposito.value = hoy;
+          // }
+    } else {
+      selDeposito.value = '';
+      txtDeposito.value = '';
+      //fechaDeposito.value = '';
+    }
+  }
+
+  chkDeposito.addEventListener('change', e => toggleDeposito(e.target.checked));
+  toggleDeposito(chkDeposito.checked);
 
 </script>

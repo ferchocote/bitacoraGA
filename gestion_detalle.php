@@ -38,9 +38,23 @@ if ($q !== '') {
     ));
 } else {
     $documentos = $wpdb->get_results($wpdb->prepare(
-        "SELECT d.*, t.Nombre AS TipoNombre
+        "SELECT d.ID as DocumentoId,
+                d.NombreArchivo,
+                d.RutaArchivo,
+                d.FechaSubida,
+                t.Nombre AS TipoNombre,
+                dd.IdTipoDocContabilidad,
+                tc.Descripcion AS TipoDocContabilidad,
+                dd.IdTipoDocCliente,
+                tcli.Descripcion AS TipoDocCliente,
+                dd.NombreClienteProveedor,
+                dd.FechaDocumento,
+                dd.Descripcion
          FROM bc_documento_gestion d
+         LEFT JOIN bc_documento_gestion_detalle dd ON d.ID = dd.IdDocumentoGestion
          LEFT JOIN bc_tipo_gestion_documental t ON t.Id = d.IdTipoGestion
+         LEFT JOIN bc_tipo_documento_contabilidad tc ON dd.IdTipoDocContabilidad = tc.ID
+         LEFT JOIN bc_tipo_documento tcli ON dd.IdTipoDocCliente = tcli.ID
          WHERE d.IdGestion = %d
          ORDER BY d.FechaSubida DESC
          LIMIT %d OFFSET %d",

@@ -86,8 +86,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Insertar registro
     $inserted = $wpdb->insert($tabla, $data);
     if ($inserted) {
-        $new_id = $wpdb->insert_id;
-        $message = '<div class="success">Proceso creado con ID: ' . $new_id . '</div>';
+      $new_id = $wpdb->insert_id;
+      // Guardar log en bc_logs
+      $log_data = [
+        'Objeto'        => wp_json_encode($data),
+        'Tabla'         => $tabla,
+        'TipoDeCambio'    => 'Crear',
+        'IdUser'        => get_current_user_id(),
+        'FechaCreacion' => current_time('mysql'),
+      ];
+      $wpdb->insert('bc_logs', $log_data);
+      $message = '<div class="success">Proceso creado con ID: ' . $new_id . '</div>';
     } else {
         $message = '<div class="error">Error al crear el proceso.</div>';
     }

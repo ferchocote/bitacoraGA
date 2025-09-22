@@ -96,6 +96,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
 
   $wpdb->update($tabla_proceso, $data_p, ['Id' => $id]);
 
+  // Guardar log en bc_logs
+  $log_data = [
+    'Objeto'        => wp_json_encode($data_p),
+    'Tabla'         => $tabla_proceso,
+    'TipoDeCambio'  => "Actualizar",
+    'IdUser'        => get_current_user_id(),
+    'FechaCreacion' => current_time('mysql'),
+  ];
+  $wpdb->insert('bc_logs', $log_data);
+
   // Insertar o actualizar detalle
   $detalle_id = !empty($_POST['detalle_id']) ? intval($_POST['detalle_id']) : 0;
   $data_d = [
@@ -132,7 +142,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
     $data_d['IdUserCreation']  = get_current_user_id();
     $wpdb->insert($tabla_detalle, $data_d);
   }
-  
+
+    // Guardar log en bc_logs
+    $log_data = [
+      'Objeto'        => wp_json_encode($data_d),
+      'Tabla'         => $tabla_detalle,
+      'TipoDeCambio'  => isset($detalle_id) ? "Actualizar" : "Crear",
+      'IdUser'        => get_current_user_id(),
+      'FechaCreacion' => current_time('mysql'),
+    ];
+    $wpdb->insert('bc_logs', $log_data);
+
     $cambios = [];
 
 
@@ -211,6 +231,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
   
   // Insertar
   $insertedEntrada = $wpdb->insert($tablaEntrada, $dataEntrada);
+  
+  // Guardar log de entrada en bc_logs
+  $log_data = [
+    'Objeto'        => wp_json_encode($dataEntrada),
+    'Tabla'         => $tablaEntrada,
+    'TipoDeCambio'    => 'Crear',
+    'IdUser'        => get_current_user_id(),
+    'FechaCreacion' => current_time('mysql'),
+  ];
+  $wpdb->insert('bc_logs', $log_data);
 
   if ($insertedEntrada) {
     $new_id = $wpdb->insert_id;
@@ -244,6 +274,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     // Insertar
     $wpdb->show_errors(); // Activar errores SQL
     $inserted = $wpdb->insert($tabla, $dataDetalle);
+
+    // Guardar log en bc_logs
+    $log_data = [
+      'Objeto'        => wp_json_encode($dataDetalle),
+      'Tabla'         => $tabla,
+      'TipoDeCambio'    => 'Crear',
+      'IdUser'        => get_current_user_id(),
+      'FechaCreacion' => current_time('mysql'),
+    ];
+    $wpdb->insert('bc_logs', $log_data);
 
     if ($inserted) {
       $response['success'] = true;
@@ -279,6 +319,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
   // Insertar
   $insertedEntrada = $wpdb->insert($tablaEntrada, $dataEntrada);
 
+  // Guardar log de entrada en bc_logs
+  $log_data = [
+    'Objeto'        => wp_json_encode($dataEntrada),
+    'Tabla'         => $tablaEntrada,
+    'TipoDeCambio'    => 'Crear',
+    'IdUser'        => get_current_user_id(),
+    'FechaCreacion' => current_time('mysql'),
+  ];
+  $wpdb->insert('bc_logs', $log_data);
+
   if ($insertedEntrada) {
     $new_id = $wpdb->insert_id;
     $response = ['success' => false, 'data' => ''];
@@ -311,6 +361,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     // Insertar
     $wpdb->show_errors(); // Activar errores SQL
     $inserted = $wpdb->insert($tabla, $dataDetalle);
+
+    // Guardar log en bc_logs
+    $log_data = [
+      'Objeto'        => wp_json_encode($dataDetalle),
+      'Tabla'         => $tabla,
+      'TipoDeCambio'    => 'Crear',
+      'IdUser'        => get_current_user_id(),
+      'FechaCreacion' => current_time('mysql'),
+    ];
+    $wpdb->insert('bc_logs', $log_data);
 
     if ($inserted) {
       $response['success'] = true;
@@ -345,6 +405,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
   // Insertar
   $insertedEntrada = $wpdb->insert($tablaEntrada, $dataEntrada);
 
+  // Guardar log de entrada en bc_logs
+  $log_data = [
+    'Objeto'        => wp_json_encode($dataEntrada),
+    'Tabla'         => $tablaEntrada,
+    'TipoDeCambio'    => 'Crear',
+    'IdUser'        => get_current_user_id(),
+    'FechaCreacion' => current_time('mysql'),
+  ];
+  $wpdb->insert('bc_logs', $log_data);
+
   if ($insertedEntrada) {
     $new_id = $wpdb->insert_id;
      $response = ['success' => false, 'data' => ''];
@@ -367,6 +437,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     // Insertar
     $wpdb->show_errors(); // Activar errores SQL
     $inserted = $wpdb->insert($tabla, $dataDetalle);
+
+    // Guardar log en bc_logs
+    $log_data = [
+      'Objeto'        => wp_json_encode($dataDetalle),
+      'Tabla'         => $tabla,
+      'TipoDeCambio'    => 'Crear',
+      'IdUser'        => get_current_user_id(),
+      'FechaCreacion' => current_time('mysql'),
+    ];
+    $wpdb->insert('bc_logs', $log_data);
 
     if ($inserted) {
       $response['success'] = true;

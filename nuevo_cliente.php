@@ -83,6 +83,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $inserted = $wpdb->insert($tabla, $data);
 
   if ($inserted) {
+    // Guardar log en bc_logs
+    $log_data = [
+        'Objeto'        => wp_json_encode($data),
+        'Tabla'         => $tabla,
+        'TipoDeCambio'    => 'Actualizar',
+        'IdUser'        => get_current_user_id(),
+        'FechaCreacion' => current_time('mysql'),
+    ];
+    $wpdb->insert('bc_logs', $log_data);
+
     $new_id = $wpdb->insert_id;
     $message = '<div class="success">Cliente creado con ID: ' . $new_id . '</div>';
 

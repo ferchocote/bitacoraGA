@@ -27,13 +27,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         'FechaEntregaUnidadVacia' => sanitize_text_field($_POST['fechaEntregaUnidadVacia'])
 
     ];
-    //echo "<script>console.log(" . json_encode($_POST) . ");</script>";
-    // echo "<script>console.log(" . json_encode($tabla) . ");</script>";
-    // echo "<script>console.log(" . json_encode($id) . ");</script>";
-
-
 
     $result = $wpdb->update($tabla, $data, ['Id' => $idEntrada]);
+
+    // Guardar log en bc_logs
+    $log_data = [
+        'Objeto'        => wp_json_encode($data),
+        'Tabla'         => $tabla,
+        'TipoDeCambio'    => 'Actualizar',
+        'IdUser'        => get_current_user_id(),
+        'FechaCreacion' => current_time('mysql'),
+    ];
+    $wpdb->insert('bc_logs', $log_data);
 
     header('Content-Type: application/json');
     if ($result !== false) {
@@ -66,13 +71,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         'Proveedor' => sanitize_text_field($_POST['Proveedor'])
 
     ];
-    //echo "<script>console.log(" . json_encode($_POST) . ");</script>";
-    // echo "<script>console.log(" . json_encode($tabla) . ");</script>";
-    // echo "<script>console.log(" . json_encode($id) . ");</script>";
-
-
 
     $result = $wpdb->update($tabla, $data, ['Id' => $idEntrada]);
+
+    // Guardar log en bc_logs
+    $log_data = [
+        'Objeto'        => wp_json_encode($data),
+        'Tabla'         => $tabla,
+        'TipoDeCambio'    => 'Actualizar',
+        'IdUser'        => get_current_user_id(),
+        'FechaCreacion' => current_time('mysql'),
+    ];
+    $wpdb->insert('bc_logs', $log_data);
 
     header('Content-Type: application/json');
     if ($result !== false) {
@@ -100,13 +110,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     ];
 
-    //echo "<script>console.log(" . json_encode($_POST) . ");</script>";
-    // echo "<script>console.log(" . json_encode($tabla) . ");</script>";
-    // echo "<script>console.log(" . json_encode($id) . ");</script>";
-
-
-
     $result = $wpdb->update($tabla, $data, ['Id' => $idEntrada]);
+
+    // Guardar log en bc_logs
+    $log_data = [
+        'Objeto'        => wp_json_encode($data),
+        'Tabla'         => $tabla,
+        'TipoDeCambio'    => 'Actualizar',
+        'IdUser'        => get_current_user_id(),
+        'FechaCreacion' => current_time('mysql'),
+    ];
+    $wpdb->insert('bc_logs', $log_data);
 
     header('Content-Type: application/json');
     if ($result !== false) {

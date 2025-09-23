@@ -1,6 +1,6 @@
 <?php
 // Valida rol de usuario 
-if ($usuario->rol_codigo == "RRHH") {
+if ($usuario->rol_codigo == "RRHH" || $usuario->rol_codigo == "PAG") {
   echo "No tienes permiso para acceder a esta vista.";
   exit;
 }

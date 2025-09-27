@@ -1,10 +1,20 @@
 <?php
 ob_start();
+require_once __DIR__ . '/../../wp-load.php';
+$current_user = wp_get_current_user();
+
+global $wpdb;
+//$tabla = $wpdb->prefix . 'users';
+$usuario = $wpdb->get_row("SELECT u.*, r.Nombre AS rol_nombre, r.Codigo AS rol_codigo
+        FROM wp_users u
+        LEFT JOIN bc_user_role ur ON ur.IdUser = u.ID
+        LEFT JOIN bc_roles r ON r.Id = ur.IdRol
+        WHERE u.id = {$current_user->ID}");
 
 // Valida rol de usuario 
 if ($usuario->rol_codigo == "RRHH") {
-    echo "No tienes permiso para acceder a esta vista.";
-    exit;
+  echo "No tienes permiso para acceder a esta vista.";
+  exit;
 }
 
 define('WP_USE_THEMES', false);
@@ -15,22 +25,22 @@ if (!is_user_logged_in()) {
   exit;
 }
 
-global $wpdb;
+//global $wpdb;
 
-add_action('phpmailer_init', function($phpmailer) {
-    // Forzar SMTP
-    $phpmailer->isSMTP();
-    $phpmailer->Host       = 'smtp.hostinger.com';   // servidor SMTP de tu hosting
-    $phpmailer->SMTPAuth   = true;
-    $phpmailer->Port       = 465;                    // 465 (SSL) o 587 (TLS)
-    $phpmailer->SMTPSecure = 'ssl';                  // o 'tls'
-    
-    // Credenciales de la cuenta en tu dominio
-    $phpmailer->Username   = 'no-reply@clscolombia.com';
-    $phpmailer->Password   = 'Soluciones25*';
-    
-    // Dirección del remitente
-    $phpmailer->setFrom('no-reply@clscolombia.com', 'CLS-COLOMBIA');
+add_action('phpmailer_init', function ($phpmailer) {
+  // Forzar SMTP
+  $phpmailer->isSMTP();
+  $phpmailer->Host       = 'smtp.hostinger.com';   // servidor SMTP de tu hosting
+  $phpmailer->SMTPAuth   = true;
+  $phpmailer->Port       = 465;                    // 465 (SSL) o 587 (TLS)
+  $phpmailer->SMTPSecure = 'ssl';                  // o 'tls'
+
+  // Credenciales de la cuenta en tu dominio
+  $phpmailer->Username   = 'no-reply@clscolombia.com';
+  $phpmailer->Password   = 'Soluciones25*';
+
+  // Dirección del remitente
+  $phpmailer->setFrom('no-reply@clscolombia.com', 'CLS-COLOMBIA');
 });
 
 // Tablas
@@ -46,17 +56,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
   $id = intval($_GET['id']);
   // Actualizar bc_proceso
   $tabla_proceso = $tabla;
-  
+
   $sql = $wpdb->prepare(
-    "SELECT p.* FROM bc_proceso p WHERE p.Id = %d", $id
+    "SELECT p.* FROM bc_proceso p WHERE p.Id = %d",
+    $id
   );
-    
+
   $proceso = $wpdb->get_row($sql);
-  
+
   $sqlDetalle = $wpdb->prepare(
-    "SELECT d.* FROM bc_detalle_proceso d WHERE d.Id = %d", $id
+    "SELECT d.* FROM bc_detalle_proceso d WHERE d.Id = %d",
+    $id
   );
-    
+
   $detalle = $wpdb->get_row($sqlDetalle);
   if ($detalle) {
     $detalle->PagoNaviera = $detalle->PagoNaviera ? date('Y-m-d H:i:s', strtotime($_POST['PagoNaviera'])) : null;
@@ -71,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
     $detalle->Manifiesto = sanitize_text_field($_POST['Manifiesto']);
     $detalle->Observaciones = sanitize_text_field($_POST['Observaciones']);
   }
-  
+
   $data_p = [
     'DOAgencia'           => sanitize_text_field($_POST['DOAgencia']),
     'AgenteCarga'         => sanitize_text_field($_POST['AgenteCarga']),
@@ -129,8 +141,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
   $data_d['IdDeposito']          = $depositoActivo ? intval($_POST['IdDeposito']) : null;
   $data_d['FechaDeposito'] = $depositoActivo
     ? (!empty($_POST['FechaDeposito'])
-        ? date('Y-m-d H:i:s', strtotime($_POST['FechaDeposito']))
-        : current_time('mysql'))
+      ? date('Y-m-d H:i:s', strtotime($_POST['FechaDeposito']))
+      : current_time('mysql'))
     : null;
 
 
@@ -143,66 +155,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
     $wpdb->insert($tabla_detalle, $data_d);
   }
 
-    // Guardar log en bc_logs
-    $log_data = [
-      'Objeto'        => wp_json_encode($data_d),
-      'Tabla'         => $tabla_detalle,
-      'TipoDeCambio'  => isset($detalle_id) ? "Actualizar" : "Crear",
-      'IdUser'        => get_current_user_id(),
-      'FechaCreacion' => current_time('mysql'),
-    ];
-    $wpdb->insert('bc_logs', $log_data);
+  // Guardar log en bc_logs
+  $log_data = [
+    'Objeto'        => wp_json_encode($data_d),
+    'Tabla'         => $tabla_detalle,
+    'TipoDeCambio'  => isset($detalle_id) ? "Actualizar" : "Crear",
+    'IdUser'        => get_current_user_id(),
+    'FechaCreacion' => current_time('mysql'),
+  ];
+  $wpdb->insert('bc_logs', $log_data);
 
-    $cambios = [];
+  $cambios = [];
 
 
-    foreach ($data_p as $campo => $valor_nuevo) {
-        $valor_actual = $proceso->$campo ?? null;
-        if ($valor_actual != $valor_nuevo) {
-            $cambios[] = [
-                'tabla' => 'Proceso',
-                'campo' => $campo,
-                'antes' => $valor_actual,
-                'despues' => $valor_nuevo
-            ];
-        }
+  foreach ($data_p as $campo => $valor_nuevo) {
+    $valor_actual = $proceso->$campo ?? null;
+    if ($valor_actual != $valor_nuevo) {
+      $cambios[] = [
+        'tabla' => 'Proceso',
+        'campo' => $campo,
+        'antes' => $valor_actual,
+        'despues' => $valor_nuevo
+      ];
     }
+  }
 
-    // Comparar cambios en Detalle
-    foreach ($data_d as $campo => $valor_nuevo) {
-        $valor_actual = $detalle->$campo ?? null;
-        if ($campo != 'IdProceso' && $valor_actual != $valor_nuevo) {
-            $cambios[] = [
-                'tabla' => 'Detalle',
-                'campo' => $campo,
-                'antes' => $valor_actual,
-                'despues' => $valor_nuevo
-            ];
-        }
+  // Comparar cambios en Detalle
+  foreach ($data_d as $campo => $valor_nuevo) {
+    $valor_actual = $detalle->$campo ?? null;
+    if ($campo != 'IdProceso' && $valor_actual != $valor_nuevo) {
+      $cambios[] = [
+        'tabla' => 'Detalle',
+        'campo' => $campo,
+        'antes' => $valor_actual,
+        'despues' => $valor_nuevo
+      ];
     }
-    
-    // Si hubo cambios, enviar correo
-    if (!empty($cambios)) {
-        $to = ["solucionestegnologicasga@gmail.com", "gerencia@galogistic.com"];
-        $subject = "Cambios en el proceso ID: $id";
-    
-        $mensaje = "<h3>Se detectaron cambios en el proceso #$id</h3>"; 
-        $mensaje .= "<h4>Hora de edición: " . date("Y-m-d H:i:s") . "</h4>\n";
-        $mensaje .= "<table border='1' cellspacing='0' cellpadding='5'>
+  }
+
+  // Si hubo cambios, enviar correo
+  if (!empty($cambios)) {
+    $to = ["solucionestegnologicasga@gmail.com", "gerencia@galogistic.com"];
+    $subject = "Cambios en el proceso ID: $id";
+
+    $mensaje = "<h3>Se detectaron cambios en el proceso #$id</h3>";
+    $mensaje .= "<h4>Hora de edición: " . date("Y-m-d H:i:s") . "</h4>\n";
+    $mensaje .= "<table border='1' cellspacing='0' cellpadding='5'>
                         <tr><th>Tabla</th><th>Campo</th><th>Antes</th><th>Después</th></tr>";
-        foreach ($cambios as $c) {
-            $mensaje .= "<tr>
+    foreach ($cambios as $c) {
+      $mensaje .= "<tr>
                             <td>{$c['tabla']}</td>
                             <td>{$c['campo']}</td>
                             <td>{$c['antes']}</td>
                             <td>{$c['despues']}</td>
                          </tr>";
-        }
-        $mensaje .= "</table>";
-    
-        $headers = ['Content-Type: text/html; charset=UTF-8'];
-        wp_mail($to, $subject, $mensaje, $headers);
     }
+    $mensaje .= "</table>";
+
+    $headers = ['Content-Type: text/html; charset=UTF-8'];
+    wp_mail($to, $subject, $mensaje, $headers);
+  }
 
   // Redirigir para evitar reenvío
   wp_safe_redirect(add_query_arg(['view' => 'bitacora_detalle', 'id' => $id], $_SERVER['PHP_SELF']));
@@ -228,19 +240,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     'Activo'  => 1
   ];
 
-  
+
   // Insertar
   $insertedEntrada = $wpdb->insert($tablaEntrada, $dataEntrada);
-  
-  // Guardar log de entrada en bc_logs
-  $log_data = [
-    'Objeto'        => wp_json_encode($dataEntrada),
-    'Tabla'         => $tablaEntrada,
-    'TipoDeCambio'    => 'Crear',
-    'IdUser'        => get_current_user_id(),
-    'FechaCreacion' => current_time('mysql'),
-  ];
-  $wpdb->insert('bc_logs', $log_data);
+
+
 
   if ($insertedEntrada) {
     $new_id = $wpdb->insert_id;
@@ -275,27 +279,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $wpdb->show_errors(); // Activar errores SQL
     $inserted = $wpdb->insert($tabla, $dataDetalle);
 
-    // Guardar log en bc_logs
-    $log_data = [
-      'Objeto'        => wp_json_encode($dataDetalle),
-      'Tabla'         => $tabla,
-      'TipoDeCambio'    => 'Crear',
-      'IdUser'        => get_current_user_id(),
-      'FechaCreacion' => current_time('mysql'),
-    ];
-    $wpdb->insert('bc_logs', $log_data);
+
 
     if ($inserted) {
       $response['success'] = true;
       $response['data'] = 'Entrada y detalle creados correctamente.';
+      // Guardar log de entrada en bc_logs
+      $log_data = [
+        'Objeto'        => wp_json_encode($dataEntrada),
+        'Tabla'         => $tablaEntrada,
+        'TipoDeCambio'    => 'Crear',
+        'IdUser'        => get_current_user_id(),
+        'FechaCreacion' => current_time('mysql'),
+      ];
+      $wpdb->insert('bc_logs', $log_data);
+      // Guardar log en bc_logs
+      $log_data = [
+        'Objeto'        => wp_json_encode($dataDetalle),
+        'Tabla'         => $tabla,
+        'TipoDeCambio'    => 'Crear',
+        'IdUser'        => get_current_user_id(),
+        'FechaCreacion' => current_time('mysql'),
+      ];
+      $wpdb->insert('bc_logs', $log_data);
     } else {
       $response['data'] = 'Error al crear detalle: ' . $wpdb->last_error;
       error_log('Error SQL: ' . $wpdb->last_error);
     }
   } else {
-   $response['data'] = 'Error al crear la entrada: ' . $wpdb->last_error;
+    $response['data'] = 'Error al crear la entrada: ' . $wpdb->last_error;
   }
-   // Devuelve JSON válido
+  // Devuelve JSON válido
   wp_send_json($response);
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'crear_giros') {
@@ -306,83 +320,80 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
   $tabla = 'bc_entrada_bitacora_giro';
   $tablaEntrada = 'bc_entrada_bitacora';
 
-  // Auditoría
   $dataEntrada = [
     'IdTipoEntrada'       => $idEntrada,
-    'IdProceso'               => $idProceso,
-    'IdUser'               => get_current_user_id(),
-    'FechaCreacion'     => current_time('mysql'),
-    'Activo'  => 1
+    'IdProceso'           => $idProceso,
+    'IdUser'              => get_current_user_id(),
+    'FechaCreacion'       => current_time('mysql'),
+    'Activo'              => 1
   ];
 
-  //echo "<script>console.log(" . json_encode($dataEntrada) . ");</script>";
-  // Insertar
   $insertedEntrada = $wpdb->insert($tablaEntrada, $dataEntrada);
 
-  // Guardar log de entrada en bc_logs
-  $log_data = [
-    'Objeto'        => wp_json_encode($dataEntrada),
-    'Tabla'         => $tablaEntrada,
-    'TipoDeCambio'    => 'Crear',
-    'IdUser'        => get_current_user_id(),
-    'FechaCreacion' => current_time('mysql'),
-  ];
-  $wpdb->insert('bc_logs', $log_data);
 
-  if ($insertedEntrada) {
+
+  $response = ['success' => false, 'data' => ''];
+
+  if ($insertedEntrada && $wpdb->insert_id > 0) {
     $new_id = $wpdb->insert_id;
-    $response = ['success' => false, 'data' => ''];
 
     $dataDetalle = [
-      'Descripcion'   => sanitize_text_field($_POST['descripcion']),
-      'ComprobanteSiigo'   => sanitize_text_field($_POST['ComprobanteSiigo']),
-      'IdEntradaBitacora'       => $new_id,
-      'FechaElaboracion'       => sanitize_text_field($_POST['FechaElaboracion']),
+      'Descripcion'           => sanitize_text_field($_POST['descripcion']),
+      'ComprobanteSiigo'      => sanitize_text_field($_POST['ComprobanteSiigo']),
+      'IdEntradaBitacora'     => $new_id,
+      'FechaElaboracion'      => sanitize_text_field($_POST['FechaElaboracion']),
       'NombreTercero'         => sanitize_text_field($_POST['NombreTercero']),
-      'DescripcionMovimiento'     => sanitize_text_field($_POST['DescripcionMovimiento']),
-      'Debito' => sanitize_text_field($_POST['Debito']),
-      'DOCruzado' => sanitize_text_field($_POST['DOCruzado']),
-      'IdEstado' => sanitize_text_field($_POST['Estado']),
-      'NumeroDeclaracion' => sanitize_text_field($_POST['NumeroDeclaracion']),
-      'USDFOB' => sanitize_text_field($_POST['USDFOB']),
-      'USDDeclaradoConFlete' => sanitize_text_field($_POST['USDDeclaradoConFlete']),
-      'USDReal' => sanitize_text_field($_POST['USDReal']),
-      'FechaMovimiento' => sanitize_text_field($_POST['FechaMovimiento']),
-      'Proveedor' => sanitize_text_field($_POST['Proveedor'])
-
+      'DescripcionMovimiento' => sanitize_text_field($_POST['DescripcionMovimiento']),
+      'Debito'                => sanitize_text_field($_POST['Debito']),
+      'DOCruzado'             => sanitize_text_field($_POST['DOCruzado']),
+      'IdEstado'              => sanitize_text_field($_POST['Estado']),
+      'NumeroDeclaracion'     => sanitize_text_field($_POST['NumeroDeclaracion']),
+      'USDFOB'                => sanitize_text_field($_POST['USDFOB']),
+      'USDDeclaradoConFlete'  => sanitize_text_field($_POST['USDDeclaradoConFlete']),
+      'USDReal'               => sanitize_text_field($_POST['USDReal']),
+      'FechaMovimiento'       => sanitize_text_field($_POST['FechaMovimiento']),
+      'Proveedor'             => sanitize_text_field($_POST['Proveedor']),
+      'FechaCreacion'         => current_time('mysql'),
+      'Activo'                => 1
     ];
 
-    // Auditoría
-
-    //$data['IdUser']     = get_current_user_id();
-    $dataDetalle['FechaCreacion'] = current_time('mysql');
-    $dataDetalle['Activo']     = 1;
-    
-    // Insertar
-    $wpdb->show_errors(); // Activar errores SQL
+    $wpdb->show_errors();
     $inserted = $wpdb->insert($tabla, $dataDetalle);
 
-    // Guardar log en bc_logs
-    $log_data = [
-      'Objeto'        => wp_json_encode($dataDetalle),
-      'Tabla'         => $tabla,
-      'TipoDeCambio'    => 'Crear',
-      'IdUser'        => get_current_user_id(),
-      'FechaCreacion' => current_time('mysql'),
-    ];
-    $wpdb->insert('bc_logs', $log_data);
+
+
+
 
     if ($inserted) {
       $response['success'] = true;
       $response['data'] = 'Entrada y detalle creados correctamente.';
+      // Guardar log de entrada en bc_logs
+      $log_data = [
+        'Objeto'        => wp_json_encode($dataEntrada),
+        'Tabla'         => $tablaEntrada,
+        'TipoDeCambio'  => 'Crear',
+        'IdUser'        => get_current_user_id(),
+        'FechaCreacion' => current_time('mysql'),
+      ];
+      $wpdb->insert('bc_logs', $log_data);
+      // Guardar log en bc_logs
+      $log_data = [
+        'Objeto'        => wp_json_encode($dataDetalle),
+        'Tabla'         => $tabla,
+        'TipoDeCambio'    => 'Crear',
+        'IdUser'        => get_current_user_id(),
+        'FechaCreacion' => current_time('mysql'),
+      ];
     } else {
       $response['data'] = 'Error al crear detalle: ' . $wpdb->last_error;
       error_log('Error SQL: ' . $wpdb->last_error);
     }
   } else {
-   $response['data'] = 'Error al crear la entrada: ' . $wpdb->last_error;
+    $response['data'] = 'Error al crear la entrada principal: ' . $wpdb->last_error;
+    error_log('Error SQL entrada principal: ' . $wpdb->last_error);
+    echo '<pre>Error SQL: ' . $wpdb->last_error . '</pre>';
   }
-   // Devuelve JSON válido
+
   wp_send_json($response);
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'crear_contabilidad') {
@@ -401,23 +412,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     'FechaCreacion'     => current_time('mysql'),
     'Activo'  => 1
   ];
-  
+
   // Insertar
   $insertedEntrada = $wpdb->insert($tablaEntrada, $dataEntrada);
 
-  // Guardar log de entrada en bc_logs
-  $log_data = [
-    'Objeto'        => wp_json_encode($dataEntrada),
-    'Tabla'         => $tablaEntrada,
-    'TipoDeCambio'    => 'Crear',
-    'IdUser'        => get_current_user_id(),
-    'FechaCreacion' => current_time('mysql'),
-  ];
-  $wpdb->insert('bc_logs', $log_data);
+
 
   if ($insertedEntrada) {
     $new_id = $wpdb->insert_id;
-     $response = ['success' => false, 'data' => ''];
+    $response = ['success' => false, 'data' => ''];
 
     $dataDetalle = [
       'Descripcion'   => sanitize_text_field($_POST['descripcion']),
@@ -438,29 +441,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $wpdb->show_errors(); // Activar errores SQL
     $inserted = $wpdb->insert($tabla, $dataDetalle);
 
-    // Guardar log en bc_logs
-    $log_data = [
-      'Objeto'        => wp_json_encode($dataDetalle),
-      'Tabla'         => $tabla,
-      'TipoDeCambio'    => 'Crear',
-      'IdUser'        => get_current_user_id(),
-      'FechaCreacion' => current_time('mysql'),
-    ];
-    $wpdb->insert('bc_logs', $log_data);
+
 
     if ($inserted) {
       $response['success'] = true;
       $response['data'] = 'Entrada y detalle creados correctamente.';
+      // Guardar log de entrada en bc_logs
+      $log_data = [
+        'Objeto'        => wp_json_encode($dataEntrada),
+        'Tabla'         => $tablaEntrada,
+        'TipoDeCambio'    => 'Crear',
+        'IdUser'        => get_current_user_id(),
+        'FechaCreacion' => current_time('mysql'),
+      ];
+      $wpdb->insert('bc_logs', $log_data);
+      // Guardar log en bc_logs
+      $log_data = [
+        'Objeto'        => wp_json_encode($dataDetalle),
+        'Tabla'         => $tabla,
+        'TipoDeCambio'    => 'Crear',
+        'IdUser'        => get_current_user_id(),
+        'FechaCreacion' => current_time('mysql'),
+      ];
+      $wpdb->insert('bc_logs', $log_data);
     } else {
       $response['data'] = 'Error al crear detalle: ' . $wpdb->last_error;
       error_log('Error SQL: ' . $wpdb->last_error);
     }
   } else {
-   $response['data'] = 'Error al crear la entrada: ' . $wpdb->last_error;
+    $response['data'] = 'Error al crear la entrada: ' . $wpdb->last_error;
   }
-   // Devuelve JSON válido
+  // Devuelve JSON válido
   wp_send_json($response);
-
 }
 // Leer el ID del proceso que viene por URL
 $id = isset($_GET['id']) ? intval($_GET['id']) : (
@@ -555,22 +567,24 @@ $tipos_entrada = $wpdb->get_results(
    ORDER BY Descripcion"
 );
 
-function dt_local_value($val) {
-    if (empty($val) || $val === '0000-00-00 00:00:00') return '';
-    $ts = strtotime($val);
-    if ($ts === false) return '';
-    return date('Y-m-d\TH:i', $ts);
+function dt_local_value($val)
+{
+  if (empty($val) || $val === '0000-00-00 00:00:00') return '';
+  $ts = strtotime($val);
+  if ($ts === false) return '';
+  return date('Y-m-d\TH:i', $ts);
 }
 
-function disabled_if_24h_passed($datetime) {
-    if (empty($datetime) || $datetime === '0000-00-00 00:00:00') {
-        return ''; // no bloquear si está vacío
-    }
-    $filled_time = strtotime($datetime);
-    if ($filled_time && (time() - $filled_time >= 24 * 3600)) {
-        return 'readonly';
-    }
-    return '';
+function disabled_if_24h_passed($datetime)
+{
+  if (empty($datetime) || $datetime === '0000-00-00 00:00:00') {
+    return ''; // no bloquear si está vacío
+  }
+  $filled_time = strtotime($datetime);
+  if ($filled_time && (time() - $filled_time >= 24 * 3600)) {
+    return 'readonly';
+  }
+  return '';
 }
 ?>
 <script src="/wp-content/bitacoras/assets/js/common-loader.js"></script>
@@ -590,9 +604,9 @@ function disabled_if_24h_passed($datetime) {
   <!-- Sección de resumen: una sola tarjeta con múltiples datos -->
   <input type="checkbox" id="popup-toggle-edit" hidden>
   <div class="summary-card single">
-  <?php if ($usuario->rol_codigo !== 'CLI') : ?>
-    <label for="popup-toggle-edit" class="edit-icon" title="Editar Proceso">⚙️</label>
-  <?php endif; ?>
+    <?php if ($usuario->rol_codigo !== 'CLI') : ?>
+      <label for="popup-toggle-edit" class="edit-icon" title="Editar Proceso">⚙️</label>
+    <?php endif; ?>
     <h2>Información del Proceso</h2>
     <div class="summary-grid">
       <div><strong>DO:</strong> <?= esc_html($proceso->DO) ?></div>
@@ -612,16 +626,16 @@ function disabled_if_24h_passed($datetime) {
 
 
   <input type="checkbox" id="popup-toggle-add" hidden>
-<?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'GIRO' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CONT') : ?>
-  <div class="toolbar" style="display:flex; justify-content:flex-end; gap:10px; margin-bottom:20px;">
-    <label for="popup-toggle-add" class="btn" style="display: flex; align-items: center; gap: 5px;">        
+  <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'GIRO' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CONT') : ?>
+    <div class="toolbar" style="display:flex; justify-content:flex-end; gap:10px; margin-bottom:20px;">
+      <label for="popup-toggle-add" class="btn" style="display: flex; align-items: center; gap: 5px;">
         <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5" />
-        </svg> 
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5" />
+        </svg>
         <div>Nueva Entrada</div>
-        </label>
-  </div>
-<?php endif; ?>
+      </label>
+    </div>
+  <?php endif; ?>
   <!-- Popup de edición/formulario completo -->
   <div class="overlay-edit">
     <div class="modal-container">
@@ -669,16 +683,16 @@ function disabled_if_24h_passed($datetime) {
         <div class="form-group">
           <label for="IdEstadoProceso">Estado:</label>
           <select disabled id="IdEstadoProceso" name="IdEstadoProceso_disabled">
-            <?php foreach ( $estadosList as $st ): ?>
-              <option value="<?= esc_attr( $st->Id ) ?>"
-                <?= selected( $proceso->IdEstadoProceso, $st->Id, false ) ?>>
-                <?= esc_html( $st->Descripcion ) ?>
+            <?php foreach ($estadosList as $st): ?>
+              <option value="<?= esc_attr($st->Id) ?>"
+                <?= selected($proceso->IdEstadoProceso, $st->Id, false) ?>>
+                <?= esc_html($st->Descripcion) ?>
               </option>
             <?php endforeach; ?>
           </select>
           <!-- Campo oculto para que el valor enviado sea el correcto -->
           <input type="hidden" id="IdEstadoProceso" name="IdEstadoProceso"
-                value="<?= esc_attr( $proceso->IdEstadoProceso ) ?>">
+            value="<?= esc_attr($proceso->IdEstadoProceso) ?>">
         </div>
 
         <div class="form-group"><label for="FechaCreacion">Fecha Creación:</label>
@@ -689,7 +703,7 @@ function disabled_if_24h_passed($datetime) {
         <div class="form-group"><label for="IdTipoProceso">Tipo Proceso:</label>
           <select id="IdTipoProceso" name="IdTipoProceso" <?= $ds_attr ?>>
             <option value="">Seleccione...</option>
-            <?php foreach($tipos as $t): ?>
+            <?php foreach ($tipos as $t): ?>
               <option value="<?= $t->Id ?>" <?= selected($proceso->IdTipoProceso, $t->Id, false) ?>>
                 <?= esc_html($t->Descripcion) ?>
               </option>
@@ -716,7 +730,7 @@ function disabled_if_24h_passed($datetime) {
         <div class="form-group"><label for="IdDigitacionRevision">Digitación/Revisión:</label>
           <select id="IdDigitacionRevision" name="IdDigitacionRevision" <?= $ds_attr ?>>
             <option value="">Seleccione...</option>
-            <?php foreach($digitaciones as $d): ?>
+            <?php foreach ($digitaciones as $d): ?>
               <option value="<?= $d->Id ?>" <?= selected($proceso->IdDigitacionRevision, $d->Id, false) ?>>
                 <?= esc_html($d->Descripcion) ?>
               </option>
@@ -730,7 +744,7 @@ function disabled_if_24h_passed($datetime) {
         <div class="form-group"><label for="IdAduana">Aduana:</label>
           <select id="IdAduana" name="IdAduana" <?= $ds_attr ?>>
             <option value="">Seleccione...</option>
-            <?php foreach($aduanas as $a): ?>
+            <?php foreach ($aduanas as $a): ?>
               <option value="<?= $a->Id ?>" <?= selected($proceso->IdAduana, $a->Id, false) ?>>
                 <?= esc_html($a->Descripcion) ?>
               </option>
@@ -756,7 +770,7 @@ function disabled_if_24h_passed($datetime) {
         <div class="form-group"><label for="IdPuerto">Puerto:</label>
           <select id="IdPuerto" name="IdPuerto" <?= $ds_attr ?>>
             <option value="">Seleccione...</option>
-            <?php foreach($puertos as $pt): ?>
+            <?php foreach ($puertos as $pt): ?>
               <option value="<?= $pt->Id ?>" <?= selected($proceso->IdPuerto, $pt->Id, false) ?>>
                 <?= esc_html($pt->Descripcion) ?>
               </option>
@@ -770,7 +784,7 @@ function disabled_if_24h_passed($datetime) {
         <div class="form-group"><label for="IdPies">Pies:</label>
           <select id="IdPies" name="IdPies" <?= $ds_attr ?>>
             <option value="">Seleccione...</option>
-            <?php foreach($pies as $p): ?>
+            <?php foreach ($pies as $p): ?>
               <option value="<?= $p->Id ?>" <?= selected($proceso->IdPies, $p->Id, false) ?>>
                 <?= esc_html($p->Descripcion) ?>
               </option>
@@ -797,44 +811,44 @@ function disabled_if_24h_passed($datetime) {
         <div class="form-group">
           <label for="PagoNaviera">Fecha Pago Naviera:</label>
           <input type="datetime-local" id="PagoNaviera" name="PagoNaviera"
-                value="<?= esc_attr(dt_local_value($detalle->PagoNaviera ?? null)) ?>"
-                <?= disabled_if_24h_passed($detalle->PagoNaviera ?? null) ?>>
+            value="<?= esc_attr(dt_local_value($detalle->PagoNaviera ?? null)) ?>"
+            <?= disabled_if_24h_passed($detalle->PagoNaviera ?? null) ?>>
         </div>
         <div class="form-group">
           <label for="Liberacion">Liberación:</label>
           <input type="datetime-local" id="Liberacion" name="Liberacion"
-                value="<?= esc_attr(dt_local_value($detalle->Liberacion ?? null)) ?>"
-                <?= disabled_if_24h_passed($detalle->Liberacion ?? null) ?>>
+            value="<?= esc_attr(dt_local_value($detalle->Liberacion ?? null)) ?>"
+            <?= disabled_if_24h_passed($detalle->Liberacion ?? null) ?>>
         </div>
         <div class="form-group">
           <label for="Aceptacion">Aceptación:</label>
           <input type="datetime-local" id="Aceptacion" name="Aceptacion"
-                value="<?= esc_attr(dt_local_value($detalle->Aceptacion ?? null)) ?>"
-                <?= disabled_if_24h_passed($detalle->Aceptacion ?? null) ?>>
+            value="<?= esc_attr(dt_local_value($detalle->Aceptacion ?? null)) ?>"
+            <?= disabled_if_24h_passed($detalle->Aceptacion ?? null) ?>>
         </div>
         <div class="form-group">
           <label for="Pago">Pago Impuestos:</label>
           <input type="datetime-local" id="Pago" name="Pago"
-                value="<?= esc_attr(dt_local_value($detalle->Pago ?? null)) ?>"
-                <?= disabled_if_24h_passed($detalle->Pago ?? null) ?>>
-        </div>        
+            value="<?= esc_attr(dt_local_value($detalle->Pago ?? null)) ?>"
+            <?= disabled_if_24h_passed($detalle->Pago ?? null) ?>>
+        </div>
         <div class="form-group">
           <label for="Selectividad">Selectividad:</label>
           <input type="datetime-local" id="Selectividad" name="Selectividad"
-                value="<?= esc_attr(dt_local_value($detalle->Selectividad ?? null)) ?>"
-                <?= disabled_if_24h_passed($detalle->Selectividad ?? null) ?>>
+            value="<?= esc_attr(dt_local_value($detalle->Selectividad ?? null)) ?>"
+            <?= disabled_if_24h_passed($detalle->Selectividad ?? null) ?>>
         </div>
         <div class="form-group">
           <label for="Levante">Levante:</label>
           <input type="datetime-local" id="Levante" name="Levante"
-                value="<?= esc_attr(dt_local_value($detalle->Levante ?? null)) ?>"
-                <?= disabled_if_24h_passed($detalle->Levante ?? null) ?>>
+            value="<?= esc_attr(dt_local_value($detalle->Levante ?? null)) ?>"
+            <?= disabled_if_24h_passed($detalle->Levante ?? null) ?>>
         </div>
         <div class="form-group">
           <label for="EntregaTransporte">Entrega Transporte:</label>
           <input type="datetime-local" id="EntregaTransporte" name="EntregaTransporte"
-                value="<?= esc_attr(dt_local_value($detalle->EntregaTransporte ?? null)) ?>"
-                <?= disabled_if_24h_passed($detalle->EntregaTransporte ?? null) ?>>
+            value="<?= esc_attr(dt_local_value($detalle->EntregaTransporte ?? null)) ?>"
+            <?= disabled_if_24h_passed($detalle->EntregaTransporte ?? null) ?>>
         </div>
         <div class="form-group"><label for="Manifiesto">Manifiesto:</label>
           <input type="text" id="Manifiesto" name="Manifiesto" value="<?= esc_attr($detalle->Manifiesto ?? '') ?>">
@@ -851,33 +865,30 @@ function disabled_if_24h_passed($datetime) {
             id="DepositoActivo"
             name="DepositoActivo"
             value="1"
-            <?= !empty($detalle->IdDeposito) ? 'checked' : '' ?>
-          >
+            <?= !empty($detalle->IdDeposito) ? 'checked' : '' ?>>
         </div>
         <div class="form-row">
           <label for="IdDeposito">Estado Depósito</label>
           <select id="IdDeposito" name="IdDeposito" <?= empty($detalle->IdDeposito) ? 'disabled' : '' ?>>
-              <option value="">Seleccione…</option>
-              <?php foreach ($depositos as $dep): ?>
-                  <option
-                      value="<?= esc_attr($dep->Id) ?>"
-                      <?= isset($detalle->IdDeposito) && (int)$detalle->IdDeposito === (int)$dep->Id ? 'selected' : '' ?>
-                  >
-                      <?= esc_html($dep->Descripcion) ?>
-                  </option>
-              <?php endforeach; ?>
+            <option value="">Seleccione…</option>
+            <?php foreach ($depositos as $dep): ?>
+              <option
+                value="<?= esc_attr($dep->Id) ?>"
+                <?= isset($detalle->IdDeposito) && (int)$detalle->IdDeposito === (int)$dep->Id ? 'selected' : '' ?>>
+                <?= esc_html($dep->Descripcion) ?>
+              </option>
+            <?php endforeach; ?>
           </select>
 
         </div>
         <div class="form-row">
           <label for="DescripcionDeposito">Descripción Depósito</label>
           <input
-              type="text"
-              id="DescripcionDeposito"
-              name="DescripcionDeposito"
-              value="<?= isset($detalle->DescripcionDeposito) ? esc_attr($detalle->DescripcionDeposito) : '' ?>"
-              <?= empty($detalle->IdDeposito) ? 'disabled' : '' ?>
-          >
+            type="text"
+            id="DescripcionDeposito"
+            name="DescripcionDeposito"
+            value="<?= isset($detalle->DescripcionDeposito) ? esc_attr($detalle->DescripcionDeposito) : '' ?>"
+            <?= empty($detalle->IdDeposito) ? 'disabled' : '' ?>>
 
         </div>
         <!-- <div class="form-row">
@@ -889,8 +900,8 @@ function disabled_if_24h_passed($datetime) {
         <div class="form-group">
           <label for="DevolucionUnidad">Devolución Unidad:</label>
           <input type="datetime-local" id="DevolucionUnidad" name="DevolucionUnidad"
-                value="<?= esc_attr(dt_local_value($detalle->DevolucionUnidad ?? null)) ?>"
-                <?= disabled_if_24h_passed($detalle->DevolucionUnidad ?? null) ?>>
+            value="<?= esc_attr(dt_local_value($detalle->DevolucionUnidad ?? null)) ?>"
+            <?= disabled_if_24h_passed($detalle->DevolucionUnidad ?? null) ?>>
         </div>
         <div class="form-group">
           <label for="ArchivoFisico">Archivo Físico:</label>
@@ -900,16 +911,16 @@ function disabled_if_24h_passed($datetime) {
           <input type="checkbox" id="ArchivoFisico" name="ArchivoFisico" value="1" <?= !empty($detalle->ArchivoFisico) ? 'checked' : '' ?>>
         </div>
         <!-- Acciones -->
-         
+
         <div class="popup-actions" style="grid-column:1 / -1; display:flex; justify-content:flex-end; gap:10px;">
-          
+
           <label for="popup-toggle-edit" class="btn close">Cancelar</label>
-          
+
           <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS') : ?>
-          <button type="submit" class="btn">Guardar</button>
+            <button type="submit" class="btn">Guardar</button>
           <?php endif; ?>
         </div>
-        
+
       </form>
     </div>
   </div>
@@ -1048,7 +1059,7 @@ function disabled_if_24h_passed($datetime) {
       });
     });
 
-    const sidebarLinks = document.querySelectorAll('.form-buttons a'); 
+    const sidebarLinks = document.querySelectorAll('.form-buttons a');
     addLoaderToLinks(sidebarLinks);
 
     // Función auxiliar para añadir el evento de clic a una colección de enlaces
@@ -1087,8 +1098,8 @@ function disabled_if_24h_passed($datetime) {
       .then(html => {
         document.getElementById('formulario-popup-container-add').innerHTML = html;
         if (tipoTab === 'GRO') {
-            setTimeout(() => cargarEstadosGiros(), 50);
-          }
+          setTimeout(() => cargarEstadosGiros(), 50);
+        }
 
       }).finally(hideLoader)
       .catch(err => {
@@ -1152,10 +1163,10 @@ function disabled_if_24h_passed($datetime) {
 
     if (checked) {
       // poner la fecha actual si no tenía valor
-          // if (!fechaDeposito.value) {
-          //   const hoy = new Date().toISOString().split('T')[0];
-          //   fechaDeposito.value = hoy;
-          // }
+      // if (!fechaDeposito.value) {
+      //   const hoy = new Date().toISOString().split('T')[0];
+      //   fechaDeposito.value = hoy;
+      // }
     } else {
       selDeposito.value = '';
       txtDeposito.value = '';
@@ -1165,5 +1176,4 @@ function disabled_if_24h_passed($datetime) {
 
   chkDeposito.addEventListener('change', e => toggleDeposito(e.target.checked));
   toggleDeposito(chkDeposito.checked);
-
 </script>

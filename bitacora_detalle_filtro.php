@@ -103,8 +103,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         'NombreClienteProveedor'   => sanitize_text_field($_POST['NombreClienteProveedor']),
         'IdEntradaBitacora'       => sanitize_text_field($_POST['idEntradaBitacora']),
         'FechaDocumento'       => sanitize_text_field($_POST['FechaDocumento']),
-        'FechaIngresoSistema'         => sanitize_text_field($_POST['FechaIngresoSistema']),
-        'FechaVencimiento'     => sanitize_text_field($_POST['FechaVencimiento']),
+        //'FechaIngresoSistema'         => sanitize_text_field($_POST['FechaIngresoSistema']),
+        //'FechaVencimiento'     => sanitize_text_field($_POST['FechaVencimiento']),
         'IdTipoDocumento' => sanitize_text_field($_POST['IdTipoDocumento']),
         'IdTipoDocumentoContabilidad' => sanitize_text_field($_POST['IdTipoDocumentoContabilidad'])
 
@@ -146,6 +146,7 @@ if (!isset($id)) {
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="/wp-content/bitacoras/assets/js/common-loader.js"></script>
 <script>
     document.addEventListener('click', function(e) {
         const detalle = e.target.closest('.detalle-entrada');
@@ -165,7 +166,7 @@ if (!isset($id)) {
             document.getElementById('popup-toggle').checked = true;
 
             const modo = detalle ? 'detalle' : 'editar';
-            document.getElementById('popup-title').textContent = modo === 'detalle' ? 'Detalle Transporte' : 'Editar Transporte';
+            //document.getElementById('popup-title').textContent = modo === 'detalle' ? 'Detalle Transporte' : 'Editar Transporte';
 
             // Mostrar u ocultar botón guardar
             document.getElementById('btn-guardar').style.display = modo === 'editar' ? 'inline-block' : 'none';
@@ -362,10 +363,9 @@ if (!isset($id)) {
         }
 
         document.getElementById('btn-guardar').addEventListener('click', () => {
+            showLoader();
             const formData = new FormData(document.getElementById('entrada-form'));
             formData.append('action', 'actualizar_transporte');
-
-            showLoader();
             fetch('bitacora_detalle_filtro.php', {
                     method: 'POST',
                     body: formData
@@ -451,10 +451,9 @@ if (!isset($id)) {
         }
 
         document.getElementById('btn-guardar').addEventListener('click', () => {
+            showLoader();
             const formData = new FormData(document.getElementById('entrada-form'));
             formData.append('action', 'actualizar_giros');
-
-            showLoader();
             fetch('bitacora_detalle_filtro.php', {
                     method: 'POST',
                     body: formData
@@ -549,10 +548,9 @@ if (!isset($id)) {
         }
 
         document.getElementById('btn-guardar').addEventListener('click', () => {
+            showLoader();
             const formData = new FormData(document.getElementById('entrada-form'));
             formData.append('action', 'actualizar_contabilidad');
-
-            showLoader();
             fetch('bitacora_detalle_filtro.php', {
                     method: 'POST',
                     body: formData
@@ -587,8 +585,8 @@ if (!isset($id)) {
         document.getElementById('Descripcion').value = data.Descripcion;
         document.getElementById('NombreClienteProveedor').value = data.NombreClienteProveedor;
         document.getElementById('FechaDocumento').value = data.FechaDocumento;
-        document.getElementById('FechaIngresoSistema').value = data.FechaIngresoSistema;
-        document.getElementById('FechaVencimiento').value = data.FechaVencimiento;
+        //document.getElementById('FechaIngresoSistema').value = data.FechaIngresoSistema;
+        //document.getElementById('FechaVencimiento').value = data.FechaVencimiento;
         document.getElementById('IdTipoDocumento').value = data.IdTipoDocumento;
         document.getElementById('IdTipoDocumentoContabilidad').value = data.IdTipoDocumentoContabilidad;
 
@@ -597,8 +595,8 @@ if (!isset($id)) {
         document.getElementById('Descripcion').disabled = !esEditable;
         document.getElementById('NombreClienteProveedor').disabled = !esEditable;
         document.getElementById('FechaDocumento').disabled = !esEditable;
-        document.getElementById('FechaIngresoSistema').disabled = !esEditable;
-        document.getElementById('FechaVencimiento').disabled = !esEditable;
+        //document.getElementById('FechaIngresoSistema').disabled = !esEditable;
+        //document.getElementById('FechaVencimiento').disabled = !esEditable;
         document.getElementById('IdTipoDocumento').disabled = !esEditable;
         document.getElementById('IdTipoDocumentoContabilidad').disabled = !esEditable;
 

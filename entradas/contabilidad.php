@@ -9,8 +9,9 @@
     $tipoContabilidad = $wpdb->get_results("SELECT * FROM bc_tipo_documento_contabilidad");
 
     // Genera el HTML del select
+    
     ?>
-
+<script src="/wp-content/bitacoras/assets/js/common-loader.js"></script>
 <div>
     <h3 id="popup-title">Detalle Contabilidad</h3>
 

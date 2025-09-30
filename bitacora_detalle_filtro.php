@@ -162,21 +162,15 @@ if (!isset($id)) {
                 return;
             }
 
+            limpiarPopup();
             // Mostrar el popup
             document.getElementById('popup-toggle').checked = true;
+            
+            const modo = 'detalle';
 
-            const modo = detalle ? 'detalle' : 'editar';
-            //document.getElementById('popup-title').textContent = modo === 'detalle' ? 'Detalle Transporte' : 'Editar Transporte';
-
-            // Mostrar u ocultar botón guardar
-            document.getElementById('btn-guardar').style.display = modo === 'editar' ? 'inline-block' : 'none';
-
-            // Esperar que el HTML cargue y luego enviar item
-            setTimeout(() => {
-                if (typeof window.inicializarFormulario === 'function') {
-                    window.inicializarFormulario(entrada, modo);
-                }
-            }, 100);
+            cargarFormularioPorTipo(entrada.TECodigo)      // espera a que cargue el HTML
+                .then(() => inicializarFormulario(entrada, modo))
+                .catch(err => console.error(err));
         } else if (editar) {
             const entradaRaw = editar.getAttribute('data-entrada');
             let entrada;
@@ -187,23 +181,16 @@ if (!isset($id)) {
                 return;
             }
 
-
+            limpiarPopup();
             // Mostrar el popup
             document.getElementById('popup-toggle').checked = true;
 
-            const modo = detalle ? 'detalle' : 'editar';
-            document.getElementById('popup-title').textContent = modo === 'detalle' ? 'Detalle Transporte' : 'Editar Transporte';
+            const modo = 'editar';
 
+            cargarFormularioPorTipo(entrada.TECodigo)      // espera a que cargue el HTML
+                .then(() => inicializarFormulario(entrada, modo))
+                .catch(err => console.error(err));
 
-            // Mostrar u ocultar botón guardar
-            document.getElementById('btn-guardar').style.display = modo === 'editar' ? 'inline-block' : 'none';
-
-            // Esperar que el HTML cargue y luego enviar item
-            setTimeout(() => {
-                if (typeof window.inicializarFormulario === 'function') {
-                    window.inicializarFormulario(entrada, modo);
-                }
-            }, 100);
         } else if (documentos) {
             const entradaRaw = documentos.getAttribute('data-entrada');
             let entrada;
@@ -219,24 +206,56 @@ if (!isset($id)) {
         }
     });
 
+    function limpiarPopup() {
+        const form = document.getElementById('entrada-form');
+        if (form) form.reset();
 
+        // Resetea campos específicos
+        const chkDeposito = document.getElementById('DepositoActivo');
+        if (chkDeposito) chkDeposito.checked = false;
+
+        ['IdDeposito', 'DescripcionDeposito', 'FechaDeposito'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+            el.value = '';
+            el.disabled = true;
+            }
+        });
+
+        const btnGuardar = document.getElementById('btn-guardar');
+        if (btnGuardar) btnGuardar.style.display = 'none';
+
+        const popupTitle = document.getElementById('popup-title');
+        if (popupTitle) popupTitle.textContent = '';
+    }
 
 
     function inicializarFormulario(data, modo) {
-        console.log("Datos recibidos:", data);
-        const entradas = data;
-        switch (entradas.TECodigo) {
+        const esEditable = modo === 'editar';
+        const popupTitle = document.getElementById('popup-title');
+        const btnGuardar = document.getElementById('btn-guardar');
+
+        if (popupTitle) {
+            popupTitle.textContent =
+            data.TECodigo === 'TRS' ? (esEditable ? 'Editar Transporte' : 'Detalle Transporte') :
+            data.TECodigo === 'GRO' ? (esEditable ? 'Editar Giro' : 'Detalle Giro') :
+            data.TECodigo === 'CTB' ? (esEditable ? 'Editar Contabilidad' : 'Detalle Contabilidad') :
+            'Detalle';
+        }
+        if (btnGuardar) btnGuardar.style.display = esEditable ? 'inline-block' : 'none';
+
+        switch (data.TECodigo) {
             case 'TRS':
-                cargarDatosTransporte(entradas, modo);
-                break;
+            cargarDatosTransporte(data, modo);
+            break;
             case 'GRO':
-                cargarDatosGiros(entradas, modo);
-                break;
+            cargarDatosGiros(data, modo);
+            break;
             case 'CTB':
-                cargarDatosContabilidad(entradas, modo);
-                break;
+            cargarDatosContabilidad(data, modo);
+            break;
             default:
-                console.warn('Tipo de entrada no reconocido:', entradas.TECodigo);
+            console.warn('Tipo de entrada no reconocido:', data.TECodigo);
         }
     }
 
@@ -325,6 +344,9 @@ if (!isset($id)) {
 
 
     function cargarFormularioPorTipo(tipoTab) {
+        const contenedor = document.getElementById('formulario-popup-container');
+        if (contenedor) contenedor.innerHTML = ''; 
+
         const rutas = {
             CTB: '/wp-content/bitacoras/entradas/contabilidad.php',
             GRO: '/wp-content/bitacoras/entradas/giros.php',
@@ -334,20 +356,19 @@ if (!isset($id)) {
         const ruta = rutas[tipoTab];
         if (!ruta) {
             document.getElementById('formulario-popup-container').innerHTML = '<p>Formulario no disponible.</p>';
-            return;
+             return Promise.reject(new Error('Sin ruta para tipo ' + tipoTab));
         }
 
-        fetch(ruta)
-            .then(res => res.text())
-            .then(html => {
-                document.getElementById('formulario-popup-container').innerHTML = html;
-
-
-            })
-            .catch(err => {
-                console.error('Error cargando formulario:', err);
-                document.getElementById('formulario-popup-container').innerHTML = '<p>Error al cargar formulario.</p>';
-            });
+        return fetch(ruta)
+        .then(res => res.text())
+        .then(html => {
+        if (contenedor) contenedor.innerHTML = html;
+        })
+        .catch(err => {
+        console.error('Error cargando formulario:', err);
+        if (contenedor) contenedor.innerHTML = '<p>Error al cargar formulario.</p>';
+        throw err; // propaga el error si quieres manejarlo arriba
+        });
     }
 
     function cargarDatosTransporte(data, modo) {
@@ -616,13 +637,13 @@ if (!isset($id)) {
     }
 
     function cargarEstadosGiros(valorSeleccionado = '') {
-    const select = document.getElementById('Estado');
-    if (!select) {
-        // Si aún no existe, intenta de nuevo en 100 ms
-        return setTimeout(() => cargarEstadosGiros(valorSeleccionado), 10);
-    }
+        const select = document.getElementById('Estado');
+        if (!select) {
+            // Si aún no existe, intenta de nuevo en 100 ms
+            return setTimeout(() => cargarEstadosGiros(valorSeleccionado), 10);
+        }
 
-    fetch('/wp-content/bitacoras/plugins/cliente/entradas-ajax.php?action=get_estados_giros')
+        fetch('/wp-content/bitacoras/plugins/cliente/entradas-ajax.php?action=get_estados_giros')
         .then(res => res.json())
         .then(estados => {
         select.innerHTML = '<option value="">Seleccione…</option>';
@@ -746,8 +767,6 @@ if (!isset($id)) {
             }).finally(hideLoaderDocumento);
     }
 
-
-
     function eliminarDocumento(idDoc, idEntrada) {
         if (!confirm('¿Eliminar este documento?')) return;
         fetch(`/wp-content/bitacoras/plugins/cliente/documentos-ajax.php?action=eliminar&id=${idDoc}`, {
@@ -761,36 +780,36 @@ if (!isset($id)) {
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-    const modal = document.getElementById('modal-documentos');
-    if (!modal) return; // nada que hacer si no existe
+        const modal = document.getElementById('modal-documentos');
+        if (!modal) return; // nada que hacer si no existe
 
-    const btnCerrarX = document.getElementById('modal-docs-x');
+        const btnCerrarX = document.getElementById('modal-docs-x');
 
-    const closeModal = (e) => {
-        if (e) e.preventDefault();
-        modal.style.display = 'none';
-    };
+        const closeModal = (e) => {
+            if (e) e.preventDefault();
+            modal.style.display = 'none';
+        };
 
-    // Botón X
-    if (btnCerrarX) {
-        // por si está dentro de un form
-        if (btnCerrarX.tagName === 'BUTTON' && !btnCerrarX.hasAttribute('type')) {
-        btnCerrarX.setAttribute('type', 'button');
+        // Botón X
+        if (btnCerrarX) {
+            // por si está dentro de un form
+            if (btnCerrarX.tagName === 'BUTTON' && !btnCerrarX.hasAttribute('type')) {
+            btnCerrarX.setAttribute('type', 'button');
+            }
+            btnCerrarX.addEventListener('click', closeModal);
         }
-        btnCerrarX.addEventListener('click', closeModal);
-    }
 
-    // Clic fuera del contenido (overlay)
-    modal.addEventListener('click', function (e) {
-        if (e.target === modal) closeModal(e);
-    });
+        // Clic fuera del contenido (overlay)
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) closeModal(e);
+        });
 
-    // Cerrar con ESC (opcional)
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && modal.style.display !== 'none') {
-        closeModal(e);
-        }
-    });
+        // Cerrar con ESC (opcional)
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && modal.style.display !== 'none') {
+            closeModal(e);
+            }
+        });
     });
 
 </script>

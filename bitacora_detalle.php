@@ -1052,7 +1052,7 @@ function disabled_if_24h_passed($datetime)
         const contenedor = document.getElementById(tabId);
         contenedor.classList.add('active');
 
-        if (!contenedor.dataset.loaded && typeof cargarEntradas === 'function') {
+        if (!contenedor.dataset.loaded && typeof cargarEntradas === "function") {
           cargarEntradas(tipo, tabId);
           contenedor.dataset.loaded = 'true';
         }

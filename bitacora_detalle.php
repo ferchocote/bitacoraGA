@@ -638,15 +638,15 @@ function disabled_if_24h_passed($datetime)
   <?php endif; ?>
   <!-- Popup de edición/formulario completo -->
   <div class="overlay-edit">
-    <div class="modal-container" style="max-width: min-content !important;">
-      <h3 style="margin-top: 0;">Editar Proceso</h3>
+    <div class="modal-container">
+      <h3>Editar Proceso</h3>
       <?php
       $is_admin = ($usuario->rol_codigo === 'ADMIN');
       $rd_attr  = $is_admin ? '' : 'readonly'; // para inputs
       $ds_attr  = $is_admin ? '' : 'disabled'; // para selects
       ?>
 
-      <form method="post" action="?view=bitacora_detalle&id=<?= esc_attr($proceso->Id) ?>" class="popup-grid-5" style="margin-bottom: 0; gap: 5px 15px;">
+      <form method="post" action="?view=bitacora_detalle&id=<?= esc_attr($proceso->Id) ?>" class="popup-grid-5">
         <?php wp_nonce_field('editar_proceso_action', 'editar_proceso_nonce'); ?>
 
         <!-- Campos principales -->
@@ -912,9 +912,9 @@ function disabled_if_24h_passed($datetime)
         </div>
         <!-- Acciones -->
 
-        <div class="form-group" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
+        <div class="popup-actions" style="grid-column:1 / -1; display:flex; justify-content:flex-end; gap:10px;">
 
-          <label for="popup-toggle-edit" class="btn close" style="color: #fff; margin-bottom: 0;">Cancelar</label>
+          <label for="popup-toggle-edit" class="btn close">Cancelar</label>
 
           <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS') : ?>
             <button type="submit" class="btn">Guardar</button>

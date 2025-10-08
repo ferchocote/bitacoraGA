@@ -109,7 +109,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gestion_id'], $_POST[
                 }
             }
             try {
-                $rutaArchivo = $subirDrive->subir($tmpPath, $nombreArchivo, $nombreImportador, $tipoGestionNombre);
+                $fechaDocumento = !empty($_POST['fecha_documento']) ? $_POST['fecha_documento'] : current_time('mysql');
+                $rutaArchivo = $subirDrive->subir($tmpPath, $nombreArchivo, $nombreImportador, $tipoGestionNombre, $fechaDocumento);
             } catch (Exception $e) {
                 $mensaje = '<div class="notice error">Error al subir archivo a Google Drive: ' . esc_html($e->getMessage()) . '</div>';
                 error_log('Error Google Drive: ' . $e->getMessage());

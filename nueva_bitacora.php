@@ -249,7 +249,7 @@ function old_dt($key, $default = '') {
 
       <div class="form-group">
         <label for="IdPuerto">Puerto:</label>
-        <select id="IdPuerto" name="IdPuerto" required>
+        <select id="IdPuerto" name="IdPuerto">
           <option value="">Selecciona puerto</option>
           <?php foreach($puertos as $pt): ?>
             <option value="<?= esc_attr($pt->Id) ?>" <?= old_is('IdPuerto', $pt->Id) ? 'selected' : '' ?>>

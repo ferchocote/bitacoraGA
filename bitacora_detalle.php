@@ -638,15 +638,17 @@ function disabled_if_24h_passed($datetime)
   <?php endif; ?>
   <!-- Popup de edición/formulario completo -->
   <div class="overlay-edit">
-    <div class="modal-container">
-      <h3>Editar Proceso</h3>
+ <div class="modal-container" style="max-width: min-content !important;">
+      <h3 style="margin-top: 0;">Editar Proceso</h3>
       <?php
       $is_admin = ($usuario->rol_codigo === 'ADMIN');
       $rd_attr  = $is_admin ? '' : 'readonly'; // para inputs
+      $rd_attr_impr_admin = $is_admin || $usuario->rol_codigo === 'IMPOR' ? '' : 'readonly';
       $ds_attr  = $is_admin ? '' : 'disabled'; // para selects
+      $ds_attr_impr_admin = $is_admin || $usuario->rol_codigo === 'IMPOR' ? '' : 'disabled';
       ?>
 
-      <form method="post" action="?view=bitacora_detalle&id=<?= esc_attr($proceso->Id) ?>" class="popup-grid-5">
+      <form method="post" action="?view=bitacora_detalle&id=<?= esc_attr($proceso->Id) ?>" class="popup-grid-5" style="margin-bottom: 0; gap: 5px 15px;">
         <?php wp_nonce_field('editar_proceso_action', 'editar_proceso_nonce'); ?>
 
         <!-- Campos principales -->
@@ -724,7 +726,7 @@ function disabled_if_24h_passed($datetime)
         </div>
 
         <div class="form-group"><label for="DiasLibres">Días Libres:</label>
-          <input type="text" id="DiasLibres" name="DiasLibres" value="<?= esc_attr($proceso->DiasLibres) ?>" <?= $rd_attr ?>>
+          <input type="text" id="DiasLibres" name="DiasLibres" value="<?= esc_attr($proceso->DiasLibres) ?>" <?= $rd_attr_impr_admin ?>>s
         </div>
 
         <div class="form-group"><label for="IdDigitacionRevision">Digitación/Revisión:</label>
@@ -760,7 +762,7 @@ function disabled_if_24h_passed($datetime)
         </div>
 
         <div class="form-group"><label for="NumeroBL">Número BL:</label>
-          <input type="text" id="NumeroBL" name="NumeroBL" value="<?= esc_attr($proceso->NumeroBL) ?>" <?= $rd_attr ?>>
+          <input type="text" id="NumeroBL" name="NumeroBL" value="<?= esc_attr($proceso->NumeroBL) ?>" <?= $rd_attr_impr_admin ?>>
         </div>
 
         <div class="form-group"><label for="Contenedor">Contenedor:</label>
@@ -768,7 +770,7 @@ function disabled_if_24h_passed($datetime)
         </div>
 
         <div class="form-group"><label for="IdPuerto">Puerto:</label>
-          <select id="IdPuerto" name="IdPuerto" <?= $ds_attr ?>>
+          <select id="IdPuerto" name="IdPuerto" <?= $ds_attr_impr_admin ?>>
             <option value="">Seleccione...</option>
             <?php foreach ($puertos as $pt): ?>
               <option value="<?= $pt->Id ?>" <?= selected($proceso->IdPuerto, $pt->Id, false) ?>>
@@ -776,7 +778,7 @@ function disabled_if_24h_passed($datetime)
               </option>
             <?php endforeach; ?>
           </select>
-          <?php if (!$is_admin): ?>
+          <?php if (!$is_admin && $usuario->rol_codigo !== 'IMPOR'): ?>
             <input type="hidden" name="IdPuerto" value="<?= esc_attr($proceso->IdPuerto) ?>">
           <?php endif; ?>
         </div>
@@ -912,9 +914,9 @@ function disabled_if_24h_passed($datetime)
         </div>
         <!-- Acciones -->
 
-        <div class="popup-actions" style="grid-column:1 / -1; display:flex; justify-content:flex-end; gap:10px;">
+        <div class="form-group" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
 
-          <label for="popup-toggle-edit" class="btn close">Cancelar</label>
+          <label for="popup-toggle-edit" class="btn close" style="color: #fff; margin-bottom: 0;">Cancelar</label>
 
           <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS') : ?>
             <button type="submit" class="btn">Guardar</button>

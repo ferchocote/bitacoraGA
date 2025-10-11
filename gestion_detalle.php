@@ -48,6 +48,7 @@ if ($q !== '') {
                 dd.IdTipoDocCliente,
                 tcli.Descripcion AS TipoDocCliente,
                 dd.NombreClienteProveedor,
+                dd.NumeroDocumento,       /* Nuevo campo agregado */
                 dd.FechaDocumento,
                 dd.Descripcion
          FROM bc_documento_gestion d
@@ -128,6 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gestion_id'], $_POST[
             'IdTipoDocContabilidad' => !empty($_POST['tipo_doc_conta']) ? (int)$_POST['tipo_doc_conta'] : null,
             'IdTipoDocCliente'      => !empty($_POST['tipo_doc_cliente']) ? (int)$_POST['tipo_doc_cliente'] : null,
             'NombreClienteProveedor'=> sanitize_text_field($_POST['nombre_cliente'] ?? ''),
+            'NumeroDocumento'       => sanitize_text_field($_POST['numero_documento'] ?? ''),
             'FechaDocumento'        => !empty($_POST['fecha_documento']) ? sanitize_text_field($_POST['fecha_documento']) : null,
             'Descripcion'           => sanitize_textarea_field($_POST['descripcion'] ?? ''),
         ];

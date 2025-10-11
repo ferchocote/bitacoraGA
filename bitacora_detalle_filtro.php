@@ -704,6 +704,7 @@ if (!isset($id)) {
             formSubir.onsubmit = function(e) {
                 e.preventDefault();
                 const formData = new FormData(this);
+                formData.append('visible_cliente', document.getElementById('visible_cliente').checked ? 1 : 0);
                 showLoaderdocumento();
                 fetch('/wp-content/bitacoras/plugins/cliente/entradas-ajax.php?action=subir_documento', {
                         method: 'POST',
@@ -742,27 +743,37 @@ if (!isset($id)) {
                     cont.innerHTML = '<em>No hay documentos.</em>';
                 } else {
                     cont.innerHTML = `
-                    <table class="tabla-documentos">
-                        <thead>
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Fecha Cargue</th>
-                                
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${data.map(doc => `
+                            <table class="tabla-documentos">
+                                <thead>
                                 <tr>
-                                    <td>
-                                        <a href="${doc.url}" target="_blank" download>${doc.nombre}</a>
-                                    </td>
-                                    <td>${doc.fecha || 'N/A'}</td>
-                                    
+                                    <th>Nombre</th>
+                                    <th>Visible Cliente</th>
+                                    <th>Fecha Cargue</th>
                                 </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                `;
+                                </thead>
+                                <tbody>
+                                ${
+                                    data.map(doc => {
+                                    const visible = Number(
+                                        doc.visibleCliente ??
+                                        doc.visiblecliente ??
+                                        doc.VisibleCliente ??
+                                        0
+                                    );
+                                    return `
+                                        <tr>
+                                        <td>
+                                            <a href="${doc.url}" target="_blank" download>${doc.nombre}</a>
+                                        </td>
+                                        <td>${visible === 1 ? 'Sí' : 'No'}</td>
+                                        <td>${doc.fecha || 'N/A'}</td>
+                                        </tr>
+                                    `;
+                                    }).join('')
+                                }
+                                </tbody>
+                            </table>
+                            `;
                 }
             }).finally(hideLoaderDocumento);
     }
@@ -825,6 +836,14 @@ if (!isset($id)) {
         <form id="form-subir-documento" >
             <input type="file" name="archivo" required>
             <input type="hidden" name="id_entrada" id="doc-id-entrada">
+
+            <div class="form-row" style="margin-top:10px;">
+                <label>
+                    <input type="hidden" name="visible_cliente" value="0">
+                    <input type="checkbox" id="visible_cliente" name="visible_cliente" value="1">
+                    Visible para Cliente
+                </label>
+            </div>
             
             <div class="form-buttons" style="margin-top:10px">
                 <button type="button" id="cerrar-modal-documentos" class="btn close">Cerrar</button>

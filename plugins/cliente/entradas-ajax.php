@@ -109,6 +109,7 @@ switch ($action) {
             $result[] = [
                 'id'     => $doc->Id,
                 'nombre' => $doc->Nombre,
+                'visibleCliente' => $doc->VisibleCliente,
                 'fecha' => $doc->FechaCreacion,
                 'idDrive' => $doc->Archivo,
                 // Enlace de visualización/descarga de Google Drive
@@ -117,6 +118,35 @@ switch ($action) {
         }
         echo json_encode($result);
         break;
+
+    case 'listar_documentos_cliente':
+            $id_proceso = intval($_GET['id_proceso'] ?? 0);
+            if (!$id_proceso) {
+                echo json_encode([]);
+                break;
+            }
+            $docs = $wpdb->get_results($wpdb->prepare("
+                SELECT d.Id,
+                    d.Nombre,
+                    d.FechaCreacion,
+                    d.Archivo
+                FROM $tabla_documentos d
+                INNER JOIN bc_entrada_bitacora eb ON eb.Id = d.IdEntradaBitacora
+                WHERE eb.IdProceso = %d
+                AND d.VisibleCliente = 1
+                AND d.Activo = 1
+                ORDER BY d.FechaCreacion DESC
+            ", $id_proceso));
+            $result = array_map(function($doc) {
+                return [
+                    'id'     => $doc->Id,
+                    'nombre' => $doc->Nombre,
+                    'fecha'  => $doc->FechaCreacion,
+                    'url'    => 'https://drive.google.com/file/d/' . $doc->Archivo . '/view?usp=sharing'
+                ];
+            }, $docs);
+            echo json_encode($result);
+    break;
 
     case 'subir_documento':
         $id_entrada = intval($_POST['id_entrada']);
@@ -139,6 +169,7 @@ switch ($action) {
        
         $do = $entrada->DO;
         $tipoDescripcion = $entrada->TipoDescripcion;
+        $visible_cliente = !empty($_POST['visible_cliente']) ? 1 : 0;
 
         // Para $empresa
         if (isset($entrada->Empresa) && !empty($entrada->Empresa)) {
@@ -215,6 +246,7 @@ switch ($action) {
                 'IdEntradaBitacora' => $id_entrada,
                 'Archivo'           => $idDrive, // ID de Google Drive
                 'Nombre'            => $nombre,  // Nombre original del archivo
+                'VisibleCliente'    => $visible_cliente,
                 'Activo'            => 1,
                 'FechaCreacion'     => current_time('mysql')
             ]);

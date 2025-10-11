@@ -1350,3 +1350,88 @@ td.observacion-cell {
   word-wrap: break-word;
   max-width: 300px;
 }
+
+#modal-docs-cliente {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: none;           /* el script lo cambia a flex */
+  align-items: center;
+  justify-content: center;
+  z-index: 10050;
+}
+
+#modal-docs-cliente .modal-box {
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  min-width: 360px;
+  max-width: 80vw;
+  max-height: 80vh;
+  overflow: auto;
+  position: relative;
+  box-shadow: 0 12px 50px rgba(0, 0, 0, 0.25);
+}
+
+#modal-docs-cliente .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+#modal-docs-cliente .modal-header h3 {
+  margin: 0;
+}
+
+#modal-docs-cliente .modal-header .btn.close {
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pagination {
+  margin: 16px 0 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0;
+}
+
+.pagination a,
+.pagination span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: #f1f5f9;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+  text-decoration: none;
+  transition: all .2s ease;
+}
+
+.pagination a:hover {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}
+
+.pagination .current {
+  background: #2563eb;
+  color: #fff;
+  cursor: default;
+}
+
+.pagination a:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.35);
+}

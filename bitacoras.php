@@ -301,6 +301,19 @@ if (
                               0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" />
                     </svg>
                   </label>
+                  <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'CLI') : ?>
+                  <a
+                    href="javascript:void(0);"
+                    class="btn-icon ver-docs-cliente"
+                    data-proceso="<?= esc_attr($p->Id) ?>"
+                    title="Documentos"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M10 4h-6c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 
+                              0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2zM4 6h4.17l2 2H20v10H4V6z"/>
+                    </svg>
+                  </a>
+                   <?php endif; ?>
                 </td>
               <?php endif; ?>
               <td class="col-detalle">
@@ -423,6 +436,7 @@ if (
         </div>
       </div>
     </div>
+
     <div id="loader-overlay">
       <div class="spinner"></div>
     </div>
@@ -431,6 +445,16 @@ if (
 
 <div id="loader-overlay">
   <div class="spinner"></div>
+</div>
+
+<div id="modal-docs-cliente" class="modal" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Documentos</h3>
+      <button type="button" id="modal-docs-cliente-cerrar" class="btn close">Cerrar</button>
+    </div>
+    <div id="lista-docs-cliente" style="margin-top:16px;"></div>
+  </div>
 </div>
 
 <script>
@@ -553,4 +577,56 @@ if (
     // Aplica la función a los enlaces del menú desplegable del usuario
     addLoaderToLinks(userDropdownLinks);
   });
+
+document.addEventListener('DOMContentLoaded', function () {
+  const modal = document.getElementById('modal-docs-cliente');
+  const modalClose = document.getElementById('modal-docs-cliente-cerrar');
+  const contenedorDocs = document.getElementById('lista-docs-cliente');
+
+  document.querySelectorAll('.ver-docs-cliente').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idProceso = btn.dataset.proceso;
+      contenedorDocs.innerHTML = '<p>Cargando…</p>';
+      modal.style.display = 'flex';
+
+      fetch(`/wp-content/bitacoras/plugins/cliente/entradas-ajax.php?action=listar_documentos_cliente&id_proceso=${idProceso}`)
+        .then(res => res.json())
+        .then(data => {
+          if (!Array.isArray(data) || data.length === 0) {
+            contenedorDocs.innerHTML = '<em>No hay documentos visibles para este cliente.</em>';
+            return;
+          }
+          contenedorDocs.innerHTML = `
+            <table class="tabla-documentos">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Fecha Cargue</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.map(doc => `
+                  <tr>
+                    <td><a href="${doc.url}" target="_blank" download>${doc.nombre}</a></td>
+                    <td>${doc.fecha || 'N/A'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+        })
+        .catch(err => {
+          console.error(err);
+          contenedorDocs.innerHTML = '<p>Error cargando documentos.</p>';
+        });
+    });
+  });
+
+  if (modalClose) {
+    modalClose.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+  }
+});
+
 </script>

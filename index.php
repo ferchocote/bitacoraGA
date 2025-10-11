@@ -104,7 +104,7 @@ function formatearNombrePagina($archivo)
             </div>
             <hr />
             <div>
-                <?php if ($usuario->rol_codigo != "RRHH" && $usuario->rol_codigo != "PAG"): ?>
+                <?php if ($usuario->rol_codigo != "RRHH"): ?>
                     <a href="?view=bitacoras">
                         <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 4h3a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3m0 3h6m-3 5h3m-6 0h.01M12 16h3m-6 0h.01M10 3v4h4V3h-4Z" />
@@ -133,7 +133,7 @@ function formatearNombrePagina($archivo)
                         <span class="menu-option-span">Roles</span>
                     </a>
                     <?php endif; ?>
-                    <?php if ($usuario->rol_codigo == "ADMIN" || $usuario->rol_codigo == "PAG"): ?>
+                    <?php if ($usuario->rol_codigo == "ADMIN" || $usuario->rol_codigo == "PAG" || $usuario->rol_codigo == "CONT"): ?>
                     <a href="?view=gestion_documental">
                         <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16M4 12h16M4 17h16" />

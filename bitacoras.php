@@ -1,6 +1,6 @@
 <?php
 // Valida rol de usuario 
-if ($usuario->rol_codigo == "RRHH" || $usuario->rol_codigo == "PAG") {
+if ($usuario->rol_codigo == "RRHH") {
   echo "No tienes permiso para acceder a esta vista.";
   exit;
 }
@@ -253,7 +253,7 @@ if (
           <th>Días Libres</th>
           <th>ETA</th>
           <th><span style="width: 120px; display:block">Estado</span></th>
-          <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CLI') : ?>
+          <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CLI' || $usuario->rol_codigo === 'PAG') : ?>
             <th>Gestionar</th>
           <?php endif; ?>
           <th>Detalle</th>
@@ -286,7 +286,7 @@ if (
                 </span>
               </td>
 
-              <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CLI') : ?>
+              <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CLI' || $usuario->rol_codigo === 'PAG') : ?>
                 <td class="col-gestion">
                   <label
                     for="gestionar-toggle"
@@ -380,7 +380,7 @@ if (
 <div class="overlay-manage">
   <div class="popup-manage" style="min-width:800px; max-width:1100px; width:100%;">
     <h3>Gestionar Estado</h3>
-    <?php if (!$is_cliente_custom): ?>
+    <?php if ($usuario->rol_codigo !== 'CLI' && $usuario->rol_codigo !== 'PAG'): ?>
       <form id="form-gestionar" method="post" action="" onsubmit="showLoader()">
         <?php wp_nonce_field('gestionar_proceso', 'gestionar_nonce'); ?>
         <input type="hidden" name="IdProceso" id="IdProceso">

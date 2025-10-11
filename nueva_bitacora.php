@@ -75,7 +75,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data['IdDigitacionRevision'] = intval($_POST['IdDigitacionRevision']);
     $data['IdAduana']             = intval($_POST['IdAduana']);
     $data['IdPies']               = intval($_POST['IdPies']);
-    $data['IdPuerto']             = intval($_POST['IdPuerto']);
+    $data['IdPuerto'] = isset($_POST['IdPuerto']) && $_POST['IdPuerto'] !== ''
+    ? intval($_POST['IdPuerto'])
+    : null;
 
     // Estado y auditoría
     $data['IdEstadoProceso'] = intval($estado_creado_id);

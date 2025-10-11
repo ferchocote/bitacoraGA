@@ -621,6 +621,9 @@ function disabled_if_24h_passed($datetime)
       <div><strong>ETA:</strong> <?= date('d/m/Y', strtotime($proceso->ETA)) ?></div>
       <div><strong>Días Libres:</strong> <?= esc_html($proceso->DiasLibres) ?></div>
       <div><strong>Digitación/Revision:</strong> <?= esc_html($proceso->DigitacionRevisionDesc) ?></div>
+      <div><strong>Selectividad:</strong> <?= !empty($detalle->Selectividad)
+            ? esc_html(date('Y-m-d H:i', strtotime($detalle->Selectividad)))
+            : '---' ?></div>
     </div>
   </div>
 
@@ -726,7 +729,7 @@ function disabled_if_24h_passed($datetime)
         </div>
 
         <div class="form-group"><label for="DiasLibres">Días Libres:</label>
-          <input type="text" id="DiasLibres" name="DiasLibres" value="<?= esc_attr($proceso->DiasLibres) ?>" <?= $rd_attr_impr_admin ?>>s
+          <input type="text" id="DiasLibres" name="DiasLibres" value="<?= esc_attr($proceso->DiasLibres) ?>" <?= $rd_attr_impr_admin ?>>
         </div>
 
         <div class="form-group"><label for="IdDigitacionRevision">Digitación/Revisión:</label>
@@ -974,7 +977,7 @@ function disabled_if_24h_passed($datetime)
   </div>
 
   <ul class="tabs">
-    <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'GIRO' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CONT' || $usuario->rol_codigo === 'IMPOR') : ?>
+    <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'GIRO' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CONT' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'PAG') : ?>
       <li data-tab="tab-contabilidad" data-tipo="CTB" class="active">Contabilidad</li>
       <li data-tab="tab-giros" data-tipo="GRO">Giros</li>
     <?php endif; ?>

@@ -129,11 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       ]);
 
       if (!is_wp_error($user_id)) {
-        // 5) relación en bc_cliente_empresa
-        $wpdb->insert('bc_cliente_empresa', [
-          'IdUser'    => $user_id,
-          'IdCliente' => $new_id,
-        ]);
+        
 
         // 6) correo con credenciales
         $login_url = 'https://galogistic.com/iniciar-sesion/';
@@ -167,6 +163,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$sent) {
           error_log('No se pudo enviar el correo de credenciales a ' . $user_email);
         }
+
+        // 5) relación en bc_cliente_empresa
+        $wpdb->insert('bc_cliente_empresa', [
+          'IdUser'    => $user_id,
+          'IdCliente' => $new_id,
+        ]);
+
+        error_log( $wpdb->last_query );
+        error_log( $wpdb->last_error );
+
       } else {
         error_log('Error al crear usuario WP: ' . $user_id->get_error_message());
       }

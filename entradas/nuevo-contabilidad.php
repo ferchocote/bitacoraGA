@@ -1,4 +1,4 @@
-   <?php
+<?php
     // Incluye WordPress para usar $wpdb
     require_once('../../../wp-load.php');
 
@@ -48,6 +48,10 @@
                </option>
            <?php endforeach; ?>
        </select>
+   </div>
+   <div class="form-row">
+       <label for="NumeroDocumento">Número Documento</label>
+       <input type="text" id="NumeroDocumento" name="NumeroDocumento" required />
    </div>
    <div class="form-row">
        <label>Descripción</label>

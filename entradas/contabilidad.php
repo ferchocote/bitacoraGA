@@ -60,6 +60,10 @@
             </select>
         </div>
         <div class="form-row">
+            <label for="NumeroDocumento">Número Documento</label>
+            <input type="text" id="NumeroDocumento" name="NumeroDocumento" required />
+        </div>
+        <div class="form-row">
             <label>Descripción</label>
             <textarea id="Descripcion" name="descripcion" rows="4" style="resize: vertical; width: 100%;" required></textarea>
         </div>    

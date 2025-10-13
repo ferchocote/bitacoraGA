@@ -428,6 +428,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
       'IdEntradaBitacora'       => $new_id,
       'FechaDocumento'       => sanitize_text_field($_POST['FechaDocumento']),
       'IdTipoDocumento' => sanitize_text_field($_POST['IdTipoDocumento']),
+      'NumeroDocumento' => sanitize_text_field($_POST['NumeroDocumento']),
       'IdTipoDocumentoContabilidad' => sanitize_text_field($_POST['IdTipoDocumentoContabilidad']),
     ];
 

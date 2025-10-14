@@ -106,7 +106,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         //'FechaIngresoSistema'         => sanitize_text_field($_POST['FechaIngresoSistema']),
         //'FechaVencimiento'     => sanitize_text_field($_POST['FechaVencimiento']),
         'IdTipoDocumento' => sanitize_text_field($_POST['IdTipoDocumento']),
-        'IdTipoDocumentoContabilidad' => sanitize_text_field($_POST['IdTipoDocumentoContabilidad'])
+        'IdTipoDocumentoContabilidad' => sanitize_text_field($_POST['IdTipoDocumentoContabilidad']),
+        'NumeroDocumento' => sanitize_text_field($_POST['NumeroDocumento'])
 
     ];
 
@@ -606,6 +607,7 @@ if (!isset($id)) {
         document.getElementById('Descripcion').value = data.Descripcion;
         document.getElementById('NombreClienteProveedor').value = data.NombreClienteProveedor;
         document.getElementById('FechaDocumento').value = data.FechaDocumento;
+        document.getElementById('NumeroDocumento').value = data.NumeroDocumento;
         //document.getElementById('FechaIngresoSistema').value = data.FechaIngresoSistema;
         //document.getElementById('FechaVencimiento').value = data.FechaVencimiento;
         document.getElementById('IdTipoDocumento').value = data.IdTipoDocumento;
@@ -616,6 +618,7 @@ if (!isset($id)) {
         document.getElementById('Descripcion').disabled = !esEditable;
         document.getElementById('NombreClienteProveedor').disabled = !esEditable;
         document.getElementById('FechaDocumento').disabled = !esEditable;
+        document.getElementById('NumeroDocumento').disabled = !esEditable;
         //document.getElementById('FechaIngresoSistema').disabled = !esEditable;
         //document.getElementById('FechaVencimiento').disabled = !esEditable;
         document.getElementById('IdTipoDocumento').disabled = !esEditable;

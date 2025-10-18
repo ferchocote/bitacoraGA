@@ -45,17 +45,16 @@ if ($q !== '') {
                 t.Nombre AS TipoNombre,
                 dd.IdTipoDocContabilidad,
                 tc.Descripcion AS TipoDocContabilidad,
-                dd.IdTipoDocCliente,
-                tcli.Descripcion AS TipoDocCliente,
-                dd.NombreClienteProveedor,
-                dd.NumeroDocumento,       /* Nuevo campo agregado */
+                dd.IdCliente,
+                c.RazonSocial AS NombreClienteProveedor,
+                c.NumeroDocumento,
                 dd.FechaDocumento,
                 dd.Descripcion
          FROM bc_documento_gestion d
          LEFT JOIN bc_documento_gestion_detalle dd ON d.ID = dd.IdDocumentoGestion
          LEFT JOIN bc_tipo_gestion_documental t ON t.Id = d.IdTipoGestion
          LEFT JOIN bc_tipo_documento_contabilidad tc ON dd.IdTipoDocContabilidad = tc.ID
-         LEFT JOIN bc_tipo_documento tcli ON dd.IdTipoDocCliente = tcli.ID
+         LEFT JOIN bc_cliente c ON dd.IdCliente = c.Id
          WHERE d.IdGestion = %d
          ORDER BY d.FechaSubida DESC
          LIMIT %d OFFSET %d",
@@ -127,10 +126,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gestion_id'], $_POST[
         ];
         //data detalle
         $dataDetalle = [
+            'IdCliente'             => !empty($_POST['cliente_proveedor']) ? (int)$_POST['cliente_proveedor'] : null,
             'IdTipoDocContabilidad' => !empty($_POST['tipo_doc_conta']) ? (int)$_POST['tipo_doc_conta'] : null,
-            'IdTipoDocCliente'      => !empty($_POST['tipo_doc_cliente']) ? (int)$_POST['tipo_doc_cliente'] : null,
-            'NombreClienteProveedor'=> sanitize_text_field($_POST['nombre_cliente'] ?? ''),
-            'NumeroDocumento'       => sanitize_text_field($_POST['numero_documento'] ?? ''),
             'FechaDocumento'        => !empty($_POST['fecha_documento']) ? sanitize_text_field($_POST['fecha_documento']) : null,
             'Descripcion'           => sanitize_textarea_field($_POST['descripcion'] ?? ''),
         ];

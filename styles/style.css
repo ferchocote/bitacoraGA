@@ -915,8 +915,16 @@ table tbody tr:nth-child(even) {
   grid-column: 1 / -1;
   justify-self: start !important;
   display: flex;
+  flex-direction: row;
   align-items: center;
+  flex-wrap: nowrap;
   gap: 8px;
+}
+
+.checkbox-group .checkbox-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 /*loader */

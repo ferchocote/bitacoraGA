@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 define('WP_USE_THEMES', false);
 require_once('../../wp-load.php');
@@ -113,7 +113,9 @@ $select_sql = "
     c.Direccion,
     c.NumeroCelular, 
     c.CorreoElectronico,r.Id as        IdRegimen, 
-    c.EsCliente,c.ResponsableIva,
+    c.EsCliente,
+    c.EsProveedor,
+    c.ResponsableIva,
     c.AplicaRetenciones,
     c.IdCiudad,
     c.ActividadEconomica
@@ -174,17 +176,27 @@ $regimenes = $wpdb->get_results("SELECT * FROM bc_regimen");
                 <th>Razón Social</th>
                 <th>Dirección</th>
                 <th>Teléfono</th>
+                <th>Tipo</th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
             <?php foreach ($Clientes as $b): ?>
+                <?php
+                    $tipoLabel = 'Cliente';
+                    if (isset($b->EsProveedor) && (int)$b->EsProveedor === 1) {
+                        $tipoLabel = 'Proveedor';
+                    } elseif (isset($b->EsCliente) && (int)$b->EsCliente === 0) {
+                        $tipoLabel = 'Importador';
+                    }
+                ?>
                 <tr>
                     <td><?= esc_html($b->Descripcion) ?></td>
                     <td><?= esc_html($b->NumeroDocumento) ?></td>
                     <td><?= esc_html($b->RazonSocial ?: 'No Asignado') ?></td>
                     <td><?= esc_html($b->Direccion) ?></td>
                     <td><?= esc_html($b->NumeroCelular) ?></td>
+                    <td><?= esc_html($tipoLabel) ?></td>
                     <td>
 
                         <a href="javascript:void(0);" class="detalle-cliente" data-user="<?= esc_attr($b->Id); ?>" style="color: #2980b9; text-decoration: none">

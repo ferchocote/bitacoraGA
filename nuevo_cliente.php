@@ -26,6 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   // Recolectar y sanitizar datos
   $campos = [
     'EsCliente',
+    'EsProveedor',
     'IdTipoDocumento',
     'NumeroDocumento',
     'RazonSocial',
@@ -45,33 +46,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $data = [];
   echo "<script>console.log(" . json_encode($_POST) . ");</script>";
   foreach ($campos as $campo) {
-    if (isset($_POST[$campo])) {
-      $valor = $_POST[$campo];
-      if (in_array($campo, ['ResponsableIva', 'EsCliente','AplicaRetenciones'])) {
-       
-        if($campo == 'EsCliente'){
-          $data[$campo] = (intval($valor)) == 0 ? 0 : 1;
-        }
-        else{
-          $data[$campo] = (intval($valor)) == 0 ? 1 : 0;
-        }
-        
-        echo "<script>console.log(" . json_encode(intval($valor)) . ");</script>";
-      } else {
-        $data[$campo] = sanitize_text_field($valor);
-      }
+    if (!isset($_POST[$campo])) {
+      continue;
+    }
+
+    $valor = $_POST[$campo];
+    if (in_array($campo, ['ResponsableIva', 'AplicaRetenciones'])) {
+      $data[$campo] = (intval($valor)) == 0 ? 1 : 0;
+      echo "<script>console.log(" . json_encode(intval($valor)) . ");</script>";
+    } elseif (in_array($campo, ['EsCliente', 'EsProveedor'])) {
+      // Se procesan m��s abajo para aplicar la regla de exclusividad.
+      continue;
+    } else {
+      $data[$campo] = sanitize_text_field($valor);
     }
   }
 
-  if (!array_key_exists('EsCliente', $data)) {
-    $data['EsCliente']     = 1;
-  }
   if (!array_key_exists('ResponsableIva', $data)) {
     $data['ResponsableIva']     = 0;
   }
   if (!array_key_exists('AplicaRetenciones', $data)) {
     $data['AplicaRetenciones']     = 0;
   }
+
+  $esImportadorMarcado = !empty($_POST['EsCliente']);
+  $esProveedorMarcado = !empty($_POST['EsProveedor']);
+  if ($esImportadorMarcado && $esProveedorMarcado) {
+    $esProveedorMarcado = false;
+  }
+  $data['EsProveedor'] = $esProveedorMarcado ? 1 : 0;
+  $data['EsCliente'] = ($esImportadorMarcado || $esProveedorMarcado) ? 0 : 1;
 
   // Auditoría
 
@@ -83,19 +87,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $inserted = $wpdb->insert($tabla, $data);
 
   if ($inserted) {
+    $new_id = $wpdb->insert_id;
+    $message = '<div class="success">Cliente creado con ID: ' . $new_id . '</div>';
     // Guardar log en bc_logs
     $log_data = [
         'Objeto'        => wp_json_encode($data),
         'Tabla'         => $tabla,
-        'TipoDeCambio'    => 'Actualizar',
+        'TipoDeCambio'    => 'Crear',
         'IdUser'        => get_current_user_id(),
         'FechaCreacion' => current_time('mysql'),
     ];
     $wpdb->insert('bc_logs', $log_data);
 
-    $new_id = $wpdb->insert_id;
-    $message = '<div class="success">Cliente creado con ID: ' . $new_id . '</div>';
-
+    
     // === NUEVO: si es Cliente (checkbox NO marcado) creamos usuario y relación ===
     $esCliente = isset($data['EsCliente']) ? (int)$data['EsCliente'] : 1; // por defecto 1 en tu código
     if ($esCliente === 1) {
@@ -205,10 +209,16 @@ $paises = $wpdb->get_results("SELECT * FROM bc_pais");
     <form method="post" action="" class="form-grid" onsubmit="showLoader()">
       <?php wp_nonce_field('crear_proceso_action', 'crear_proceso_nonce'); ?>
 
-      <!-- Checkbox para elegir Cliente o Importador -->
+      <!-- Checkbox para elegir si es Importador o Proveedor -->
       <div class="form-group checkbox-group">
-        <label for="es_importador">Marcar si es Importador</label>
-        <input type="checkbox" id="EsCliente" name="EsCliente" />
+        <label class="checkbox-option" for="EsCliente">
+          <input type="checkbox" id="EsCliente" name="EsCliente" />
+          Marcar si es Importador
+        </label>
+        <label class="checkbox-option" for="EsProveedor">
+          <input type="checkbox" id="EsProveedor" name="EsProveedor" />
+          Marcar si es Proveedor
+        </label>
       </div>
 
       <?php
@@ -335,8 +345,6 @@ $paises = $wpdb->get_results("SELECT * FROM bc_pais");
         // Selecciona todos los enlaces dentro del sidebar (tu menú principal)
         const sidebarLinks = document.querySelectorAll('.form-buttons a');
 
-
-
         // Función auxiliar para añadir el evento de clic a una colección de enlaces
         function addLoaderToLinks(links) {
             links.forEach(function(link) {
@@ -352,8 +360,20 @@ $paises = $wpdb->get_results("SELECT * FROM bc_pais");
         // Aplica la función a los enlaces del sidebar
         addLoaderToLinks(sidebarLinks);
 
-
+        const chkImportador = document.getElementById('EsCliente');
+        const chkProveedor = document.getElementById('EsProveedor');
+        if (chkImportador && chkProveedor) {
+            chkImportador.addEventListener('change', function() {
+                if (chkImportador.checked) {
+                    chkProveedor.checked = false;
+                }
+            });
+            chkProveedor.addEventListener('change', function() {
+                if (chkProveedor.checked) {
+                    chkImportador.checked = false;
+                }
+            });
+        }
     });
 
- 
 </script>

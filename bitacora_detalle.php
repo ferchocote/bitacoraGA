@@ -424,11 +424,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     $dataDetalle = [
       'Descripcion'   => sanitize_text_field($_POST['descripcion']),
-      'NombreClienteProveedor'   => sanitize_text_field($_POST['NombreClienteProveedor']),
+      'IdCliente'     => !empty($_POST['cliente_proveedor']) ? (int)$_POST['cliente_proveedor'] : null,
       'IdEntradaBitacora'       => $new_id,
       'FechaDocumento'       => sanitize_text_field($_POST['FechaDocumento']),
-      'IdTipoDocumento' => sanitize_text_field($_POST['IdTipoDocumento']),
-      'NumeroDocumento' => sanitize_text_field($_POST['NumeroDocumento']),
       'IdTipoDocumentoContabilidad' => sanitize_text_field($_POST['IdTipoDocumentoContabilidad']),
     ];
 

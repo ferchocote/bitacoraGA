@@ -100,15 +100,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     $data = [
         'Descripcion'   => sanitize_text_field($_POST['descripcion']),
-        'NombreClienteProveedor'   => sanitize_text_field($_POST['NombreClienteProveedor']),
+        'IdCliente'     => !empty($_POST['cliente_proveedor']) ? (int)$_POST['cliente_proveedor'] : null,
         'IdEntradaBitacora'       => sanitize_text_field($_POST['idEntradaBitacora']),
         'FechaDocumento'       => sanitize_text_field($_POST['FechaDocumento']),
-        //'FechaIngresoSistema'         => sanitize_text_field($_POST['FechaIngresoSistema']),
-        //'FechaVencimiento'     => sanitize_text_field($_POST['FechaVencimiento']),
-        'IdTipoDocumento' => sanitize_text_field($_POST['IdTipoDocumento']),
-        'IdTipoDocumentoContabilidad' => sanitize_text_field($_POST['IdTipoDocumentoContabilidad']),
-        'NumeroDocumento' => sanitize_text_field($_POST['NumeroDocumento'])
-
+        'IdTipoDocumentoContabilidad' => sanitize_text_field($_POST['IdTipoDocumentoContabilidad'])
     ];
 
     $result = $wpdb->update($tabla, $data, ['Id' => $idEntrada]);
@@ -606,23 +601,23 @@ if (!isset($id)) {
         document.getElementById('IdEntradaBitacora').value = data.IdEntradaBitacora;
         document.getElementById('Id').value = data.Id;
         document.getElementById('Descripcion').value = data.Descripcion;
-        document.getElementById('NombreClienteProveedor').value = data.NombreClienteProveedor;
         document.getElementById('FechaDocumento').value = data.FechaDocumento;
-        document.getElementById('NumeroDocumento').value = data.NumeroDocumento;
-        //document.getElementById('FechaIngresoSistema').value = data.FechaIngresoSistema;
-        //document.getElementById('FechaVencimiento').value = data.FechaVencimiento;
-        document.getElementById('IdTipoDocumento').value = data.IdTipoDocumento;
         document.getElementById('IdTipoDocumentoContabilidad').value = data.IdTipoDocumentoContabilidad;
-
+        
+        // Manejo del cliente/proveedor
+        const selectCliente = document.getElementById('cliente_proveedor');
+        if (selectCliente) {
+            selectCliente.value = data.IdCliente || '';
+            
+            // Disparar el evento change para actualizar los campos relacionados
+            const event = new Event('change');
+            selectCliente.dispatchEvent(event);
+        }
 
         const esEditable = modo === 'editar';
         document.getElementById('Descripcion').disabled = !esEditable;
-        document.getElementById('NombreClienteProveedor').disabled = !esEditable;
+        document.getElementById('cliente_proveedor').disabled = !esEditable;
         document.getElementById('FechaDocumento').disabled = !esEditable;
-        document.getElementById('NumeroDocumento').disabled = !esEditable;
-        //document.getElementById('FechaIngresoSistema').disabled = !esEditable;
-        //document.getElementById('FechaVencimiento').disabled = !esEditable;
-        document.getElementById('IdTipoDocumento').disabled = !esEditable;
         document.getElementById('IdTipoDocumentoContabilidad').disabled = !esEditable;
 
 

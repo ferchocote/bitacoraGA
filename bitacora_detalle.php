@@ -628,7 +628,7 @@ function disabled_if_24h_passed($datetime)
 
 
   <input type="checkbox" id="popup-toggle-add" hidden>
-  <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'GIRO' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CONT') : ?>
+  <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'GIRO' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CONT' || $usuario->rol_codigo === 'IMPOR') : ?>
     <div class="toolbar" style="display:flex; justify-content:flex-end; gap:10px; margin-bottom:20px;">
       <label for="popup-toggle-add" class="btn" style="display: flex; align-items: center; gap: 5px;">
         <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -977,7 +977,7 @@ function disabled_if_24h_passed($datetime)
 
   <ul class="tabs">
     <?php if ($usuario->rol_codigo === 'ADMIN' || $usuario->rol_codigo === 'GIRO' || $usuario->rol_codigo === 'TRANS' || $usuario->rol_codigo === 'CONT' || $usuario->rol_codigo === 'IMPOR' || $usuario->rol_codigo === 'PAG') : ?>
-      <li data-tab="tab-contabilidad" data-tipo="CTB" class="active">Contabilidad</li>
+      <li data-tab="tab-contabilidad" data-tipo="CTB" class="active">Importaciones/Contabilidad</li>
       <li data-tab="tab-giros" data-tipo="GRO">Giros</li>
     <?php endif; ?>
     <li data-tab="tab-transporte" data-tipo="TRS">Transporte</li>

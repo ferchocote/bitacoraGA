@@ -55,9 +55,11 @@ if (! empty($_GET['q'])) {
     OR p.NumeroBL    LIKE %s
     OR p.Contenedor  LIKE %s
     OR ep.Descripcion LIKE %s
+    OR c.RazonSocial LIKE %s
   )";
   // rellenamos los parámetros con la versión con %…
-  array_push($params, $like, $like, $like, $like, $like);
+  array_push($params, $like, $like, $like, $like, $like, $like);
+    $q = $searchTerm;
 }
 
 if ($is_cliente_custom) {
@@ -96,6 +98,8 @@ $count_sql = "
   SELECT COUNT(*)
   FROM bc_proceso p
   LEFT JOIN {$wpdb->prefix}users u ON u.ID = p.IdUserCreation
+  LEFT JOIN {$tabla_cliente} c ON c.ID = p.IdImportador
+  LEFT JOIN bc_estado_proceso ep ON ep.Id = p.IdEstadoProceso
   {$where_sql}
 ";
 // Si no hay placeholders, no llamamos a prepare()
@@ -127,13 +131,12 @@ $select_sql = "
     p.ETA,
     CASE 
       WHEN p.ETA IS NULL OR p.ETA = '' THEN 0
-      ELSE (p.DiasLibres - DATEDIFF(CURDATE(), DATE(p.FechaCreacion)))
+      ELSE (p.DiasLibres - DATEDIFF(CURDATE(), DATE(p.ETA)))
     END AS DiasRestantes
   FROM bc_proceso p
   LEFT JOIN {$wpdb->prefix}users u ON u.ID = p.IdUserCreation
+  LEFT JOIN {$tabla_cliente} c ON c.ID = p.IdImportador
   LEFT JOIN bc_estado_proceso ep ON ep.Id = p.IdEstadoProceso
-  LEFT JOIN {$tabla_cliente} c
-      ON c.ID = p.IdImportador
   {$where_sql}
   ORDER BY (ep.Codigo = 'COM') ASC, DiasRestantes ASC
   LIMIT %d OFFSET %d
@@ -630,3 +633,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 </script>
+
+
+
+

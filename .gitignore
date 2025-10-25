@@ -4,3 +4,4 @@ node_modules/
 languages/
 plugins/
 themes/
+bitacoras/environment/service_account_cred.json

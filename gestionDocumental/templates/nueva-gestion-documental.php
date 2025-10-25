@@ -1,47 +1,45 @@
-<?php
-if (!defined('ABSPATH')) {
-    exit;
-}
-?>
-<div class="wrap gestion-documental-form">
-    <h1 class="wp-heading-inline">Nueva gestión documental</h1>
-    <a href="<?php echo esc_url(add_query_arg(['view' => 'gestion_documental'], remove_query_arg(['action']))); ?>" class="page-title-action">Volver a la lista</a>
+<!DOCTYPE html>
+<html lang="es">
 
-    <?php if (!empty($mensaje)) : ?>
-        <div class="notice notice-<?php echo !empty($exito) ? 'success' : 'error'; ?>" style="margin-top:1em;">
-            <p><?php echo wp_kses_post($mensaje); ?></p>
-        </div>
-    <?php endif; ?>
+<head>
+    <meta charset="UTF-8">
+    <title>Nueva Gestión Documental</title>
+    <link rel="stylesheet" href="../bitacoras/styles/style.css">
+</head>
 
-    <form method="post" style="margin-top:1em;">
-        <?php wp_nonce_field('crear_gestion_documental', 'gestion_documental_nonce'); ?>
-        <table class="form-table" role="presentation">
-            <tbody>
-                <tr>
-                    <th scope="row"><label for="importador">Importador</label></th>
-                    <td>
-                        <select name="importador" id="importador" required class="regular-text">
-                            <option value="">Seleccione un importador</option>
-                            <?php foreach ($importadores as $importador) : ?>
-                                <option value="<?php echo esc_attr($importador->ID); ?>" <?php selected(!empty($_POST['importador']) && (int) $_POST['importador'] === (int) $importador->ID); ?>>
-                                    <?php echo esc_html($importador->RazonSocial); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="observaciones">Observaciones</label></th>
-                    <td>
-                        <textarea name="observaciones" id="observaciones" rows="4" class="large-text"><?php echo isset($_POST['observaciones']) ? esc_textarea(wp_unslash($_POST['observaciones'])) : ''; ?></textarea>
-                        <p class="description">Campo opcional para registrar comentarios internos sobre la gestión.</p>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+<body>
+    <div class="form-container">
+        <h1>Nueva Gestión Documental</h1>
+        <?php if (!empty($mensaje)): ?>
+            <div class="<?= !empty($exito) ? 'success' : 'error' ?>"><?= esc_html($mensaje) ?></div>
+        <?php endif; ?>
+        <form method="post" class="form-grid" action="" id="formNuevaGestion">
+            <div class="form-group">
+                <label for="importador">Importador:</label>
+                <select name="importador" id="importador" required>
+                    <option value="">Seleccione un importador</option>
+                    <?php foreach ($importadores as $imp): ?>
+                        <option value="<?= esc_attr($imp->ID) ?>"><?= esc_html($imp->RazonSocial) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
 
-        <p class="submit">
-            <button type="submit" class="button button-primary">Crear gestión</button>
-        </p>
-    </form>
-</div>
+            <div class="form-buttons">
+                <a href="?view=gestion_documental" class="btn close">Cerrar</a>
+                <button type="submit" class="btn" id="btnCrearGestion">Crear Gestión</button>
+            </div>
+
+        </form>
+        <script>
+       
+        document.getElementById('formNuevaGestion').addEventListener('submit', function() {
+            showLoader();
+        });
+        window.addEventListener('DOMContentLoaded', function() {
+            hideLoader(); // Por si queda abierto por error
+        });
+        </script>
+    </div>
+</body>
+
+</html>

@@ -1,26 +1,8 @@
 <?php
-if (!function_exists('crear_gestion_documental')) {
-    function crear_gestion_documental($wpdb, $idImportador, $idUsuario)
-    {
-        $datos = [
-            'IdImportador'   => (int) $idImportador,
-            'UsuarioCreacion'=> (int) $idUsuario,
-            'FechaCreacion'  => current_time('mysql'),
-        ];
+// Caso de uso: Crear una nueva gestión documental
+require_once __DIR__ . '/../repositories/GestionDocumentalRepository.php';
 
-        $formatos = ['%d', '%d', '%s'];
-
-        if (isset($_POST['observaciones']) && $_POST['observaciones'] !== '') {
-            $datos['Observaciones'] = sanitize_textarea_field($_POST['observaciones']);
-            $formatos[] = '%s';
-        }
-
-        $resultado = $wpdb->insert('bc_gestion_documental', $datos, $formatos);
-
-        if (!$resultado) {
-            return false;
-        }
-
-        return (int) $wpdb->insert_id;
-    }
+function crear_gestion_documental($wpdb, $idImportador, $idUsuario) {
+    $repo = new GestionDocumentalRepository($wpdb);
+    return $repo->crearGestion($idImportador, $idUsuario);
 }

@@ -1,0 +1,1 @@
+[2025-07-31 00:33:23] ❌ Error: file "environment/service_account_cred.json" does not exist

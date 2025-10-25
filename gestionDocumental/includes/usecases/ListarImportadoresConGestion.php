@@ -1,24 +1,11 @@
 <?php
+// Caso de uso: Listar importadores con gestión documental
 require_once __DIR__ . '/../repositories/ImportadorRepository.php';
 
-if (!class_exists('ListarImportadoresConGestion')) {
-    class ListarImportadoresConGestion
-    {
-        private $repositorio;
-
-        public function __construct($wpdb)
-        {
-            $this->repositorio = new ImportadorRepository($wpdb);
-        }
-
-        public function ejecutar($perPage, $offset, $searchTerm = '')
-        {
-            return $this->repositorio->obtenerGestionesPaginadas($perPage, $offset, $searchTerm);
-        }
-
-        public function contar($searchTerm = '')
-        {
-            return $this->repositorio->contarGestiones($searchTerm);
-        }
+function listar_importadores_con_gestion($wpdb, $q = '') {
+    $repo = new ImportadorRepository($wpdb);
+    if ($q !== '') {
+        return $repo->getImportadoresConGestionFiltrado($q);
     }
+    return $repo->getImportadoresConGestion();
 }

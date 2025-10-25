@@ -1,2 +1,6 @@
-environment/service_account_cred.json
-log_errores.txt
+google-drive/
+vendor/
+node_modules/
+languages/
+plugins/
+themes/

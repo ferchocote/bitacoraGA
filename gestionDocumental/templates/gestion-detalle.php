@@ -78,6 +78,7 @@
                      data-tipo_doc_conta="<?= esc_attr($doc->TipoDocContabilidad ?? '') ?>"
                      data-tipo_doc_cliente="<?= esc_attr($doc->TipoDocCliente ?? '') ?>"
                      data-nombre_cliente="<?= esc_attr($doc->NombreClienteProveedor ?? '') ?>"
+                     data-numero_documento="<?= esc_attr($doc->NumeroDocumento ?? '') ?>"
                      data-ruta_archivo="<?= esc_attr($doc->RutaArchivo) ?>"
                      title="Ver Detalle">
                     Detalle
@@ -138,18 +139,32 @@
             <?php endforeach; ?>
           </select>
         </div>
-        <div class="form-group">
-          <label for="tipo_doc_cliente">Tipo Documento Cliente/Proveedor</label>
-          <select class="input" name="tipo_doc_cliente" id="tipo_doc_cliente">
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <label for="cliente_proveedor">Cliente/Proveedor</label>
+          <select class="input" name="cliente_proveedor" id="cliente_proveedor">
             <option value="">Seleccione...</option>
-            <?php foreach ($tiposDocCliente as $tipo): ?>
-              <option value="<?= esc_attr($tipo->Id) ?>"><?= esc_html($tipo->Descripcion) ?></option>
+            <?php
+            $clientes = $wpdb->get_results("SELECT Id, RazonSocial, NumeroDocumento, EsCliente, EsProveedor 
+                                          FROM bc_cliente 
+                                          WHERE (EsCliente = 1 OR EsProveedor = 1) 
+                                          AND Activo = 1 
+                                          ORDER BY RazonSocial");
+            foreach ($clientes as $cliente): 
+              $tipo = [];
+              if ($cliente->EsCliente) $tipo[] = 'Cliente';
+              if ($cliente->EsProveedor) $tipo[] = 'Proveedor';
+              $tipoTexto = implode('/', $tipo);
+            ?>
+              <option value="<?= esc_attr($cliente->Id) ?>" 
+                      data-tipo="<?= esc_attr($tipoTexto) ?>"
+                      data-numero-documento="<?= esc_attr($cliente->NumeroDocumento) ?>"
+                      data-razon-social="<?= esc_attr($cliente->RazonSocial) ?>">
+                <?= esc_html($cliente->RazonSocial) ?> - <?= esc_html($cliente->NumeroDocumento) ?> (<?= esc_html($tipoTexto) ?>)
+              </option>
             <?php endforeach; ?>
           </select>
-        </div>
-        <div class="form-group">
-          <label for="nombre_cliente">Nombre Cliente/Proveedor</label>
-          <input class="input" type="text" name="nombre_cliente" id="nombre_cliente">
+          <input type="hidden" name="numero_documento" id="numero_documento">
+          <input type="hidden" name="nombre_cliente" id="nombre_cliente">
         </div>
         <div class="form-group">
           <label for="fecha_documento">Fecha Documento</label>
@@ -190,13 +205,9 @@
         <label>Tipo Documento Contabilidad</label>
         <input class="input" type="text" id="detalle_tipo_doc_conta" readonly>
       </div>
-      <div class="form-group">
-        <label>Tipo Documento Cliente/Proveedor</label>
-        <input class="input" type="text" id="detalle_tipo_doc_cliente" readonly>
-      </div>
-      <div class="form-group">
-        <label>Nombre Cliente/Proveedor</label>
-        <input class="input" type="text" id="detalle_nombre_cliente" readonly>
+      <div class="form-group" style="grid-column: 1 / -1;">
+        <label>Cliente/Proveedor</label>
+        <input class="input" type="text" id="detalle_cliente_proveedor" readonly>
       </div>
       <div class="form-group">
         <label>Fecha Documento</label>
@@ -210,10 +221,6 @@
         <label>Descripción</label>
         <textarea class="input" id="detalle_descripcion" rows="2" readonly></textarea>
       </div>
-      <div class="form-group">
-        <label>Ruta Archivo</label>
-        <input class="input" type="text" id="detalle_ruta_archivo" readonly>
-      </div>
       <div class="form-buttons">
         <label for="popup-toggle-detalle-doc" class="btn close" style="pointer-events:auto;">Cerrar</label>
       </div>
@@ -221,19 +228,13 @@
   </div>
 </div>
 
-<?php
-$documentos_json = function_exists('wp_json_encode')
-  ? wp_json_encode($documentosAgrupados)
-  : json_encode($documentosAgrupados);
-?>
 <script>
-const documentosAgrupados = <?php echo $documentos_json !== false ? $documentos_json : '[]'; ?>;
-console.log('documentosAgrupados:', documentosAgrupados);
+console.log('documentosAgrupados:', <?php echo json_encode($documentosAgrupados); ?>);
 // Abrir popup al hacer click en el botón Nuevo Documento
 const btnNuevoDoc = document.getElementById('btn-nuevo-documento');
 const popupToggle = document.getElementById('popup-toggle-add-doc');
 const overlayAdd = document.querySelector('.overlay-add');
-if (btnNuevoDoc && popupToggle && overlayAdd) {
+if (btnNuevoDoc) {
   btnNuevoDoc.addEventListener('click', function(e) {
     e.preventDefault();
     popupToggle.checked = true;
@@ -242,18 +243,16 @@ if (btnNuevoDoc && popupToggle && overlayAdd) {
   });
 }
 // Cerrar popup al hacer click en Cancelar o fuera del popup
-if (popupToggle && overlayAdd) {
-  overlayAdd.addEventListener('click', function(e) {
-    if (e.target === overlayAdd) {
-      popupToggle.checked = false;
-      overlayAdd.style.display = 'none';
-    }
-  });
-  popupToggle.addEventListener('change', function() {
-    overlayAdd.style.display = popupToggle.checked ? 'flex' : 'none';
-  });
-  overlayAdd.style.display = 'none';
-}
+overlayAdd.addEventListener('click', function(e) {
+  if (e.target === overlayAdd) {
+    popupToggle.checked = false;
+    overlayAdd.style.display = 'none';
+  }
+});
+popupToggle.addEventListener('change', function() {
+  overlayAdd.style.display = popupToggle.checked ? 'flex' : 'none';
+});
+overlayAdd.style.display = 'none';
 
 // Oculta el loader al hacer clic en descargar
 const descargarLinks = document.querySelectorAll('a[title="Ver/Descargar"]');
@@ -263,12 +262,26 @@ descargarLinks.forEach(link => {
   });
 });
 
-const formNuevoDocumento = document.getElementById('form-nuevo-documento');
-if (formNuevoDocumento) {
-  formNuevoDocumento.addEventListener('submit', function() {
+// Manejar la selección de cliente/proveedor
+// document.getElementById('cliente_proveedor').addEventListener('change', function() {
+//     const selectedOption = this.options[this.selectedIndex];
+//     const numeroDocumento = document.getElementById('numero_documento');
+//     const nombreCliente = document.getElementById('nombre_cliente');
+//     const tipoDocCliente = document.getElementById('tipo_doc_cliente');
+    
+//     if (this.value) {
+//         numeroDocumento.value = selectedOption.dataset.numeroDocumento || '';
+//         nombreCliente.value = selectedOption.dataset.razonSocial || '';
+//         tipoDocCliente.value = selectedOption.dataset.tipoDocumento || '';
+//     } else {
+//         numeroDocumento.value = '';
+//         nombreCliente.value = '';
+//         tipoDocCliente.value = '';
+// });
+
+document.getElementById('form-nuevo-documento').addEventListener('submit', function() {
     showLoader(); // Muestra el loader al enviar el formulario
-  });
-}
+});
 
 // Caso de uso: DetalleDocumentoGestion
 const btnDetalleDocs = document.querySelectorAll('.btn-detalle-doc');
@@ -276,36 +289,34 @@ console.log('btnDetalleDocs:', btnDetalleDocs);
 const popupToggleDetalle = document.getElementById('popup-toggle-detalle-doc');
 const overlayDetalle = document.querySelector('.overlay-detalle');
 
-if (popupToggleDetalle && overlayDetalle) {
-  btnDetalleDocs.forEach(btn => {
-    btn.addEventListener('click', function(e) {
-      e.preventDefault();
-      document.getElementById('detalle_tipo_documento').value = btn.dataset.tipo || '';
-      document.getElementById('detalle_tipo_doc_conta').value = btn.dataset.tipo_doc_conta || '';
-      document.getElementById('detalle_tipo_doc_cliente').value = btn.dataset.tipo_doc_cliente || '';
-      document.getElementById('detalle_nombre_cliente').value = btn.dataset.nombre_cliente || '';
-      document.getElementById('detalle_fecha_documento').value = btn.dataset.fecha || '';
-      document.getElementById('detalle_nombre').value = btn.dataset.nombre || '';
-      document.getElementById('detalle_descripcion').value = btn.dataset.descripcion || '';
-      document.getElementById('detalle_ruta_archivo').value = btn.dataset.ruta_archivo || '';
-      popupToggleDetalle.checked = true;
-      overlayDetalle.style.display = 'flex';
-      hideLoader();
-    });
+btnDetalleDocs.forEach(btn => {
+  btn.addEventListener('click', function(e) {
+    e.preventDefault();
+    document.getElementById('detalle_tipo_documento').value = btn.dataset.tipo || '';
+    document.getElementById('detalle_tipo_doc_conta').value = btn.dataset.tipo_doc_conta || '';
+    document.getElementById('detalle_cliente_proveedor').value = btn.dataset.nombre_cliente || '';
+    document.getElementById('detalle_fecha_documento').value = btn.dataset.fecha || '';
+    document.getElementById('detalle_nombre').value = btn.dataset.nombre || '';
+    document.getElementById('detalle_descripcion').value = btn.dataset.descripcion || '';
+    popupToggleDetalle.checked = true;
+    overlayDetalle.style.display = 'flex';
+    hideLoader();
   });
+});
 
-  // Cerrar popup al hacer click fuera del popup
-  overlayDetalle.addEventListener('click', function(e) {
-    if (e.target === overlayDetalle) {
-      popupToggleDetalle.checked = false;
-      overlayDetalle.style.display = 'none';
-    }
-  });
-  popupToggleDetalle.addEventListener('change', function() {
-    overlayDetalle.style.display = popupToggleDetalle.checked ? 'flex' : 'none';
-  });
-  overlayDetalle.style.display = 'none';
-}
+// Cerrar popup al hacer click fuera del popup
+overlayDetalle.addEventListener('click', function(e) {
+  if (e.target === overlayDetalle) {
+    popupToggleDetalle.checked = false;
+    overlayDetalle.style.display = 'none';
+  }
+});
+popupToggleDetalle.addEventListener('change', function() {
+  overlayDetalle.style.display = popupToggleDetalle.checked ? 'flex' : 'none';
+});
+
+// Inicialización del overlay (mover al final del script)
+overlayDetalle.style.display = 'none'; // Esta línea debe ir después de todas las definiciones
 </script>
 
 </body>

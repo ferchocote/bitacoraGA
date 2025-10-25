@@ -1,5 +1,9 @@
 # bitacoraGA
 
+## Estructura del repositorio
+- `bitacoras/`: contiene el plugin de WordPress utilizado para la gestión diaria de bitácoras y las vistas que interactúan con el módulo documental.
+- `gestionDocumental/`: incluye los casos de uso, repositorios y plantillas compartidas por las vistas de gestión documental.
+
 ## Instrucciones para configurar integraciones
 ### Integración con GA Logistic
 La página de login que se integra en la página de ga-logistic.com se incluye en este repo, pero debe ser copiado en el sistema de archivos de ga-logistic.com. Este se creó como un plugin de WP, por lo que si se requiere subir un cambio, hay que:

@@ -138,11 +138,12 @@ switch ($action) {
                 ORDER BY d.FechaCreacion DESC
             ", $id_proceso));
             $result = array_map(function($doc) {
+                $downloadUrl = "descargar.php?id={$doc->Archivo}";
                 return [
                     'id'     => $doc->Id,
                     'nombre' => $doc->Nombre,
                     'fecha'  => $doc->FechaCreacion,
-                    'url'    => 'https://drive.google.com/file/d/' . $doc->Archivo . '/view?usp=sharing'
+                    'url'    => $downloadUrl
                 ];
             }, $docs);
             echo json_encode($result);

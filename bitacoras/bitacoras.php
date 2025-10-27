@@ -354,20 +354,50 @@ if (
   <?php
   // 3) Renderizado del paginador
   $total_pages = ceil($total / $per_page);
-  if ($total_pages > 1): ?>
+  if ($total_pages > 1):
+    $pagination_query_args = [];
+    if (!empty($_GET)) {
+      foreach ($_GET as $key => $value) {
+        if ($key === 'paged' || is_array($value)) {
+          continue;
+        }
+        $pagination_query_args[$key] = sanitize_text_field(wp_unslash($value));
+      }
+    }
+    if (!isset($pagination_query_args['view'])) {
+      $pagination_query_args['view'] = 'bitacoras';
+    }
+    if ($q !== '') {
+      $pagination_query_args['q'] = $q;
+    } else {
+      unset($pagination_query_args['q']);
+    }
+    ?>
     <div class="pagination">
       <?php if ($page > 1): ?>
-        <a href="?view=bitacoras&paged=<?= $page - 1 ?>">&laquo; Anterior</a>
+        <?php
+          $prev_query = $pagination_query_args;
+          $prev_query['paged'] = $page - 1;
+        ?>
+        <a href="<?= esc_url('?' . http_build_query($prev_query)) ?>">&laquo; Anterior</a>
       <?php endif; ?>
       <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+        <?php
+          $page_query = $pagination_query_args;
+          $page_query['paged'] = $i;
+        ?>
         <?php if ($i == $page): ?>
           <span class="current"><?= $i ?></span>
         <?php else: ?>
-          <a href="?view=bitacoras&paged=<?= $i ?>"><?= $i ?></a>
+          <a href="<?= esc_url('?' . http_build_query($page_query)) ?>"><?= $i ?></a>
         <?php endif; ?>
       <?php endfor; ?>
       <?php if ($page < $total_pages): ?>
-        <a href="?view=bitacoras&paged=<?= $page + 1 ?>">Siguiente &raquo;</a>
+        <?php
+          $next_query = $pagination_query_args;
+          $next_query['paged'] = $page + 1;
+        ?>
+        <a href="<?= esc_url('?' . http_build_query($next_query)) ?>">Siguiente &raquo;</a>
       <?php endif; ?>
     </div>
   <?php endif; ?>
@@ -633,7 +663,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 </script>
-
 
 
 

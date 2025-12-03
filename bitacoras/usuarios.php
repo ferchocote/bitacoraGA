@@ -39,6 +39,7 @@ $roles = $wpdb->get_results("SELECT * FROM bc_roles");
 $aliados = $wpdb->get_results("SELECT * FROM bc_grupo_empresa ORDER BY Nombre");
 ?>
 <script src="/wp-content/bitacoras/assets/js/common-loader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <!DOCTYPE html>
 <h1>Usuarios</h1>
 
@@ -154,12 +155,20 @@ $aliados = $wpdb->get_results("SELECT * FROM bc_grupo_empresa ORDER BY Nombre");
             const aliadoId = aliadoSelect.value;
             
             if (!rolCodigo || !aliadoId) {
-                alert('Por favor seleccione tanto el rol como el aliado');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Campos incompletos',
+                    text: 'Por favor seleccione tanto el rol como el aliado'
+                });
                 return;
             }
             
             if (!userId) {
-                alert('Error: No se ha seleccionado un usuario');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se ha seleccionado un usuario'
+                });
                 return;
             }
             
@@ -186,6 +195,7 @@ $aliados = $wpdb->get_results("SELECT * FROM bc_grupo_empresa ORDER BY Nombre");
         addLoaderToLinks(sidebarLinks);
 
         function modificarRol(rolCodigo, aliadoId) {
+            showLoader();
             fetch(ajaxUrl, {
                     method: 'POST',
                     headers: {
@@ -201,17 +211,34 @@ $aliados = $wpdb->get_results("SELECT * FROM bc_grupo_empresa ORDER BY Nombre");
                 })
                 .then(response => response.json())
                 .then(data => {
+                    hideLoader();
                     if (data.success) {
-                        alert('Rol y aliado modificados correctamente');
-                        document.getElementById('popup-toggle').checked = false;
-                        location.reload();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Éxito',
+                            text: 'Rol y aliado modificados correctamente',
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            document.getElementById('popup-toggle').checked = false;
+                            showLoader();
+                            location.reload();
+                        });
                     } else {
-                        alert('Error: ' + data.data);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.data || 'Ocurrió un error inesperado'
+                        });
                     }
                 })
                 .catch(error => {
+                    hideLoader();
                     console.error('Error:', error);
-                    alert('Error de conexión: ' + error.message);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de conexión',
+                        text: error.message || 'No se pudo conectar con el servidor'
+                    });
                 });
         }
     });

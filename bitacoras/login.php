@@ -47,9 +47,9 @@
                     echo '<p style="color:red;">' . $user->get_error_message() . '</p>';
                 } else {
                     echo "<script>
-                        if (window.top !== window.self) {
+                        
                             window.top.location.href = 'https://clscolombia.com/wp-content/bitacoras/?view=bitacoras';
-                        }
+                        
                     </script>";
                     exit;
                 }

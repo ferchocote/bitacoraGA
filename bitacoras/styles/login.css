@@ -1,0 +1,102 @@
+/* Estilos del LOGIN */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f5f6fa;
+    color: #333;
+    font-size: 14px;
+}
+
+.top-main-menu {
+    background-color: #2c3e50;
+    color: #fff;
+    text-align: right;
+    padding: 0 20px;
+}
+
+.login-body * {
+    box-sizing: border-box;
+}
+
+.login-body {
+  background-color: #f4f6f9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 32px);
+}
+
+.container {
+  display: flex;
+  width: 900px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.left {
+  background-color: #2c3e50;
+  color: #fff;
+  padding: 20px 30px 40px 30px;
+  width: 50%;
+}
+
+.left h2 {
+  margin-bottom: 20px;
+}
+
+.left p {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.right {
+  padding: 20px 30px 40px 30px;
+  width: 50%;
+}
+
+.right h2 {
+  margin-bottom: 10px;
+}
+
+.right p {
+  font-size: 14px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.form-group input[type="email"],
+.form-group input[type="password"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.l-btn {
+  width: 100%;
+  background-color: #0066ff;
+  color: white;
+  margin-top: 10px;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.l-btn:hover {
+  background-color: #004ecc;
+}
+/* Estilos del LOGIN */

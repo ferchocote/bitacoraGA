@@ -7,52 +7,61 @@ require_once __DIR__ . '/../gestionDocumental/includes/repositories/ImportadorRe
 
 global $wpdb;
 
-$action = isset($_GET['action']) ? sanitize_text_field(wp_unslash($_GET['action'])) : '';
+$action = isset($_GET['action']) ? $_GET['action'] : '';
 $mensaje = '';
 
 if ($action === 'nueva') {
+    // Mostrar formulario para nueva gestión documental
     $repoImportador = new ImportadorRepository($wpdb);
     $importadores = $repoImportador->getTodosImportadores();
 
     $exito = false;
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!isset($_POST['gestion_documental_nonce']) || !wp_verify_nonce($_POST['gestion_documental_nonce'], 'crear_gestion_documental')) {
-            $mensaje = 'La solicitud no es válida. Inténtalo de nuevo.';
-        } else {
-            $idImportador = isset($_POST['importador']) ? (int) $_POST['importador'] : 0;
-            $idUsuario = get_current_user_id();
-
-            if ($idImportador > 0) {
-                $validador = new ValidarGestionDocumentalDuplicada($wpdb);
-                if ($validador->existeGestionActiva($idImportador)) {
-                    $mensaje = 'Ya existe una gestión activa para este importador.';
-                } else {
-                    $nuevaId = crear_gestion_documental($wpdb, $idImportador, $idUsuario);
-                    if ($nuevaId) {
-                        $exito = true;
-                        $mensaje = 'Gestión documental creada exitosamente.';
-                        $_POST = [];
-                    } else {
-                        $mensaje = 'Error al crear la gestión. ' . esc_html($wpdb->last_error);
-                    }
-                }
+        $idImportador = (int)($_POST['importador'] ?? 0);
+        $idUsuario = get_current_user_id();
+        if ($idImportador > 0) {
+            $validador = new ValidarGestionDocumentalDuplicada($wpdb);
+            if ($validador->existeGestionActiva($idImportador)) {
+                $mensaje = 'Ya existe una gestión activa para este importador.';
             } else {
-                $mensaje = 'Seleccione un importador.';
+                $nuevaId = crear_gestion_documental($wpdb, $idImportador, $idUsuario);
+                if ($nuevaId) {
+                    $exito = true;
+                    $mensaje = 'Gestión documental creada exitosamente.';
+                    // Limpiar POST para evitar reenvío
+                    $_POST = [];
+                } else {
+                    $mensaje = 'Error al crear la gestión.';
+                }
             }
+        } else {
+            $mensaje = 'Seleccione un importador.';
         }
     }
-
     include __DIR__ . '/../gestionDocumental/templates/nueva-gestion-documental.php';
     return;
 }
 
-$q = isset($_GET['q']) ? sanitize_text_field(wp_unslash($_GET['q'])) : '';
+// Vista por defecto: lista de gestiones documentales
+// Obtener filtro de búsqueda si existe
+$q = isset($_GET['q']) ? trim($_GET['q']) : '';
+
+// Paginación
 $per_page = 10;
-$page = max(1, isset($_GET['paged']) ? (int) $_GET['paged'] : 1);
+$page = max(1, intval($_GET['paged'] ?? 1));
 $offset = ($page - 1) * $per_page;
 
-$listadoUseCase = new ListarImportadoresConGestion($wpdb);
-$total_gestiones = $listadoUseCase->contar($q);
-$importadores = $listadoUseCase->ejecutar($per_page, $offset, $q);
+// Total de gestiones documentales
+$total_gestiones = $wpdb->get_var("SELECT COUNT(*) FROM bc_gestion_documental");
+
+// Importadores paginados
+$importadores = $wpdb->get_results($wpdb->prepare(
+    "SELECT gd.*, gd.ID AS GestionID, c.RazonSocial, c.NumeroDocumento
+     FROM bc_gestion_documental gd
+     LEFT JOIN bc_cliente c ON c.ID = gd.IdImportador
+     ORDER BY gd.ID DESC
+     LIMIT %d OFFSET %d",
+    $per_page, $offset
+));
 
 include __DIR__ . '/../gestionDocumental/templates/gestion-lista.php';

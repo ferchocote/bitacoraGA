@@ -26,15 +26,17 @@ $total_paginas = ceil($total_registros / $registros_por_pagina);
 // Consulta paginada
 $bitacoras = $wpdb->get_results(
     $wpdb->prepare("
-        SELECT u.ID, u.user_login, u.user_email, r.Nombre AS rol_nombre
+        SELECT u.ID, u.user_login, u.user_email, r.Nombre AS rol_nombre, ge.Nombre AS aliado_nombre
         FROM {$tabla} u
         LEFT JOIN bc_user_role ur ON ur.IdUser = u.ID
         LEFT JOIN bc_roles r ON r.Id = ur.IdRol
+        LEFT JOIN bc_grupo_empresa ge ON ge.Id = u.IdAliado
         LIMIT %d OFFSET %d
     ", $registros_por_pagina, $offset)
 );
 
 $roles = $wpdb->get_results("SELECT * FROM bc_roles");
+$aliados = $wpdb->get_results("SELECT * FROM bc_grupo_empresa ORDER BY Nombre");
 ?>
 <script src="/wp-content/bitacoras/assets/js/common-loader.js"></script>
 <!DOCTYPE html>
@@ -55,6 +57,7 @@ $roles = $wpdb->get_results("SELECT * FROM bc_roles");
                 <th>Nombre de Usuario</th>
                 <th>Correo</th>
                 <th>Rol</th>
+                <th>Aliado</th>
                 <th></th>
             </tr>
         </thead>
@@ -64,8 +67,9 @@ $roles = $wpdb->get_results("SELECT * FROM bc_roles");
                     <td><?= esc_html($b->user_login) ?></td>
                     <td><?= esc_html($b->user_email) ?></td>
                     <td><?= esc_html($b->rol_nombre ?: 'No Asignado') ?></td>
+                    <td><?= esc_html($b->aliado_nombre ?: 'No Asignado') ?></td>
                     <td>
-                        <label class="btn modificar-rol" for="popup-toggle" data-user="<?= esc_attr($b->ID); ?>">Modificar Rol</label>
+                        <label class="btn modificar-rol" for="popup-toggle" data-user="<?= esc_attr($b->ID); ?>">Gestionar Usuario</label>
                     </td>
                 </tr>
             <?php endforeach; ?>
@@ -99,9 +103,10 @@ $roles = $wpdb->get_results("SELECT * FROM bc_roles");
 <input type="checkbox" id="popup-toggle">
 <div class="overlay">
     <div class="popup" style="max-width: 380px;">
-        <h3>Selecciona un Rol</h3>
-        <div class="custom-select">
-            <select id="rol" name="rol">
+        <h3>Selecciona Rol y Aliado</h3>
+        <div class="custom-select" style="margin-bottom: 15px;">
+            <label for="rol" style="display: block; margin-bottom: 5px; font-weight: bold;">Rol *</label>
+            <select id="rol" name="rol" required>
                 <option value="">Seleccione un rol</option>
                 <?php foreach ($roles as $rol): ?>
                     <option value="<?= esc_attr($rol->Codigo); ?>">
@@ -110,15 +115,26 @@ $roles = $wpdb->get_results("SELECT * FROM bc_roles");
                 <?php endforeach; ?>
             </select>
         </div>
+        <div class="custom-select" style="margin-bottom: 15px;">
+            <label for="aliado" style="display: block; margin-bottom: 5px; font-weight: bold;">Aliado *</label>
+            <select id="aliado" name="aliado" required>
+                <option value="">Seleccione un aliado</option>
+                <?php foreach ($aliados as $aliado): ?>
+                    <option value="<?= esc_attr($aliado->Id); ?>">
+                        <?= esc_html($aliado->Nombre) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
         <div class="form-buttons" style="margin-top: 10px;">
             <label for="popup-toggle" class="btn close">Cerrar</label>
-            <label for="popup-toggle" id="aceptar" class="btn">Aceptar</label>
+            <button type="button" id="aceptar" class="btn">Aceptar</button>
         </div>
     </div>
 </div>
 
 <script>
-    const ajaxUrl = "<?= admin_url('admin-ajax.php'); ?>";
+    const ajaxUrl = '/wp-content/bitacoras/plugins/usuarios/usuarios-ajax.php';
     const ajaxNonce = "<?= wp_create_nonce('modificar_rol_nonce'); ?>";
 
 
@@ -132,9 +148,22 @@ $roles = $wpdb->get_results("SELECT * FROM bc_roles");
         });
 
         document.querySelector('#aceptar').addEventListener('click', function() {
-            const select = document.querySelector('#rol');
-            const rolCodigo = select.value;
-            modificarRol(rolCodigo);
+            const rolSelect = document.querySelector('#rol');
+            const aliadoSelect = document.querySelector('#aliado');
+            const rolCodigo = rolSelect.value;
+            const aliadoId = aliadoSelect.value;
+            
+            if (!rolCodigo || !aliadoId) {
+                alert('Por favor seleccione tanto el rol como el aliado');
+                return;
+            }
+            
+            if (!userId) {
+                alert('Error: No se ha seleccionado un usuario');
+                return;
+            }
+            
+            modificarRol(rolCodigo, aliadoId);
         })
         // Selecciona todos los enlaces dentro del sidebar (tu menú principal)
         const sidebarLinks = document.querySelectorAll('.form-buttons a');
@@ -156,7 +185,7 @@ $roles = $wpdb->get_results("SELECT * FROM bc_roles");
         // Aplica la función a los enlaces del sidebar
         addLoaderToLinks(sidebarLinks);
 
-        function modificarRol(rolCodigo) {
+        function modificarRol(rolCodigo, aliadoId) {
             fetch(ajaxUrl, {
                     method: 'POST',
                     headers: {
@@ -166,17 +195,23 @@ $roles = $wpdb->get_results("SELECT * FROM bc_roles");
                         action: 'modificar_rol_usuario',
                         security: ajaxNonce,
                         userId: userId,
-                        rolCodigo: rolCodigo
+                        rolCodigo: rolCodigo,
+                        aliadoId: aliadoId
                     })
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        alert('Rol modificado correctamente');
+                        alert('Rol y aliado modificados correctamente');
+                        document.getElementById('popup-toggle').checked = false;
                         location.reload();
                     } else {
                         alert('Error: ' + data.data);
                     }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error de conexión: ' + error.message);
                 });
         }
     });

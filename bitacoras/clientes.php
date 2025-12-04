@@ -20,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         'ActividadEconomica' => sanitize_text_field($_POST['ActividadEconomica']),
         'IdTipoDocumento' => sanitize_text_field($_POST['IdTipoDocumento']),
         'IdRegimen' => sanitize_text_field($_POST['IdRegimen']),
+        'IdAliado' => absint($_POST['IdAliado']),
         'ResponsableIva'   => sanitize_text_field(!array_key_exists('ResponsableIva', $_POST) ? 0 : 1),
         'AplicaRetenciones'   => sanitize_text_field(!array_key_exists('AplicaRetenciones', $_POST) ? 0 : 1),
     ];
@@ -117,11 +118,14 @@ $select_sql = "
     c.EsProveedor,
     c.ResponsableIva,
     c.AplicaRetenciones,
+    c.IdAliado,
+    ge.Nombre AS AliadoNombre,
     c.IdCiudad,
     c.ActividadEconomica
         FROM $tabla c
         LEFT JOIN bc_tipo_documento td ON td.Id = c.IdTipoDocumento 
         LEFT JOIN bc_regimen r ON r.Id = c.IdRegimen
+        LEFT JOIN bc_grupo_empresa ge ON ge.Id = c.IdAliado
     {$where_sql}
     ORDER BY c.RazonSocial ASC
     LIMIT %d OFFSET %d
@@ -132,6 +136,7 @@ $Clientes = $wpdb->get_results($wpdb->prepare($select_sql, $prepare_params));
 $roles = $wpdb->get_results("SELECT * FROM bc_roles");
 $tipoIdentificacion = $wpdb->get_results("SELECT * FROM bc_tipo_documento");
 $regimenes = $wpdb->get_results("SELECT * FROM bc_regimen");
+$aliados = $wpdb->get_results("SELECT * FROM bc_grupo_empresa ORDER BY Nombre");
 
 ?>
 <script src="/wp-content/bitacoras/assets/js/common-loader.js"></script>
@@ -272,6 +277,17 @@ $regimenes = $wpdb->get_results("SELECT * FROM bc_regimen");
                     <?php endforeach; ?>
                 </select>
             </div>
+            <div class="form-group">
+                <label>Aliado</label>
+                <select id="IdAliado" name="IdAliado" required>
+                    <option value="">Seleccione...</option>
+                    <?php foreach ($aliados as $aliado): ?>
+                        <option value="<?= esc_attr($aliado->Id) ?>">
+                            <?= esc_html($aliado->Nombre) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
 
             <div class="form-row">
                 <label>Documento</label>
@@ -346,11 +362,13 @@ $regimenes = $wpdb->get_results("SELECT * FROM bc_regimen");
         document.getElementById('cliente-ActividadEconomica').value = cliente.ActividadEconomica;
         document.getElementById('cliente-ResponsableIva').checked = cliente.ResponsableIva == 1;
         document.getElementById('cliente-AplicaRetenciones').checked = cliente.AplicaRetenciones == 1;
+        document.getElementById('IdAliado').value = cliente.IdAliado || '';
 
         const esEditable = modo === 'editar';
         document.getElementById('cliente-doc').readOnly = !esEditable;
         document.getElementById('IdTipoDocumento').disabled = !esEditable;
         document.getElementById('IdRegimen').disabled = !esEditable;
+        document.getElementById('IdAliado').disabled = !esEditable;
         document.getElementById('cliente-razon').readOnly = !esEditable;
         document.getElementById('cliente-dir').readOnly = !esEditable;
         document.getElementById('cliente-cel').readOnly = !esEditable;

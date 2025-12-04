@@ -33,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     'Direccion',
     'IdPais',
     'IdCiudad',
+    'IdAliado',
     'NumeroCelular',
     'CorreoElectronico',
     'ActividadEconomica',
@@ -54,6 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (in_array($campo, ['ResponsableIva', 'AplicaRetenciones'])) {
       $data[$campo] = (intval($valor)) == 0 ? 1 : 0;
       echo "<script>console.log(" . json_encode(intval($valor)) . ");</script>";
+    } elseif ($campo === 'IdAliado') {
+      $data[$campo] = absint($valor);
     } elseif (in_array($campo, ['EsCliente', 'EsProveedor'])) {
       // Se procesan m��s abajo para aplicar la regla de exclusividad.
       continue;
@@ -191,6 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $tipoIdentificacion = $wpdb->get_results("SELECT * FROM bc_tipo_documento");
 $regimenes = $wpdb->get_results("SELECT * FROM bc_regimen");
 $paises = $wpdb->get_results("SELECT * FROM bc_pais");
+$aliados = $wpdb->get_results("SELECT * FROM bc_grupo_empresa ORDER BY Nombre");
 ?>
 <script src="/wp-content/bitacoras/assets/js/common-loader.js"></script>
 <!DOCTYPE html>
@@ -224,6 +228,7 @@ $paises = $wpdb->get_results("SELECT * FROM bc_pais");
       <?php
       $labels = [
         'TipoDocumento' => 'Tipo de Documento',
+        'Aliado' => 'Aliados',
         'NumeroDocumento' => 'Documento',
         'RazonSocial' => 'Razon Social',
         'Direccion' => 'Dirección',
@@ -233,9 +238,9 @@ $paises = $wpdb->get_results("SELECT * FROM bc_pais");
         'NumeroCelular' => 'Telefono',
         'CorreoElectronico' => 'Correo',
         'ActividadEconomica' => 'Actividad Economica',
+        'Regimen' => 'Regimen',
         'ResponsableIva' => 'Responsable Iva',
-        'AplicaRetenciones' => 'Aplica Retenciones',
-        'Regimen' => 'Regimen'
+        'AplicaRetenciones' => 'Aplica Retenciones'
       ];
       foreach ($labels as $name => $label): ?>
         <div class="form-group">
@@ -247,6 +252,15 @@ $paises = $wpdb->get_results("SELECT * FROM bc_pais");
               <?php foreach ($tipoIdentificacion as $tipo): ?>
                 <option value="<?= esc_attr($tipo->Id) ?>">
                   <?= esc_html($tipo->Descripcion) ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+          <?php elseif ($name === 'Aliado'): ?>
+            <select id="IdAliado" name="IdAliado" required>
+              <option value="">Seleccione...</option>
+              <?php foreach ($aliados as $aliado): ?>
+                <option value="<?= esc_attr($aliado->Id) ?>">
+                  <?= esc_html($aliado->Nombre) ?>
                 </option>
               <?php endforeach; ?>
             </select>

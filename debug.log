@@ -2601,3 +2601,6 @@ Stack trace:
 [03-Dec-2025 00:30:12 UTC]   Automatic theme updates starting...
 [03-Dec-2025 00:30:13 UTC]   Automatic theme updates complete.
 [03-Dec-2025 00:30:13 UTC] Automatic updates complete.
+[04-Dec-2025 00:36:11 UTC] No se pudo enviar el correo de credenciales a 101365987999@example.invalid
+[04-Dec-2025 00:36:11 UTC] INSERT INTO `bc_cliente_empresa` (`IdUser`, `IdCliente`) VALUES ('18', '40')
+[04-Dec-2025 00:36:11 UTC] 

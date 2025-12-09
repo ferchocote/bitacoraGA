@@ -21,8 +21,21 @@ $tabla_estados  = 'bc_' . 'estado_proceso';
 $tabla_clientes = 'bc_' . 'cliente';
 
 // Obtener listas para selects
-$clientes = $wpdb->get_results("SELECT Id, RazonSocial FROM {$tabla_clientes} WHERE Activo=1 AND EsCliente=1 ORDER BY RazonSocial");
-$importadores = $wpdb->get_results("SELECT Id, RazonSocial FROM {$tabla_clientes} WHERE Activo=1 AND EsCliente=0 ORDER BY RazonSocial");
+// Filtrar por IdAliado del usuario si no es ADMIN
+if ($usuario->rol_codigo === 'ADMIN') {
+  $clientes = $wpdb->get_results("SELECT Id, RazonSocial FROM {$tabla_clientes} WHERE Activo=1 AND EsCliente=1 ORDER BY RazonSocial");
+  $importadores = $wpdb->get_results("SELECT Id, RazonSocial FROM {$tabla_clientes} WHERE Activo=1 AND EsCliente=0 ORDER BY RazonSocial");
+} else {
+  $id_aliado = !empty($usuario->IdAliado) ? (int)$usuario->IdAliado : 0;
+  $clientes = $wpdb->get_results($wpdb->prepare(
+      "SELECT Id, RazonSocial FROM {$tabla_clientes} WHERE Activo=1 AND EsCliente=1 AND IdAliado=%d ORDER BY RazonSocial",
+      $id_aliado
+  ));
+  $importadores = $wpdb->get_results($wpdb->prepare(
+      "SELECT Id, RazonSocial FROM {$tabla_clientes} WHERE Activo=1 AND EsCliente=0 AND IdAliado=%d ORDER BY RazonSocial",
+      $id_aliado
+  ));
+}
 
 $aduanas = $wpdb->get_results("SELECT Id, Descripcion FROM bc_catalogo WHERE Tipo='Aduana' AND Activo=1 ORDER BY Descripcion");
 $pies    = $wpdb->get_results("SELECT Id, Descripcion FROM bc_catalogo WHERE Tipo='Pies' AND Activo=1 ORDER BY Descripcion");

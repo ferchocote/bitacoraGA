@@ -541,8 +541,20 @@ $detalles = $wpdb->get_results(
 $detalle = ! empty($detalles) ? $detalles[0] : null;
 
 // Listas para selects
-$clientes = $wpdb->get_results("SELECT Id, RazonSocial FROM {$tabla_clientes} WHERE Activo=1 ORDER BY RazonSocial");
-$importadores = $clientes; // mismos registros, diferencia según flujo
+// Si es admin, muestra todos los clientes; si no, filtra por IdAliado
+if ($usuario->rol_codigo === 'ADMIN') {
+    $clientes = $wpdb->get_results("SELECT Id, RazonSocial FROM {$tabla_clientes} WHERE Activo=1 AND EsCliente=1 ORDER BY RazonSocial");
+    $importadores = $wpdb->get_results("SELECT Id, RazonSocial FROM {$tabla_clientes} WHERE Activo=1 AND EsCliente=0 ORDER BY RazonSocial");
+} else {
+    $clientes = $wpdb->get_results($wpdb->prepare(
+        "SELECT Id, RazonSocial FROM {$tabla_clientes} WHERE Activo=1 AND EsCliente=1 AND IdAliado = %d ORDER BY RazonSocial",
+        (int)$usuario->IdAliado
+    ));
+    $importadores = $wpdb->get_results($wpdb->prepare(
+        "SELECT Id, RazonSocial FROM {$tabla_clientes} WHERE Activo=1 AND EsCliente=0 AND IdAliado = %d ORDER BY RazonSocial",
+        (int)$usuario->IdAliado
+    ));
+}
 $estadosList = $wpdb->get_results("SELECT Id, Descripcion FROM {$tabla_estados} WHERE Activo=1 ORDER BY Id");
 
 $tipos = $wpdb->get_results("SELECT Id, Descripcion FROM bc_catalogo WHERE Tipo='TipoProceso' AND Activo=1 ORDER BY Descripcion");

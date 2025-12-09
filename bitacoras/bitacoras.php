@@ -19,6 +19,7 @@ $params        = [];
 // Nombre real de tu tabla, ajusta el prefijo si es necesario:
 $tabla = 'bc_' . 'proceso';
 $tabla_estados = 'bc_' . 'estado_proceso';
+$tabla_grupo_empresa = 'bc_' . 'grupo_empresa';
 $tabla_cliente = 'bc_' . 'cliente';
 
 
@@ -86,6 +87,11 @@ if ($is_cliente_custom) {
     // Sin relación => sin resultados
     $where_clauses[] = "1=0";
   }
+} elseif ($usuario->rol_codigo !== 'ADMIN' && !empty($usuario->IdAliado)) {
+  // Filtrar por grupo empresa (IdAliado) para todos los roles excepto ADMIN
+  $where_clauses[] = "(c.IdAliado = %d OR imp.IdAliado = %d)";
+  $params[] = (int) $usuario->IdAliado;
+  $params[] = (int) $usuario->IdAliado;
 }
 
 
@@ -98,7 +104,8 @@ $count_sql = "
   SELECT COUNT(*)
   FROM bc_proceso p
   LEFT JOIN {$wpdb->prefix}users u ON u.ID = p.IdUserCreation
-  LEFT JOIN {$tabla_cliente} c ON c.ID = p.IdImportador
+  LEFT JOIN {$tabla_cliente} c ON c.ID = p.IdCliente
+  LEFT JOIN {$tabla_cliente} imp ON imp.ID = p.IdImportador
   LEFT JOIN bc_estado_proceso ep ON ep.Id = p.IdEstadoProceso
   {$where_sql}
 ";
@@ -135,7 +142,8 @@ $select_sql = "
     END AS DiasRestantes
   FROM bc_proceso p
   LEFT JOIN {$wpdb->prefix}users u ON u.ID = p.IdUserCreation
-  LEFT JOIN {$tabla_cliente} c ON c.ID = p.IdImportador
+  LEFT JOIN {$tabla_cliente} c ON c.ID = p.IdCliente
+  LEFT JOIN {$tabla_cliente} imp ON imp.ID = p.IdImportador
   LEFT JOIN bc_estado_proceso ep ON ep.Id = p.IdEstadoProceso
   {$where_sql}
   ORDER BY (ep.Codigo = 'COM') ASC, DiasRestantes ASC

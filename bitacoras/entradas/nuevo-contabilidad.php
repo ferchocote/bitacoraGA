@@ -3,15 +3,34 @@
     require_once('../../../wp-load.php');
 
     global $wpdb;
+    $current_user = wp_get_current_user();
+    $usuario = $wpdb->get_row("SELECT u.*, r.Nombre AS rol_nombre, r.Codigo AS rol_codigo
+            FROM wp_users u
+            LEFT JOIN bc_user_role ur ON ur.IdUser = u.ID
+            LEFT JOIN bc_roles r ON r.Id = ur.IdRol
+            WHERE u.id = {$current_user->ID}");
 
     // Consulta los tipos de documento y clientes
     $tipoContabilidad = $wpdb->get_results("SELECT * FROM bc_tipo_documento_contabilidad");
-    $clientes = $wpdb->get_results("SELECT Id, RazonSocial, NumeroDocumento, EsCliente, EsProveedor 
-                                   FROM bc_cliente 
-                                   WHERE (EsCliente = 1 OR EsProveedor = 1) 
-                                   AND Activo = 1 
-                                   ORDER BY RazonSocial");
-
+    if ($usuario->rol_codigo === 'ADMIN') {
+        $clientes = $wpdb->get_results(
+            "SELECT Id, RazonSocial, NumeroDocumento, EsCliente, EsProveedor 
+            FROM bc_cliente 
+            WHERE (EsCliente = 1 OR EsProveedor = 1) 
+            AND Activo = 1 
+            ORDER BY RazonSocial"
+        );
+    } else {
+        $clientes = $wpdb->get_results($wpdb->prepare(
+            "SELECT Id, RazonSocial, NumeroDocumento, EsCliente, EsProveedor 
+            FROM bc_cliente 
+            WHERE (EsCliente = 1 OR EsProveedor = 1) 
+            AND IdAliado = %d
+            AND Activo = 1 
+            ORDER BY RazonSocial",
+            (int)$usuario->IdAliado
+        ));
+    }
     // Genera el HTML del select
     ?>
    <input type="hidden" id="IdEntradaBitacora" name="idEntradaBitacora" />

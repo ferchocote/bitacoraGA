@@ -87,7 +87,7 @@ if ($is_cliente_custom) {
     // Sin relación => sin resultados
     $where_clauses[] = "1=0";
   }
-} elseif ($usuario->rol_codigo !== 'ADMIN' && !empty($usuario->IdAliado)) {
+} elseif ($usuario->rol_codigo !== 'ADMIN' && $usuario->grupo_nombre === 'GA') {
   // Filtrar por grupo empresa (IdAliado) para todos los roles excepto ADMIN
   $where_clauses[] = "(c.IdAliado = %d OR imp.IdAliado = %d)";
   $params[] = (int) $usuario->IdAliado;

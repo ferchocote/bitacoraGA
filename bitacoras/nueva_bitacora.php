@@ -22,7 +22,7 @@ $tabla_clientes = 'bc_' . 'cliente';
 
 // Obtener listas para selects
 // Filtrar por IdAliado del usuario si no es ADMIN
-if ($usuario->rol_codigo === 'ADMIN') {
+if ($usuario->rol_codigo === 'ADMIN' && $usuario->grupo_nombre === 'GA') {
   $clientes = $wpdb->get_results("SELECT Id, RazonSocial FROM {$tabla_clientes} WHERE Activo=1 AND EsCliente=1 ORDER BY RazonSocial");
   $importadores = $wpdb->get_results("SELECT Id, RazonSocial FROM {$tabla_clientes} WHERE Activo=1 AND EsCliente=0 ORDER BY RazonSocial");
 } else {

@@ -5,10 +5,11 @@ $current_user = wp_get_current_user();
 
 global $wpdb;
 //$tabla = $wpdb->prefix . 'users';
-$usuario = $wpdb->get_row("SELECT u.*, r.Nombre AS rol_nombre, r.Codigo AS rol_codigo
+$usuario = $wpdb->get_row("SELECT u.*, r.Nombre AS rol_nombre, r.Codigo AS rol_codigo, ge.Nombre AS grupo_nombre
         FROM wp_users u
         LEFT JOIN bc_user_role ur ON ur.IdUser = u.ID
         LEFT JOIN bc_roles r ON r.Id = ur.IdRol
+        LEFT JOIN bc_grupo_empresa ge ON ge.Id = u.IdAliado
         WHERE u.id = {$current_user->ID}");
 
 // Valida rol de usuario 
@@ -541,8 +542,8 @@ $detalles = $wpdb->get_results(
 $detalle = ! empty($detalles) ? $detalles[0] : null;
 
 // Listas para selects
-// Si es admin, muestra todos los clientes; si no, filtra por IdAliado
-if ($usuario->rol_codigo === 'ADMIN') {
+// Si es admin de GA, muestra todos los clientes; si no, filtra por IdAliado
+if ($usuario->rol_codigo === 'ADMIN' && $usuario->grupo_nombre === 'GA') {
     $clientes = $wpdb->get_results("SELECT Id, RazonSocial FROM {$tabla_clientes} WHERE Activo=1 AND EsCliente=1 ORDER BY RazonSocial");
     $importadores = $wpdb->get_results("SELECT Id, RazonSocial FROM {$tabla_clientes} WHERE Activo=1 AND EsCliente=0 ORDER BY RazonSocial");
 } else {

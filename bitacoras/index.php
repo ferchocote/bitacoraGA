@@ -62,8 +62,8 @@ $usuario = $wpdb->get_row("SELECT u.*, r.Nombre AS rol_nombre, r.Codigo AS rol_c
         LEFT JOIN bc_grupo_empresa ge ON ge.Id = u.IdAliado
         WHERE u.id = {$current_user->ID}");
 
-// Determinar si el usuario es de un aliado externo (no GA)
-$es_aliado_externo = ($usuario->rol_codigo !== 'ADMIN' && !empty($usuario->IdAliado) && $usuario->grupo_nombre !== 'GA');
+// Determinar si el usuario es ADMIN de GA (tiene acceso completo)
+$es_admin_ga = ($usuario->rol_codigo === 'ADMIN' && $usuario->grupo_nombre === 'GA');
 
 $vista = isset($_GET['view']) && !empty($_GET['view']) ? $_GET['view'] : 'bitacoras';
 $viewFile = basename($vista) . '.php';
@@ -117,7 +117,7 @@ function formatearNombrePagina($archivo)
                         <span class="menu-option-span">Bitácoras</span>
                     </a>
                 <?php endif; ?>
-                <?php if (!$es_aliado_externo && ($usuario->rol_codigo == "ADMIN" || $usuario->rol_codigo == "RRHH")): ?>
+                <?php if ($es_admin_ga || $usuario->rol_codigo == "RRHH"): ?>
                     <a href="?view=clientes">
                         <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
                             <path fill-rule="evenodd" d="M12 20a7.966 7.966 0 0 1-5.002-1.756l.002.001v-.683c0-1.794 1.492-3.25 3.333-3.25h3.334c1.84 0 3.333 1.456 3.333 3.25v.683A7.966 7.966 0 0 1 12 20ZM2 12C2 6.477 6.477 2 12 2s10 4.477 10 10c0 5.5-4.44 9.963-9.932 10h-.138C6.438 21.962 2 17.5 2 12Zm10-5c-1.84 0-3.333 1.455-3.333 3.25S10.159 13.5 12 13.5c1.84 0 3.333-1.455 3.333-3.25S13.841 7 12 7Z" clip-rule="evenodd" />
@@ -137,7 +137,7 @@ function formatearNombrePagina($archivo)
                         <span class="menu-option-span">Roles</span>
                     </a>
                     <?php endif; ?>
-                    <?php if (!$es_aliado_externo && ($usuario->rol_codigo == "ADMIN" || $usuario->rol_codigo == "PAG" || $usuario->rol_codigo == "CONT")): ?>
+                    <?php if ($es_admin_ga || $usuario->rol_codigo == "PAG" || $usuario->rol_codigo == "CONT"): ?>
                     <a href="?view=gestion_documental">
                         <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16M4 12h16M4 17h16" />

@@ -2604,3 +2604,25 @@ Stack trace:
 [04-Dec-2025 00:36:11 UTC] No se pudo enviar el correo de credenciales a 101365987999@example.invalid
 [04-Dec-2025 00:36:11 UTC] INSERT INTO `bc_cliente_empresa` (`IdUser`, `IdCliente`) VALUES ('18', '40')
 [04-Dec-2025 00:36:11 UTC] 
+[20-Jan-2026 02:18:59 UTC] Automatic updates starting...
+[20-Jan-2026 02:19:00 UTC]   Automatic plugin updates starting...
+[20-Jan-2026 02:19:01 UTC]   Automatic plugin updates complete.
+[20-Jan-2026 02:19:02 UTC]   Automatic theme updates starting...
+[20-Jan-2026 02:19:02 UTC]   Automatic theme updates complete.
+[20-Jan-2026 02:19:02 UTC] Automatic updates complete.
+[20-Jan-2026 02:20:49 UTC] Error de evento de reprogramación de cron para el hook: action_scheduler_run_queue. Código de error: invalid_schedule. Mensaje de error: El programa del evento no existe.. Datos: {"schedule":"every_minute","args":["WP Cron"],"interval":60}
+[20-Jan-2026 02:20:49 UTC] Error de evento de reprogramación de cron para el hook: litespeed_task_lqip. Código de error: invalid_schedule. Mensaje de error: El programa del evento no existe.. Datos: {"schedule":"litespeed_filter","args":[],"interval":900}
+[20-Jan-2026 03:33:40 UTC] WordPress database error Unknown column 'Activo' in 'SELECT' for query SELECT IdProceso, FechaCambio, COALESCE(Activo,1) AS ActivoFlag FROM bc_proceso_estado_historial WHERE Id = 12
+[20-Jan-2026 03:34:17 UTC] WordPress database error Unknown column 'Activo' in 'SELECT' for query SELECT IdProceso, FechaCambio, COALESCE(Activo,1) AS ActivoFlag FROM bc_proceso_estado_historial WHERE Id = 12
+[20-Jan-2026 03:37:13 UTC] WordPress database error Unknown column 'Activo' in 'SELECT' for query SELECT IdProceso, FechaCambio, COALESCE(Activo,1) AS ActivoFlag FROM bc_proceso_estado_historial WHERE Id = 12
+[20-Jan-2026 03:37:22 UTC] WordPress database error Unknown column 'Activo' in 'SELECT' for query SELECT IdProceso, FechaCambio, COALESCE(Activo,1) AS ActivoFlag FROM bc_proceso_estado_historial WHERE Id = 12
+[20-Jan-2026 23:09:25 UTC] PHP Warning:  mysqli_real_connect(): php_network_getaddresses: getaddrinfo for srv961.hstgr.io failed: Host desconocido.  in C:\xampp\htdocs\wp-includes\class-wpdb.php on line 1994
+[20-Jan-2026 23:09:25 UTC] PHP Warning:  mysqli_real_connect(): (HY000/2002): php_network_getaddresses: getaddrinfo for srv961.hstgr.io failed: Host desconocido.  in C:\xampp\htdocs\wp-includes\class-wpdb.php on line 1994
+[20-Jan-2026 23:09:49 UTC] Automatic updates starting...
+[20-Jan-2026 23:09:50 UTC]   Automatic plugin updates starting...
+[20-Jan-2026 23:09:50 UTC]   Automatic plugin updates complete.
+[20-Jan-2026 23:09:52 UTC]   Automatic theme updates starting...
+[20-Jan-2026 23:09:52 UTC]   Automatic theme updates complete.
+[20-Jan-2026 23:09:52 UTC] Automatic updates complete.
+[20-Jan-2026 23:10:01 UTC] Error de evento de reprogramación de cron para el hook: action_scheduler_run_queue. Código de error: invalid_schedule. Mensaje de error: El programa del evento no existe.. Datos: {"schedule":"every_minute","args":["WP Cron"],"interval":60}
+[20-Jan-2026 23:10:01 UTC] Error de evento de reprogramación de cron para el hook: litespeed_task_lqip. Código de error: invalid_schedule. Mensaje de error: El programa del evento no existe.. Datos: {"schedule":"litespeed_filter","args":[],"interval":900}

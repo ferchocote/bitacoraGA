@@ -13,6 +13,63 @@ if (!is_user_logged_in()) {
     exit;
 }
 
+/**
+ * Devuelve true solo si el usuario actual tiene rol ADMIN en la bitácora.
+ */
+function bc_es_admin_bitacora(): bool
+{
+    global $wpdb;
+    static $cached = null;
+    if ($cached !== null) {
+        return $cached;
+    }
+    $user_id = get_current_user_id();
+    if (!$user_id) {
+        $cached = false;
+        return false;
+    }
+    $rol = $wpdb->get_var(
+        $wpdb->prepare(
+            "SELECT r.Codigo 
+             FROM bc_user_role ur 
+             INNER JOIN bc_roles r ON r.Id = ur.IdRol 
+             WHERE ur.IdUser = %d 
+             LIMIT 1",
+            $user_id
+        )
+    );
+    $cached = ($rol === 'ADMIN');
+    return $cached;
+}
+
+/**
+ * Verifica si la tabla de historial tiene la columna Activo para borrado lógico.
+ */
+function bc_historial_tiene_columna_activo(): bool
+{
+    global $wpdb;
+    static $hasColumn = null;
+    if ($hasColumn !== null) {
+        return $hasColumn;
+    }
+    $hasColumn = (bool) $wpdb->get_var("SHOW COLUMNS FROM bc_proceso_estado_historial LIKE 'Activo'");
+    return $hasColumn;
+}
+
+/**
+ * Lee el cuerpo JSON de la petición y devuelve un array.
+ */
+function bc_leer_payload(): array
+{
+    $raw = file_get_contents('php://input');
+    if (!$raw) {
+        return [];
+    }
+    $data = json_decode($raw, true);
+    return is_array($data) ? $data : [];
+}
+
+$es_admin_bitacora = bc_es_admin_bitacora();
 $action = $_GET['action'] ?? '';
 
 switch ($action) {
@@ -22,10 +79,12 @@ switch ($action) {
             echo json_encode([]);
             break;
         }
+        $select_activo = bc_historial_tiene_columna_activo() ? ', h.Activo' : '';
+        $filtro_activo = bc_historial_tiene_columna_activo() ? ' AND COALESCE(h.Activo,1) = 1' : '';
         // Traer historial con nombres de usuario y descripciones de estado
         $historial = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT h.Id, h.IdProceso, h.EstadoAnteriorId, h.EstadoNuevoId, h.Observacion, h.IdUsuarioCambio, h.FechaCambio,
+                "SELECT h.Id, h.IdProceso, h.EstadoAnteriorId, h.EstadoNuevoId, h.Observacion, h.IdUsuarioCambio, h.FechaCambio{$select_activo},
                         ea.Descripcion AS estado_anterior,
                         en.Descripcion AS estado_nuevo,
                         u.display_name AS usuario
@@ -33,7 +92,7 @@ switch ($action) {
                  LEFT JOIN bc_estado_proceso ea ON ea.Id = h.EstadoAnteriorId
                  LEFT JOIN bc_estado_proceso en ON en.Id = h.EstadoNuevoId
                  LEFT JOIN wp_users u ON u.ID = h.IdUsuarioCambio
-                 WHERE h.IdProceso = %d
+                 WHERE h.IdProceso = %d{$filtro_activo}
                  ORDER BY h.FechaCambio DESC",
                 $id_proceso
             )
@@ -44,13 +103,108 @@ switch ($action) {
                 'id_proceso'       => $row->IdProceso,
                 'estado_anterior'  => $row->estado_anterior,
                 'estado_nuevo'     => $row->estado_nuevo,
+                'estado_anterior_id' => $row->EstadoAnteriorId,
+                'estado_nuevo_id'  => $row->EstadoNuevoId,
                 'usuario'          => $row->usuario,
                 'fecha'            => $row->FechaCambio,
-                'observacion'      => $row->Observacion
+                'observacion'      => $row->Observacion,
+                'activo'           => property_exists($row, 'Activo') ? (int)$row->Activo : 1
             ];
         }, $historial);
         echo json_encode($result);
         break;
+
+    case 'actualizar_historial_estado':
+        if (!$es_admin_bitacora) {
+            echo json_encode(['success' => false, 'message' => 'No autorizado']);
+            break;
+        }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            break;
+        }
+        $payload = bc_leer_payload();
+        $id_historial   = intval($payload['id'] ?? 0);
+        $estado_nuevo   = intval($payload['estado_nuevo_id'] ?? 0);
+        $observacion    = sanitize_text_field($payload['observacion'] ?? '');
+        if (!$id_historial || !$estado_nuevo) {
+            echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
+            break;
+        }
+        // Solo se permite editar el último registro activo del proceso
+        $tiene_activo = bc_historial_tiene_columna_activo();
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                $tiene_activo
+                    ? "SELECT IdProceso, FechaCambio, COALESCE(Activo,1) AS ActivoFlag FROM bc_proceso_estado_historial WHERE Id = %d"
+                    : "SELECT IdProceso, FechaCambio FROM bc_proceso_estado_historial WHERE Id = %d",
+                $id_historial
+            )
+        );
+        if (!$row) {
+            echo json_encode(['success' => false, 'message' => 'Registro no encontrado']);
+            break;
+        }
+        $filtro_activo = $tiene_activo ? "AND COALESCE(Activo,1) = 1" : "";
+        $ultimo_id = $wpdb->get_var($wpdb->prepare(
+            "SELECT Id FROM bc_proceso_estado_historial WHERE IdProceso = %d {$filtro_activo} ORDER BY FechaCambio DESC, Id DESC LIMIT 1",
+            $row->IdProceso
+        ));
+        if (intval($ultimo_id) !== $id_historial) {
+            echo json_encode(['success' => false, 'message' => 'Solo se puede editar el último estado.']);
+            break;
+        }
+        $estado_actual_proceso = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT IdEstadoProceso FROM bc_proceso WHERE Id = %d",
+                $row->IdProceso
+            )
+        );
+
+        $updated = $wpdb->update(
+            'bc_proceso_estado_historial',
+            [
+                'EstadoNuevoId'   => $estado_nuevo,
+                'Observacion'     => $observacion,
+                'IdUsuarioCambio' => get_current_user_id(),
+                'FechaCambio'     => current_time('mysql')
+            ],
+            ['Id' => $id_historial]
+        );
+        $proceso_actualizado = false;
+        if ($updated !== false) {
+            // Actualizar el estado actual del proceso
+            if ((int)$estado_actual_proceso !== $estado_nuevo) {
+                $wpdb->update(
+                    'bc_proceso',
+                    ['IdEstadoProceso' => $estado_nuevo],
+                    ['Id' => $row->IdProceso]
+                );
+                $proceso_actualizado = true;
+            }
+            $log_data = [
+                'Objeto'        => wp_json_encode([
+                    'IdHistorial'      => $id_historial,
+                    'IdProceso'        => $row->IdProceso,
+                    'EstadoNuevoId'    => $estado_nuevo,
+                    'Observacion'      => $observacion,
+                    'IdUsuarioCambio'  => get_current_user_id(),
+                    'FechaCambio'      => current_time('mysql')
+                ]),
+                'Tabla'         => 'bc_proceso_estado_historial',
+                'TipoDeCambio'  => 'Actualizar',
+                'IdUser'        => get_current_user_id(),
+                'FechaCreacion' => current_time('mysql'),
+            ];
+            $wpdb->insert('bc_logs', $log_data);
+        }
+        echo json_encode([
+            'success' => $updated !== false,
+            'updated' => (int) $updated,
+            'proceso_actualizado' => $proceso_actualizado
+        ]);
+        break;
+
     case 'get_entradas_transporte':
         $id_proceso = intval($_GET['id_proceso']);
         $entradas = $wpdb->get_results("SELECT TE.Descripcion as TEDescripcion,TE.Codigo as TECodigo,BT.FechaCreacion as BTFechaCreacion, EB.*,BT.*,U.* FROM `bc_entrada_bitacora` EB 

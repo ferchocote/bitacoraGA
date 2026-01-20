@@ -1,15 +1,24 @@
 <?php
-// Valida rol de usuario 
-if ($usuario->rol_codigo == "RRHH") {
-  echo "No tienes permiso para acceder a esta vista.";
-  exit;
-}
-
 define('WP_USE_THEMES', false);
 require_once('../../wp-load.php');
 
 global $wpdb;
+$current_user    = wp_get_current_user();
+$usuario = $wpdb->get_row("SELECT u.*, r.Nombre AS rol_nombre, r.Codigo AS rol_codigo, ge.Nombre AS grupo_nombre
+        FROM wp_users u
+        LEFT JOIN bc_user_role ur ON ur.IdUser = u.ID
+        LEFT JOIN bc_roles r ON r.Id = ur.IdRol
+        LEFT JOIN bc_grupo_empresa ge ON ge.Id = u.IdAliado
+        WHERE u.id = {$current_user->ID}");
+
+// Valida rol de usuario 
+if ($usuario && $usuario->rol_codigo == "RRHH") {
+  echo "No tienes permiso para acceder a esta vista.";
+  exit;
+}
+
 $current_user_id = get_current_user_id();
+$es_admin_bitacora = ($usuario && isset($usuario->rol_codigo) && $usuario->rol_codigo === 'ADMIN');
 
 $q    = '';
 $searchTerm    = '';
@@ -218,6 +227,46 @@ if (
 ?>
 <script src="/wp-content/bitacoras/assets/js/common-loader.js"></script>
 <!DOCTYPE html>
+<style>
+  .historial-actions .icon-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    line-height: 1;
+    font-size: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: #fff;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 16px 16px;
+    color: #0f172a;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+  .historial-actions .icon-action:hover {
+    background: #f3f4f6;
+    transform: translateY(-1px);
+  }
+  .historial-actions .icon-action svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+    stroke: currentColor;
+    display: block;
+  }
+  .historial-actions .icon-edit {
+    color: #d7ab00;
+    background-image: none;
+  }
+  .historial-actions .icon-delete {
+    color: #dc2626;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23dc2626'%3E%3Cpath d='M7.5 3 6.5 4h-3v2h13V4h-3l-1-1h-5Zm-2 5v8a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2V8h-9Z'/%3E%3C/svg%3E");
+  }
+</style>
 
 <div class="toolbar" style="margin-bottom: 20px; display: flex; gap: 10px;">
 
@@ -476,6 +525,29 @@ if (
           <div style="text-align:center; color:#888;">Cargando historial...</div>
         </div>
       </div>
+      <?php if ($es_admin_bitacora): ?>
+        <div id="historial-editor" style="display:none; margin-top:16px; border-top:1px solid #e5e7eb; padding-top:16px;">
+          <h4>Editar historial</h4>
+          <input type="hidden" id="HistorialEditId">
+          <div class="form-group">
+            <label for="HistorialEstadoNuevo">Estado nuevo</label>
+            <select id="HistorialEstadoNuevo">
+              <option value="">-- Seleccione --</option>
+              <?php foreach ($Listestados as $st): ?>
+                <option value="<?= esc_attr($st->Id) ?>"><?= esc_html($st->Descripcion) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="HistorialObservacion">Observación</label>
+            <textarea id="HistorialObservacion" rows="2"></textarea>
+          </div>
+          <div class="popup-actions">
+            <button type="button" class="btn" id="btn-cancelar-edit-historial" style="background:#dc3545; color:#fff; border-color:#dc3545;">Cancelar</button>
+            <button type="button" class="btn" id="btn-guardar-edit-historial">Actualizar</button>
+          </div>
+        </div>
+      <?php endif; ?>
     </div>
 
     <div id="loader-overlay">
@@ -499,6 +571,20 @@ if (
 </div>
 
 <script>
+  const ES_ADMIN_BITACORA = <?= $es_admin_bitacora ? 'true' : 'false' ?>;
+  let historialProcesoActual = null;
+  let historialData = [];
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
   // 1) Definimos las transiciones válidas
   const transiciones = {
     'Creado': ['Selectividad Auto', 'Selectividad Fisica'],
@@ -524,6 +610,9 @@ if (
       const fila = btn.closest('tr');
       const estadoEl = fila.querySelector('.status-label');
       const estadoActual = estadoEl ? estadoEl.textContent.trim() : '';
+
+      // Reiniciar editor de historial al abrir modal
+      limpiarEditorHistorial();
 
       // c) Calculamos las opciones permitidas
       const permitidos = transiciones[estadoActual] || [];
@@ -553,16 +642,49 @@ if (
 
   // Función para cargar historial de estados por proceso
   function cargarHistorialEstados(idProceso) {
+    historialProcesoActual = idProceso;
     const cont = document.getElementById('historial-estados-container');
     cont.innerHTML = '<div style="text-align:center; color:#888;">Cargando historial...</div>';
     showLoader();
     fetch(`/wp-content/bitacoras/plugins/cliente/entradas-ajax.php?action=historial_estados&id_proceso=${idProceso}`)
       .then(res => res.json())
       .then(data => {
+        historialData = Array.isArray(data) ? data : [];
         if (!Array.isArray(data) || data.length === 0) {
           cont.innerHTML = '<em>No hay historial de estados.</em>';
           return;
         }
+        const filas = data.map((est, idx) => {
+          const esUltimo = idx === 0; // la consulta viene ordenada DESC, primer registro es el último
+          const obsEncoded = encodeURIComponent(est.observacion || '');
+          const estadoAnteriorEncoded = encodeURIComponent(est.estado_anterior || '');
+          return `
+            <tr>
+              <td>${escapeHtml(est.estado_anterior || '-')}</td>
+              <td>${escapeHtml(est.estado_nuevo || '-')}</td>
+              <td>${escapeHtml(est.usuario || '-')}</td>
+              <td>${est.fecha ? new Date(est.fecha).toLocaleString() : '-'}</td>
+              <td class="observacion-cell">${escapeHtml(est.observacion || '')}</td>
+              ${ES_ADMIN_BITACORA && esUltimo ? `
+                <td class="historial-actions" style="min-width:60px; display:flex; gap:8px;">
+                  <button type="button"
+                          class="icon-action icon-edit btn-edit-historial"
+                          data-id="${est.id}"
+                          data-estado-nuevo-id="${est.estado_nuevo_id || ''}"
+                          data-estado-anterior-id="${est.estado_anterior_id || ''}"
+                          data-estado-anterior="${estadoAnteriorEncoded}"
+                          data-observacion="${obsEncoded}"
+                          title="Editar estado"
+                          aria-label="Editar estado">
+                    <svg class="w-[16px] h-[16px]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                      <path fill-rule="evenodd" d="M14 4.182A4.136 4.136 0 0 1 16.9 3c1.087 0 2.13.425 2.899 1.182A4.01 4.01 0 0 1 21 7.037c0 1.068-.43 2.092-1.194 2.849L18.5 11.214l-5.8-5.71 1.287-1.31.012-.012Zm-2.717 2.763L6.186 12.13l2.175 2.141 5.063-5.218-2.141-2.108Zm-6.25 6.886-1.98 5.849a.992.992 0 0 0 .245 1.026 1.03 1.03 0 0 0 1.043.242L10.282 19l-5.25-5.168Zm6.954 4.01 5.096-5.186-2.218-2.183-5.063 5.218 2.185 2.15Z" clip-rule="evenodd" />
+                    </svg>
+                  </button>
+                </td>
+              ` : ''}
+            </tr>
+          `;
+        }).join('');
         cont.innerHTML = `
           <table class="tabla-historial-estados" style="width:100%; margin-top:10px;">
             <thead>
@@ -572,26 +694,141 @@ if (
                 <th>Usuario</th>
                 <th>Fecha</th>
                 <th>Observación</th>
+                ${ES_ADMIN_BITACORA ? '<th>Acciones</th>' : ''}
               </tr>
             </thead>
             <tbody>
-              ${data.map(est => `
-                <tr>
-                  <td>${est.estado_anterior || '-'}</td>
-                  <td>${est.estado_nuevo || '-'}</td>
-                  <td>${est.usuario || '-'}</td>
-                  <td>${est.fecha ? new Date(est.fecha).toLocaleString() : '-'}</td>
-                  <td class="observacion-cell">${est.observacion || ''}</td>
-                </tr>
-              `).join('')}
+              ${filas}
             </tbody>
           </table>
         `;
-      }).finally(hideLoader)
+        prepararAccionesHistorial();
+      })
       .catch(() => {
         cont.innerHTML = '<em>Error al cargar historial.</em>';
-      });
+      })
+      .finally(hideLoader);
   }
+
+  function prepararAccionesHistorial() {
+    if (!ES_ADMIN_BITACORA) return;
+    document.querySelectorAll('.btn-edit-historial').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const data = {
+          id: parseInt(btn.dataset.id || '0', 10),
+          estado_nuevo_id: parseInt(btn.dataset.estadoNuevoId || '0', 10) || '',
+          estado_anterior_id: parseInt(btn.dataset.estadoAnteriorId || '0', 10) || '',
+          observacion: btn.dataset.observacion ? decodeURIComponent(btn.dataset.observacion) : ''
+        };
+        const idx = historialData.findIndex(h => parseInt(h.id, 10) === data.id);
+        const anteriorRegistro = idx >= 0 && historialData[idx + 1] ? historialData[idx + 1] : null;
+        const estadoBase = anteriorRegistro
+          ? (anteriorRegistro.estado_nuevo || anteriorRegistro.estado_anterior || '')
+          : (btn.dataset.estadoAnterior ? decodeURIComponent(btn.dataset.estadoAnterior) : '');
+        abrirEditorHistorial(data, estadoBase);
+      });
+    });
+  }
+
+  function abrirEditorHistorial(data, estadoBase) {
+    const editor = document.getElementById('historial-editor');
+    const idInput = document.getElementById('HistorialEditId');
+    const estadoSelect = document.getElementById('HistorialEstadoNuevo');
+    const obsTextarea = document.getElementById('HistorialObservacion');
+    if (!editor || !idInput || !estadoSelect || !obsTextarea) return;
+    idInput.value = data.id || '';
+    estadoSelect.value = data.estado_nuevo_id || '';
+    obsTextarea.value = data.observacion || '';
+    if (estadoBase) {
+      filtrarOpcionesEstado(estadoSelect, estadoBase);
+    }
+    editor.style.display = 'block';
+    editor.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function filtrarOpcionesEstado(selectEl, estadoBase) {
+    if (!selectEl) return;
+    const permitidos = transiciones[estadoBase] || [];
+    Array.from(selectEl.options).forEach(opt => {
+      if (!opt.value) {
+        opt.hidden = false;
+        return;
+      }
+      opt.hidden = permitidos.length ? !permitidos.includes(opt.textContent.trim()) : true;
+    });
+  }
+
+  function limpiarEditorHistorial() {
+    const editor = document.getElementById('historial-editor');
+    const idInput = document.getElementById('HistorialEditId');
+    const estadoSelect = document.getElementById('HistorialEstadoNuevo');
+    const obsTextarea = document.getElementById('HistorialObservacion');
+    if (editor) editor.style.display = 'none';
+    if (idInput) idInput.value = '';
+    if (estadoSelect) estadoSelect.value = '';
+    if (obsTextarea) obsTextarea.value = '';
+  }
+
+  function guardarEdicionHistorial() {
+    const idInput = document.getElementById('HistorialEditId');
+    const estadoSelect = document.getElementById('HistorialEstadoNuevo');
+    const obsTextarea = document.getElementById('HistorialObservacion');
+    const id = parseInt(idInput?.value || '0', 10);
+    const estadoNuevo = parseInt(estadoSelect?.value || '0', 10);
+    const observacion = obsTextarea ? obsTextarea.value.trim() : '';
+    if (!id || !estadoNuevo) {
+      alert('Seleccione un estado y registro para actualizar.');
+      return;
+    }
+    showLoader();
+    fetch('/wp-content/bitacoras/plugins/cliente/entradas-ajax.php?action=actualizar_historial_estado', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ id, estado_nuevo_id: estadoNuevo, observacion })
+    })
+      .then(res => res.json())
+      .then(resp => {
+        if (resp && resp.success) {
+          limpiarEditorHistorial();
+          if (resp.proceso_actualizado) {
+            // Si cambió el estado del proceso, refrescamos la tabla principal
+            window.location.reload();
+            return;
+          }
+          if (historialProcesoActual) cargarHistorialEstados(historialProcesoActual);
+        } else {
+          alert(resp.message || 'No se pudo actualizar el historial.');
+        }
+      })
+      .catch(() => alert('Error al actualizar historial.'))
+      .finally(hideLoader);
+  }
+
+  const btnGuardarHistorial = document.getElementById('btn-guardar-edit-historial');
+  if (btnGuardarHistorial) {
+    btnGuardarHistorial.addEventListener('click', (e) => {
+      e.preventDefault();
+      guardarEdicionHistorial();
+    });
+  }
+  const btnCancelarHistorial = document.getElementById('btn-cancelar-edit-historial');
+  if (btnCancelarHistorial) {
+    btnCancelarHistorial.addEventListener('click', (e) => {
+      e.preventDefault();
+      limpiarEditorHistorial();
+    });
+  }
+  // Cierre del modal principal debe limpiar también el editor
+  document.querySelectorAll('label[for="gestionar-toggle"]').forEach(lbl => {
+    lbl.addEventListener('click', () => {
+      limpiarEditorHistorial();
+      const nuevoEstado = document.getElementById('NuevoEstado');
+      const obsCambio = document.getElementById('ObservacionCambio');
+      if (nuevoEstado) nuevoEstado.value = '';
+      if (obsCambio) obsCambio.value = '';
+    });
+  });
   document.addEventListener('DOMContentLoaded', function() {
     hideLoader();
     // Selecciona todos los enlaces dentro del sidebar (tu menú principal)
@@ -671,6 +908,3 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 </script>
-
-
-

@@ -370,7 +370,7 @@ switch ($action) {
             $client->setSubject('subgerencia@galogistic.com');
             $client->setScopes([Google_Service_Drive::DRIVE]);
             $driveService = new Google_Service_Drive($client);
-            $sharedDriveId = '0APg0nAAp2LMpUk9PVA'; // Ajusta si usas Shared Drives
+            $sharedDriveId = '0APg0nAAp2LMpUk9PVA';
 
             // Buscar o crear carpeta DO
 
@@ -412,16 +412,56 @@ switch ($action) {
         }
         break;
 
-    case 'eliminar_documento':
-        $id = intval($_GET['id'] ?? $_POST['id']);
-        $doc = $wpdb->get_row($wpdb->prepare("SELECT * FROM $tabla_documentos WHERE id = %d", $id));
-        if ($doc) {
-            $file = WP_CONTENT_DIR . '/uploads/bitacora_docs/' . $doc->archivo;
-            if (file_exists($file)) unlink($file);
-            $wpdb->delete($tabla_documentos, ['id' => $id]);
+   case 'eliminar_documento':
+        $id = intval($_POST['id'] ?? $_GET['id'] ?? 0);
+        if ($id <= 0) {
+            echo json_encode(['success' => false, 'msg' => 'ID inválido']);
+            exit;
+        }
+
+        $doc = $wpdb->get_row($wpdb->prepare("SELECT * FROM $tabla_documentos WHERE Id = %d", $id));
+        if (!$doc) {
+            echo json_encode(['success' => false, 'msg' => 'Documento no encontrado']);
+            exit;
+        }
+
+        try {
+            $client = new Google_Client();
+            $client->setApplicationName('Acceso Drive desde WordPress');
+            $client->setAuthConfig(__DIR__ . '/../../environment/service_account_cred.json');
+            $client->setSubject('subgerencia@galogistic.com');
+            $client->setScopes([Google_Service_Drive::DRIVE]);
+            $driveService = new Google_Service_Drive($client);
+
+            $driveFileId = $doc->Archivo ?? null;
+
+            if (!empty($driveFileId)) {
+                $driveService->files->delete($driveFileId, [
+                    'supportsAllDrives' => true
+                ]);
+            }
+        } catch (Google_Service_Exception $e) {
+            $code = $e->getCode();
+            if ($code != 404) {
+                echo json_encode([
+                    'success' => false,
+                    'msg' => 'Error eliminando en Drive: ' . $e->getMessage()
+                ]);
+                exit;
+            }
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'msg' => 'Error eliminando en Drive: ' . $e->getMessage()
+            ]);
+            exit;
+        }
+        $deleted = $wpdb->delete($tabla_documentos, ['Id' => $id], ['%d']);
+
+        if ($deleted !== false) {
             echo json_encode(['success' => true]);
         } else {
-            echo json_encode(['success' => false]);
+            echo json_encode(['success' => false, 'msg' => 'No se pudo eliminar en BD']);
         }
         break;
         

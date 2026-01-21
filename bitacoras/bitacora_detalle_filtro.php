@@ -749,6 +749,7 @@ if (!isset($id)) {
                                     <th>Nombre</th>
                                     <th>Visible Cliente</th>
                                     <th>Fecha Cargue</th>
+                                    <th></th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -767,6 +768,11 @@ if (!isset($id)) {
                                         </td>
                                         <td>${visible === 1 ? 'Sí' : 'No'}</td>
                                         <td>${(typeof bcFormatFechaLocal === 'function') ? bcFormatFechaLocal(doc.fecha) : (doc.fecha || 'N/A')}</td>
+                                        <td style="text-align: right;">
+                                            <a href="#" onclick="eliminarDocumento(${doc.id}, ${idEntrada}); return false;" class="documentos-entrada" style="color: #2cd857ff; text-decoration: none" title="Gestionar Documentos">
+                                                <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" width="24" height="24" fill="#e74c3c" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22 5a1 1 0 0 1-1 1H3a1 1 0 0 1 0-2h5V3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v1h5a1 1 0 0 1 1 1zM4.934 21.071 4 8h16l-.934 13.071a1 1 0 0 1-1 .929H5.931a1 1 0 0 1-.997-.929zM15 18a1 1 0 0 0 2 0v-6a1 1 0 0 0-2 0zm-4 0a1 1 0 0 0 2 0v-6a1 1 0 0 0-2 0zm-4 0a1 1 0 0 0 2 0v-6a1 1 0 0 0-2 0z"/></svg>
+                                            </a></td>
+                                        </tr>
                                         </tr>
                                     `;
                                     }).join('')
@@ -780,7 +786,7 @@ if (!isset($id)) {
 
     function eliminarDocumento(idDoc, idEntrada) {
         if (!confirm('¿Eliminar este documento?')) return;
-        fetch(`/wp-content/bitacoras/plugins/cliente/documentos-ajax.php?action=eliminar&id=${idDoc}`, {
+        fetch(`/wp-content/bitacoras/plugins/cliente/entradas-ajax.php?action=eliminar_documento&id=${idDoc}`, {
                 method: 'POST'
             })
             .then(res => res.json())

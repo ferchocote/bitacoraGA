@@ -59,7 +59,15 @@
             <?php foreach ($docs as $doc): ?>
               <tr>
                 <td><?= esc_html($doc->TipoGestionDocumental ?? $tipo) ?></td>
-                <td><?= esc_html(date('d/m/Y', strtotime($doc->FechaDocumento ?? $fecha))) ?></td>
+                <td class="gd-fecha"
+                    data-fecha-documento="<?= esc_attr($doc->FechaDocumento ?? '') ?>"
+                    data-fecha-subida="<?= esc_attr($doc->FechaSubida ?? '') ?>">
+                  <?php if (!empty($doc->FechaDocumento)): ?>
+                    <?= esc_html(date('d/m/Y', strtotime($doc->FechaDocumento))) ?>
+                  <?php else: ?>
+                    <?= esc_html($doc->FechaSubida ?? '') ?>
+                  <?php endif; ?>
+                </td>
                 <td><?= esc_html($doc->NombreArchivo) ?></td>
                 <td><?= isset($doc->Descripcion) ? esc_html($doc->Descripcion) : '' ?></td>
                 <td>
@@ -72,7 +80,8 @@
                 <td>
                   <a href="#" class="btn-detalle-doc"
                      data-tipo="<?= esc_attr($doc->TipoGestionDocumental ?? $tipo) ?>"
-                     data-fecha="<?= esc_attr($doc->FechaDocumento ?? $fecha) ?>"
+                     data-fecha-documento="<?= esc_attr($doc->FechaDocumento ?? '') ?>"
+                     data-fecha-subida="<?= esc_attr($doc->FechaSubida ?? '') ?>"
                      data-nombre="<?= esc_attr($doc->NombreArchivo) ?>"
                      data-descripcion="<?= esc_attr($doc->Descripcion ?? '') ?>"
                      data-tipo_doc_conta="<?= esc_attr($doc->TipoDocContabilidad ?? '') ?>"
@@ -155,16 +164,11 @@
               if ($cliente->EsProveedor) $tipo[] = 'Proveedor';
               $tipoTexto = implode('/', $tipo);
             ?>
-              <option value="<?= esc_attr($cliente->Id) ?>" 
-                      data-tipo="<?= esc_attr($tipoTexto) ?>"
-                      data-numero-documento="<?= esc_attr($cliente->NumeroDocumento) ?>"
-                      data-razon-social="<?= esc_attr($cliente->RazonSocial) ?>">
+              <option value="<?= esc_attr($cliente->Id) ?>">
                 <?= esc_html($cliente->RazonSocial) ?> - <?= esc_html($cliente->NumeroDocumento) ?> (<?= esc_html($tipoTexto) ?>)
               </option>
             <?php endforeach; ?>
           </select>
-          <input type="hidden" name="numero_documento" id="numero_documento">
-          <input type="hidden" name="nombre_cliente" id="nombre_cliente">
         </div>
         <div class="form-group">
           <label for="fecha_documento">Fecha Documento</label>
@@ -228,8 +232,18 @@
   </div>
 </div>
 
+<script src="/wp-content/bitacoras/assets/js/date-utils.js"></script>
+
 <script>
 console.log('documentosAgrupados:', <?php echo json_encode($documentosAgrupados); ?>);
+// Normalizar fechas renderizadas (evita desfase UTC vs local)
+document.querySelectorAll('.gd-fecha').forEach(td => {
+  const fechaDocumento = td.dataset.fechaDocumento || '';
+  const fechaSubida = td.dataset.fechaSubida || '';
+  if (!fechaDocumento && fechaSubida && typeof bcFormatFechaLocalDate === 'function') {
+    td.textContent = bcFormatFechaLocalDate(fechaSubida);
+  }
+});
 // Abrir popup al hacer click en el botón Nuevo Documento
 const btnNuevoDoc = document.getElementById('btn-nuevo-documento');
 const popupToggle = document.getElementById('popup-toggle-add-doc');
@@ -262,23 +276,6 @@ descargarLinks.forEach(link => {
   });
 });
 
-// Manejar la selección de cliente/proveedor
-// document.getElementById('cliente_proveedor').addEventListener('change', function() {
-//     const selectedOption = this.options[this.selectedIndex];
-//     const numeroDocumento = document.getElementById('numero_documento');
-//     const nombreCliente = document.getElementById('nombre_cliente');
-//     const tipoDocCliente = document.getElementById('tipo_doc_cliente');
-    
-//     if (this.value) {
-//         numeroDocumento.value = selectedOption.dataset.numeroDocumento || '';
-//         nombreCliente.value = selectedOption.dataset.razonSocial || '';
-//         tipoDocCliente.value = selectedOption.dataset.tipoDocumento || '';
-//     } else {
-//         numeroDocumento.value = '';
-//         nombreCliente.value = '';
-//         tipoDocCliente.value = '';
-// });
-
 document.getElementById('form-nuevo-documento').addEventListener('submit', function() {
     showLoader(); // Muestra el loader al enviar el formulario
 });
@@ -295,7 +292,15 @@ btnDetalleDocs.forEach(btn => {
     document.getElementById('detalle_tipo_documento').value = btn.dataset.tipo || '';
     document.getElementById('detalle_tipo_doc_conta').value = btn.dataset.tipo_doc_conta || '';
     document.getElementById('detalle_cliente_proveedor').value = btn.dataset.nombre_cliente || '';
-    document.getElementById('detalle_fecha_documento').value = btn.dataset.fecha || '';
+    const fechaDoc = btn.dataset.fechaDocumento || '';
+    const fechaSubida = btn.dataset.fechaSubida || '';
+    if (fechaDoc) {
+      document.getElementById('detalle_fecha_documento').value = fechaDoc;
+    } else if (fechaSubida && typeof bcLocalISODate === 'function') {
+      document.getElementById('detalle_fecha_documento').value = bcLocalISODate(fechaSubida);
+    } else {
+      document.getElementById('detalle_fecha_documento').value = '';
+    }
     document.getElementById('detalle_nombre').value = btn.dataset.nombre || '';
     document.getElementById('detalle_descripcion').value = btn.dataset.descripcion || '';
     popupToggleDetalle.checked = true;

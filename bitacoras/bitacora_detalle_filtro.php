@@ -143,6 +143,7 @@ if (!isset($id)) {
 </div>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="/wp-content/bitacoras/assets/js/common-loader.js"></script>
+<script src="/wp-content/bitacoras/assets/js/date-utils.js"></script>
 <script>
     document.addEventListener('click', function(e) {
         const detalle = e.target.closest('.detalle-entrada');
@@ -305,7 +306,7 @@ if (!isset($id)) {
                             <td>${item.Descripcion || 'Sin descripción'}</td>
                             <td>${item.user_nicename || '---'}</td>
                             <td>${item.user_email || '---'}</td>
-                            <td>${item.FechaCreacion ? new Date(item.FechaCreacion).toLocaleDateString() : '---'}</td>
+                            <td>${(typeof bcFormatFechaLocalDate === 'function') ? bcFormatFechaLocalDate(item.FechaCreacion) : (item.FechaCreacion ? item.FechaCreacion : '---')}</td>
                             <td>
                             <a href="javascript:void(0);" class="detalle-entrada"  data-entrada='${JSON.stringify(item).replace(/'/g, "&apos;")}' style="color: #2980b9; text-decoration: none" title="Ver detalle">
                                 <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
@@ -765,7 +766,7 @@ if (!isset($id)) {
                                             <a href="${doc.url}" target="_blank" download>${doc.nombre}</a>
                                         </td>
                                         <td>${visible === 1 ? 'Sí' : 'No'}</td>
-                                        <td>${doc.fecha || 'N/A'}</td>
+                                        <td>${(typeof bcFormatFechaLocal === 'function') ? bcFormatFechaLocal(doc.fecha) : (doc.fecha || 'N/A')}</td>
                                         </tr>
                                     `;
                                     }).join('')

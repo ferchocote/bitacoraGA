@@ -600,6 +600,7 @@ function disabled_if_24h_passed($datetime)
 }
 ?>
 <script src="/wp-content/bitacoras/assets/js/common-loader.js"></script>
+<script src="/wp-content/bitacoras/assets/js/date-utils.js"></script>
 
 <!DOCTYPE html>
 <html lang="es">

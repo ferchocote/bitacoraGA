@@ -226,6 +226,7 @@ if (
 }
 ?>
 <script src="/wp-content/bitacoras/assets/js/common-loader.js"></script>
+<script src="/wp-content/bitacoras/assets/js/date-utils.js"></script>
 <!DOCTYPE html>
 <style>
   .historial-actions .icon-action {
@@ -663,7 +664,7 @@ if (
               <td>${escapeHtml(est.estado_anterior || '-')}</td>
               <td>${escapeHtml(est.estado_nuevo || '-')}</td>
               <td>${escapeHtml(est.usuario || '-')}</td>
-              <td>${est.fecha ? new Date(est.fecha).toLocaleString() : '-'}</td>
+              <td>${(typeof bcFormatFechaLocal === 'function') ? bcFormatFechaLocal(est.fecha) : (est.fecha || '-')}</td>
               <td class="observacion-cell">${escapeHtml(est.observacion || '')}</td>
               ${ES_ADMIN_BITACORA && esUltimo ? `
                 <td class="historial-actions" style="min-width:60px; display:flex; gap:8px;">
@@ -886,7 +887,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 ${data.map(doc => `
                   <tr>
                     <td><a href="${doc.url}" target="_blank" download>${doc.nombre}</a></td>
-                    <td>${doc.fecha || 'N/A'}</td>
+                    <td>${(typeof bcFormatFechaLocal === 'function') ? bcFormatFechaLocal(doc.fecha) : (doc.fecha || 'N/A')}</td>
                   </tr>
                 `).join('')}
               </tbody>

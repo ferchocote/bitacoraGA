@@ -26,48 +26,95 @@ $total_docs = $wpdb->get_var($wpdb->prepare(
 ));
 
 // Documentos paginados
+// Nota: bc_documento_gestion_detalle tiene FK dd.IdCliente -> bc_cliente.Id
+// Para mostrar Cliente/Proveedor, usamos JOIN por IdCliente (sin depender de columnas de texto en detalle).
+$base_select = "
+    SELECT d.ID as DocumentoId,
+           d.NombreArchivo,
+           d.RutaArchivo,
+           d.FechaSubida,
+           t.Nombre AS TipoNombre,
+           dd.IdCliente,
+           dd.IdTipoDocContabilidad,
+           tc.Descripcion AS TipoDocContabilidad,
+           dd.IdTipoDocCliente,
+           tcli.Descripcion AS TipoDocCliente,
+         cp.RazonSocial AS NombreClienteProveedor,
+         cp.NumeroDocumento AS NumeroDocumento,
+           dd.FechaDocumento,
+           dd.Descripcion
+      FROM bc_documento_gestion d
+      LEFT JOIN bc_documento_gestion_detalle dd ON d.ID = dd.IdDocumentoGestion
+      LEFT JOIN bc_cliente cp ON cp.Id = dd.IdCliente
+      LEFT JOIN bc_tipo_gestion_documental t ON t.Id = d.IdTipoGestion
+      LEFT JOIN bc_tipo_documento_contabilidad tc ON dd.IdTipoDocContabilidad = tc.ID
+      LEFT JOIN bc_tipo_documento tcli ON dd.IdTipoDocCliente = tcli.ID
+     WHERE d.IdGestion = %d
+";
+
 if ($q !== '') {
+    $like = '%' . $wpdb->esc_like($q) . '%';
+    $sql = $base_select . "
+       AND (
+            d.NombreArchivo LIKE %s
+         OR t.Nombre LIKE %s
+         OR cp.RazonSocial LIKE %s
+         OR cp.NumeroDocumento LIKE %s
+       )
+     ORDER BY d.FechaSubida DESC
+     LIMIT %d OFFSET %d
+    ";
     $documentos = $wpdb->get_results($wpdb->prepare(
-        "SELECT d.*, t.Nombre AS TipoNombre
-         FROM bc_documento_gestion d
-         LEFT JOIN bc_tipo_gestion_documental t ON t.Id = d.IdTipoGestion
-         WHERE d.IdGestion = %d AND (d.NombreArchivo LIKE %s OR t.Nombre LIKE %s)
-         ORDER BY d.FechaSubida DESC
-         LIMIT %d OFFSET %d",
-        $idGestion, "%$q%", "%$q%", $per_page, $offset
+        $sql,
+        $idGestion,
+        $like,
+        $like,
+        $like,
+        $like,
+        $per_page,
+        $offset
     ));
 } else {
+    $sql = $base_select . "
+     ORDER BY d.FechaSubida DESC
+     LIMIT %d OFFSET %d
+    ";
     $documentos = $wpdb->get_results($wpdb->prepare(
-        "SELECT d.ID as DocumentoId,
-                d.NombreArchivo,
-                d.RutaArchivo,
-                d.FechaSubida,
-                t.Nombre AS TipoNombre,
-                dd.IdTipoDocContabilidad,
-                tc.Descripcion AS TipoDocContabilidad,
-                dd.IdTipoDocCliente,
-                tcli.Descripcion AS TipoDocCliente,
-                dd.NombreClienteProveedor,
-                dd.NumeroDocumento,       /* Nuevo campo agregado */
-                dd.FechaDocumento,
-                dd.Descripcion
-         FROM bc_documento_gestion d
-         LEFT JOIN bc_documento_gestion_detalle dd ON d.ID = dd.IdDocumentoGestion
-         LEFT JOIN bc_tipo_gestion_documental t ON t.Id = d.IdTipoGestion
-         LEFT JOIN bc_tipo_documento_contabilidad tc ON dd.IdTipoDocContabilidad = tc.ID
-         LEFT JOIN bc_tipo_documento tcli ON dd.IdTipoDocCliente = tcli.ID
-         WHERE d.IdGestion = %d
-         ORDER BY d.FechaSubida DESC
-         LIMIT %d OFFSET %d",
-        $idGestion, $per_page, $offset
+        $sql,
+        $idGestion,
+        $per_page,
+        $offset
     ));
 }
 
 // Agrupar documentos paginados
+$bc_gd_wp_local_date_from_utc_mysql = function ($mysqlDateTime, $format = 'Y-m-d') {
+    if (empty($mysqlDateTime) || $mysqlDateTime === '0000-00-00 00:00:00') {
+        return '';
+    }
+    $timestamp = null;
+    try {
+        $dt = new DateTimeImmutable($mysqlDateTime, new DateTimeZone('UTC'));
+        $timestamp = $dt->getTimestamp();
+    } catch (Exception $e) {
+        $timestamp = strtotime($mysqlDateTime . ' UTC');
+        if (!$timestamp) {
+            $timestamp = strtotime($mysqlDateTime);
+        }
+    }
+    if (!$timestamp) {
+        return '';
+    }
+    if (function_exists('wp_date')) {
+        return wp_date($format, $timestamp);
+    }
+    return date($format, $timestamp);
+};
+
 $documentosAgrupados = [];
 foreach ($documentos as $doc) {
     $tipo = $doc->TipoNombre;
-    $fecha = date('Y-m-d', strtotime($doc->FechaSubida));
+    $fecha = $bc_gd_wp_local_date_from_utc_mysql($doc->FechaSubida, 'Y-m-d');
     $documentosAgrupados[$tipo][$fecha][] = $doc;
 }
 
@@ -126,11 +173,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gestion_id'], $_POST[
             'FechaSubida'    => current_time('mysql'),
         ];
         //data detalle
+        $idCliente = !empty($_POST['cliente_proveedor']) ? (int) $_POST['cliente_proveedor'] : 0;
+        $idCliente = $idCliente > 0 ? $idCliente : null;
+
         $dataDetalle = [
             'IdTipoDocContabilidad' => !empty($_POST['tipo_doc_conta']) ? (int)$_POST['tipo_doc_conta'] : null,
             'IdTipoDocCliente'      => !empty($_POST['tipo_doc_cliente']) ? (int)$_POST['tipo_doc_cliente'] : null,
-            'NombreClienteProveedor'=> sanitize_text_field($_POST['nombre_cliente'] ?? ''),
-            'NumeroDocumento'       => sanitize_text_field($_POST['numero_documento'] ?? ''),
+            'IdCliente'             => $idCliente,
             'FechaDocumento'        => !empty($_POST['fecha_documento']) ? sanitize_text_field($_POST['fecha_documento']) : null,
             'Descripcion'           => sanitize_textarea_field($_POST['descripcion'] ?? ''),
         ];

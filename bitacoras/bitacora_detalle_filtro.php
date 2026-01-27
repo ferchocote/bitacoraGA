@@ -143,7 +143,8 @@ if (!isset($id)) {
 </div>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="/wp-content/bitacoras/assets/js/common-loader.js"></script>
-<script src="/wp-content/bitacoras/assets/js/date-utils.js"></script>
+<!-- bc: date-utils.js activo (fechas según navegador) | pub 2026-01-27 -->
+<script src="/wp-content/bitacoras/assets/js/date-utils.js?v=20260127"></script>
 <script>
     document.addEventListener('click', function(e) {
         const detalle = e.target.closest('.detalle-entrada');

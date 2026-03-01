@@ -65,3 +65,16 @@ function hideLoader() {
         console.error('Elemento loader-overlay no encontrado');
     }
 }
+
+// Cargar script del popup de suscripción de forma global
+(function() {
+    try {
+        const s = document.createElement('script');
+        s.src = '/wp-content/bitacoras/assets/js/subscription-popup.js';
+        s.defer = true;
+        s.async = false;
+        document.head.appendChild(s);
+    } catch (e) {
+        console.error('No se pudo cargar subscription-popup.js', e);
+    }
+})();

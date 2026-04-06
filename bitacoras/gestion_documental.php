@@ -1,5 +1,6 @@
 <?php
 // Controlador para la vista principal de Gestión Documental (lista y nuevo)
+require_once __DIR__ . '/includes/suscripcion.php';
 require_once __DIR__ . '/../gestionDocumental/includes/usecases/ListarImportadoresConGestion.php';
 require_once __DIR__ . '/../gestionDocumental/includes/usecases/CrearGestionDocumental.php';
 require_once __DIR__ . '/../gestionDocumental/includes/usecases/ValidarGestionDocumentalDuplicada.php';
@@ -9,6 +10,8 @@ global $wpdb;
 
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 $mensaje = '';
+$suscripcionBloqueada = bc_suscripcion_esta_bloqueada($wpdb);
+$mensajeSuscripcion = bc_suscripcion_mensaje_bloqueo();
 
 if ($action === 'nueva') {
     // Mostrar formulario para nueva gestión documental
@@ -17,25 +20,29 @@ if ($action === 'nueva') {
 
     $exito = false;
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $idImportador = (int)($_POST['importador'] ?? 0);
-        $idUsuario = get_current_user_id();
-        if ($idImportador > 0) {
-            $validador = new ValidarGestionDocumentalDuplicada($wpdb);
-            if ($validador->existeGestionActiva($idImportador)) {
-                $mensaje = 'Ya existe una gestión activa para este importador.';
-            } else {
-                $nuevaId = crear_gestion_documental($wpdb, $idImportador, $idUsuario);
-                if ($nuevaId) {
-                    $exito = true;
-                    $mensaje = 'Gestión documental creada exitosamente.';
-                    // Limpiar POST para evitar reenvío
-                    $_POST = [];
-                } else {
-                    $mensaje = 'Error al crear la gestión.';
-                }
-            }
+        if ($suscripcionBloqueada) {
+            $mensaje = '';
         } else {
-            $mensaje = 'Seleccione un importador.';
+            $idImportador = (int)($_POST['importador'] ?? 0);
+            $idUsuario = get_current_user_id();
+            if ($idImportador > 0) {
+                $validador = new ValidarGestionDocumentalDuplicada($wpdb);
+                if ($validador->existeGestionActiva($idImportador)) {
+                    $mensaje = 'Ya existe una gestión activa para este importador.';
+                } else {
+                    $nuevaId = crear_gestion_documental($wpdb, $idImportador, $idUsuario);
+                    if ($nuevaId) {
+                        $exito = true;
+                        $mensaje = 'Gestión documental creada exitosamente.';
+                        // Limpiar POST para evitar reenvío
+                        $_POST = [];
+                    } else {
+                        $mensaje = 'Error al crear la gestión.';
+                    }
+                }
+            } else {
+                $mensaje = 'Seleccione un importador.';
+            }
         }
     }
     include __DIR__ . '/../gestionDocumental/templates/nueva-gestion-documental.php';

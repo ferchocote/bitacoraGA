@@ -69,6 +69,9 @@ function hideLoader() {
 // Cargar script del popup de suscripción de forma global
 (function() {
     try {
+        if (!window.bcSubscriptionInactive) {
+            return;
+        }
         const s = document.createElement('script');
         s.src = '/wp-content/bitacoras/assets/js/subscription-popup.js';
         s.defer = true;

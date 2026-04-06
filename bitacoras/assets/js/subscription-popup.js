@@ -60,10 +60,10 @@
                 <circle cx="12" cy="12" r="10" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </div>
-            <h3>Tu suscripción está por expirar</h3>
-            <p>Tu suscripción vencerá pronto. Por favor, contacta un administrador para seguir disfrutando de la aplicación sin interrupciones.</p>
+            <h1>Tu suscripción ha expirado</h1>
+            <p>Algunas funcionalidades fueron deshabilitadas y otras podrían dejar de estar disponibles pronto. Para seguir usando la aplicación sin interrupciones, por favor contacta a un administrador.</p>
             <div class="actions">
-                <button class="btn-primary" id="subscription-pay">Recordarme más tarde</button>
+                <button class="btn-secondary" style="background-color: #e74c3c; color:#fff" id="subscription-pay">Recordarme más tarde</button>
             </div>
         `;
 
@@ -79,7 +79,7 @@
         const payBtn = dialog.querySelector('#subscription-pay');
         if (payBtn) {
             // disable button for a short countdown so user has time to read/close
-            let countdown = 3;
+            let countdown = 5;
             const origText = payBtn.textContent;
             payBtn.disabled = true;
             payBtn.textContent = `${origText} (${countdown})`;

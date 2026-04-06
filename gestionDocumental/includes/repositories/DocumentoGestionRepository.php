@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../../bitacoras/includes/suscripcion.php';
 // Repositorio para documentos de gestión documental
 class DocumentoGestionRepository {
     private $wpdb;
@@ -37,6 +38,10 @@ class DocumentoGestionRepository {
      * Guarda un documento en la base de datos principal y su detalle
      */
     public function crearDocumentoGestion($dataDocumento, $dataDetalle) {
+        if (bc_suscripcion_esta_bloqueada($this->wpdb)) {
+            return false;
+        }
+
         $this->wpdb->insert('bc_documento_gestion', $dataDocumento);
         $idDocumento = $this->wpdb->insert_id;
         if (!$idDocumento) return false;

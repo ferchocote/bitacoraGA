@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../../bitacoras/includes/suscripcion.php';
 // Repositorio para operaciones sobre gestiones documentales
 class GestionDocumentalRepository {
     private $wpdb;
@@ -6,6 +7,10 @@ class GestionDocumentalRepository {
         $this->wpdb = $wpdb;
     }
     public function crearGestion($idImportador, $idUsuario) {
+        if (bc_suscripcion_esta_bloqueada($this->wpdb)) {
+            return false;
+        }
+
         $res = $this->wpdb->insert('bc_gestion_documental', [
             'IdImportador' => $idImportador,
             'UsuarioCreador' => $idUsuario,

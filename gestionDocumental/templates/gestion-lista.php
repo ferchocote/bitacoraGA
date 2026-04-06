@@ -17,13 +17,26 @@
       </div>
     </div>
   </form>
-  <a href="?view=gestion_documental&action=nueva" class="btn btn-icon" onclick="showLoader()">
-    <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5" />
-    </svg>
-    Nueva Gestión
-  </a>
+  <?php if (!empty($suscripcionBloqueada)): ?>
+    <span class="btn btn-icon" style="opacity:.6; cursor:not-allowed;" title="<?= esc_attr($mensajeSuscripcion) ?>">
+      <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5" />
+      </svg>
+      Nueva Gestión
+    </span>
+  <?php else: ?>
+    <a href="?view=gestion_documental&action=nueva" class="btn btn-icon" onclick="showLoader()">
+      <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5" />
+      </svg>
+      Nueva Gestión
+    </a>
+  <?php endif; ?>
 </div>
+
+<?php if (!empty($suscripcionBloqueada)): ?>
+  <div class="error"><?= esc_html($mensajeSuscripcion) ?></div>
+<?php endif; ?>
 
 <?php if (empty($importadores)): ?>
   <p>No hay importadores con gestión documental.</p>

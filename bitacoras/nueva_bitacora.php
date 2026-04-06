@@ -8,6 +8,7 @@ if ($usuario->rol_codigo != "IMPOR" && $usuario->rol_codigo != "ADMIN") {
 // 1. Cargar WP y verificar sesión
 define('WP_USE_THEMES', false);
 require_once __DIR__ . '/../../wp-load.php';
+require_once __DIR__ . '/includes/suscripcion.php';
 
 if (!is_user_logged_in()) {
     wp_redirect(wp_login_url($_SERVER['REQUEST_URI']));
@@ -19,6 +20,8 @@ global $wpdb;
 $tabla = 'bc_' . 'proceso';
 $tabla_estados  = 'bc_' . 'estado_proceso';
 $tabla_clientes = 'bc_' . 'cliente';
+$suscripcionBloqueada = bc_suscripcion_esta_bloqueada($wpdb);
+$mensajeSuscripcion = bc_suscripcion_mensaje_bloqueo();
 
 // Obtener listas para selects
 // Filtrar por IdAliado del usuario si no es ADMIN
@@ -50,72 +53,76 @@ $message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     check_admin_referer('crear_proceso_action', 'crear_proceso_nonce');
 
-    // Normaliza y valida DO primero
-    $do_ingresado = sanitize_text_field($_POST['DO']);
-    $do_normalizado = trim($do_ingresado);
-
-    // Valida existencia (case-insensitive y sin espacios en extremos)
-    $ya_existe = (int) $wpdb->get_var(
-        $wpdb->prepare(
-            "SELECT COUNT(*) 
-             FROM {$tabla} 
-             WHERE UPPER(TRIM(DO)) = UPPER(TRIM(%s))",
-            $do_normalizado
-        )
-    );
-
-    if ($ya_existe > 0) {
-        $message = '<div class="error">El DO <strong>' . esc_html($do_ingresado) . '</strong> ya existe en el sistema.</div>';
+    if ($suscripcionBloqueada) {
+        $message = '';
     } else {
+        // Normaliza y valida DO primero
+        $do_ingresado = sanitize_text_field($_POST['DO']);
+        $do_normalizado = trim($do_ingresado);
 
-    // Campos que vienen del formulario
-    $data = [];
-    $data['DO']               = sanitize_text_field($_POST['DO']);
-    $data['Encargado']        = $current_user->user_login;
-    $data['IdCliente']        = intval($_POST['IdEmpresa']);
-    $data['IdImportador']     = intval($_POST['IdImportador']);
-    $data['DOAgencia']        = sanitize_text_field($_POST['DOAgencia']);
-    $data['AgenteCarga']      = sanitize_text_field($_POST['AgenteCarga']);
-    $data['ETA']              = date('Y-m-d H:i:s', strtotime($_POST['ETA']));
-    $data['DiasLibres']       = sanitize_text_field($_POST['DiasLibres']);
-    $data['Producto']         = sanitize_text_field($_POST['Producto']);
-    $data['NumeroBL']         = sanitize_text_field($_POST['NumeroBL']);
-    $data['Contenedor']       = sanitize_text_field($_POST['Contenedor']);
-    $data['Bulto']            = sanitize_text_field($_POST['Bulto']);
-    $data['PesoBruto']        = sanitize_text_field($_POST['PesoBruto']);
-    $data['Bandera']          = sanitize_text_field($_POST['Bandera']);
-    $data['IdTipoProceso']        = intval($_POST['IdTipoProceso']);
-    $data['IdDigitacionRevision'] = intval($_POST['IdDigitacionRevision']);
-    $data['IdAduana']             = intval($_POST['IdAduana']);
-    $data['IdPies']               = intval($_POST['IdPies']);
-    $data['IdPuerto'] = isset($_POST['IdPuerto']) && $_POST['IdPuerto'] !== ''
-    ? intval($_POST['IdPuerto'])
-    : null;
+        // Valida existencia (case-insensitive y sin espacios en extremos)
+        $ya_existe = (int) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) 
+                 FROM {$tabla} 
+                 WHERE UPPER(TRIM(DO)) = UPPER(TRIM(%s))",
+                $do_normalizado
+            )
+        );
 
-    // Estado y auditoría
-    $data['IdEstadoProceso'] = intval($estado_creado_id);
-    $data['IdUserCreation']  = get_current_user_id();
-    $data['FechaCreacion']   = current_time('mysql');
-    $data['Activo']          = 1;
+        if ($ya_existe > 0) {
+            $message = '<div class="error">El DO <strong>' . esc_html($do_ingresado) . '</strong> ya existe en el sistema.</div>';
+        } else {
 
-    // Insertar registro
-    $inserted = $wpdb->insert($tabla, $data);
-    if ($inserted) {
-      $new_id = $wpdb->insert_id;
-      // Guardar log en bc_logs
-      $log_data = [
-        'Objeto'        => wp_json_encode($data),
-        'Tabla'         => $tabla,
-        'TipoDeCambio'    => 'Crear',
-        'IdUser'        => get_current_user_id(),
-        'FechaCreacion' => current_time('mysql'),
-      ];
-      $wpdb->insert('bc_logs', $log_data);
-      $message = '<div class="success">Proceso creado con ID: ' . $new_id . '</div>';
-    } else {
-        $message = '<div class="error">Error al crear el proceso.</div>';
+            // Campos que vienen del formulario
+            $data = [];
+            $data['DO']               = sanitize_text_field($_POST['DO']);
+            $data['Encargado']        = $current_user->user_login;
+            $data['IdCliente']        = intval($_POST['IdEmpresa']);
+            $data['IdImportador']     = intval($_POST['IdImportador']);
+            $data['DOAgencia']        = sanitize_text_field($_POST['DOAgencia']);
+            $data['AgenteCarga']      = sanitize_text_field($_POST['AgenteCarga']);
+            $data['ETA']              = date('Y-m-d H:i:s', strtotime($_POST['ETA']));
+            $data['DiasLibres']       = sanitize_text_field($_POST['DiasLibres']);
+            $data['Producto']         = sanitize_text_field($_POST['Producto']);
+            $data['NumeroBL']         = sanitize_text_field($_POST['NumeroBL']);
+            $data['Contenedor']       = sanitize_text_field($_POST['Contenedor']);
+            $data['Bulto']            = sanitize_text_field($_POST['Bulto']);
+            $data['PesoBruto']        = sanitize_text_field($_POST['PesoBruto']);
+            $data['Bandera']          = sanitize_text_field($_POST['Bandera']);
+            $data['IdTipoProceso']        = intval($_POST['IdTipoProceso']);
+            $data['IdDigitacionRevision'] = intval($_POST['IdDigitacionRevision']);
+            $data['IdAduana']             = intval($_POST['IdAduana']);
+            $data['IdPies']               = intval($_POST['IdPies']);
+            $data['IdPuerto'] = isset($_POST['IdPuerto']) && $_POST['IdPuerto'] !== ''
+            ? intval($_POST['IdPuerto'])
+            : null;
+
+            // Estado y auditoría
+            $data['IdEstadoProceso'] = intval($estado_creado_id);
+            $data['IdUserCreation']  = get_current_user_id();
+            $data['FechaCreacion']   = current_time('mysql');
+            $data['Activo']          = 1;
+
+            // Insertar registro
+            $inserted = $wpdb->insert($tabla, $data);
+            if ($inserted) {
+              $new_id = $wpdb->insert_id;
+              // Guardar log en bc_logs
+              $log_data = [
+                'Objeto'        => wp_json_encode($data),
+                'Tabla'         => $tabla,
+                'TipoDeCambio'    => 'Crear',
+                'IdUser'        => get_current_user_id(),
+                'FechaCreacion' => current_time('mysql'),
+              ];
+              $wpdb->insert('bc_logs', $log_data);
+              $message = '<div class="success">Proceso creado con ID: ' . $new_id . '</div>';
+            } else {
+                $message = '<div class="error">Error al crear el proceso.</div>';
+            }
+        }
     }
-  }
 }
 
 // Helpers para “valores antiguos” (sticky form)
@@ -146,8 +153,11 @@ function old_dt($key, $default = '') {
 <body>
   <div class="form-container">
     <h1>Crear Nuevo Proceso (DO)</h1>
+    <?php if ($suscripcionBloqueada): ?>
+      <div class="error"><?= esc_html($mensajeSuscripcion) ?></div>
+    <?php endif; ?>
     <?= $message ?>
-    <form method="post" class="form-grid">
+    <form method="post" class="form-grid"<?= $suscripcionBloqueada ? ' onsubmit="return false;"' : '' ?>>
       <?php wp_nonce_field('crear_proceso_action','crear_proceso_nonce'); ?>
 
       <div class="form-group">
@@ -291,7 +301,7 @@ function old_dt($key, $default = '') {
 
       <div class="form-group last">
         <a href="?view=bitacoras" class="btn close">Cerrar</a>
-        <button type="submit" class="btn">Crear Proceso</button>
+        <button type="submit" class="btn"<?= $suscripcionBloqueada ? ' disabled title="' . esc_attr($mensajeSuscripcion) . '"' : '' ?>>Crear Proceso</button>
       </div>
     </form>
   </div>

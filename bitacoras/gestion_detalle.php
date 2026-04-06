@@ -1,5 +1,6 @@
 <?php
 // Controlador para el detalle de gestión documental
+require_once __DIR__ . '/includes/suscripcion.php';
 require_once __DIR__ . '/../gestionDocumental/includes/repositories/DocumentoGestionRepository.php';
 require_once __DIR__ . '/../gestionDocumental/includes/usecases/ListarTiposDocumentos.php';
 require_once __DIR__ . '/../gestionDocumental/includes/usecases/CrearDocumentoGestion.php';
@@ -9,6 +10,8 @@ global $wpdb;
 
 $idGestion = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $q = isset($_GET['q']) ? trim($_GET['q']) : '';
+$suscripcionBloqueada = bc_suscripcion_esta_bloqueada($wpdb);
+$mensajeSuscripcion = bc_suscripcion_mensaje_bloqueo();
 if ($idGestion <= 0) {
     echo "Gestión no válida.";
     exit;
@@ -140,7 +143,9 @@ $nombreImportador = $wpdb->get_var($wpdb->prepare('
     WHERE gd.ID = %d', $idGestion));
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gestion_id'], $_POST['tipo_documento'], $_POST['nombre'])) {
-    if (!$gestionExiste) {
+    if ($suscripcionBloqueada) {
+        $mensaje = '';
+    } elseif (!$gestionExiste) {
         $mensaje = '<div class="notice error">No se puede guardar: la gestión seleccionada no existe. ID recibido: ' . esc_html($_POST['gestion_id']) . '</div>';
     } else {
         $rutaArchivo = '';

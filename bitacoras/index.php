@@ -2,6 +2,7 @@
 ob_start();
 // define('WP_USE_THEMES', false);
 require_once('../../wp-load.php');
+require_once __DIR__ . '/includes/suscripcion.php';
 
 add_action('init', 'auto_login_from_token');
 define('CLS_SECRET_KEY', '7i9FnaDgt917eRnzRo^>');
@@ -62,6 +63,8 @@ $usuario = $wpdb->get_row("SELECT u.*, r.Nombre AS rol_nombre, r.Codigo AS rol_c
         LEFT JOIN bc_grupo_empresa ge ON ge.Id = u.IdAliado
         WHERE u.id = {$current_user->ID}");
 
+$bc_suscripcion_bloqueada = bc_suscripcion_esta_bloqueada($wpdb);
+
 // Determinar si el usuario es ADMIN de GA (tiene acceso completo)
 $es_admin_ga = ($usuario->rol_codigo === 'ADMIN' && $usuario->grupo_nombre === 'GA');
 
@@ -88,6 +91,9 @@ function formatearNombrePagina($archivo)
     return $nombreFormateado;
 }
 ?>
+<script>
+    window.bcSubscriptionInactive = <?php echo $bc_suscripcion_bloqueada ? 'true' : 'false'; ?>;
+</script>
 <script src="/wp-content/bitacoras/assets/js/common-loader.js"></script>
 <!DOCTYPE html>
 <html lang="es">

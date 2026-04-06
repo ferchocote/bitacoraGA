@@ -27,15 +27,27 @@
       </div>
     </div>
   </form>
-  <a href="#" id="btn-nuevo-documento" class="btn btn-icon" onclick="showLoader()">
-    <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5" />
-    </svg>
-    Nuevo Documento
-  </a>
+  <?php if (!empty($suscripcionBloqueada)): ?>
+    <span id="btn-nuevo-documento" class="btn btn-icon" style="opacity:.6; cursor:not-allowed;" title="<?= esc_attr($mensajeSuscripcion) ?>">
+      <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5" />
+      </svg>
+      Nuevo Documento
+    </span>
+  <?php else: ?>
+    <a href="#" id="btn-nuevo-documento" class="btn btn-icon" onclick="showLoader()">
+      <svg class="w-[18px] h-[18px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5" />
+      </svg>
+      Nuevo Documento
+    </a>
+  <?php endif; ?>
 </div>
 
 <!-- Vista: Detalle de gestión documental -->
+<?php if (!empty($suscripcionBloqueada)): ?>
+  <div class="error"><?= esc_html($mensajeSuscripcion) ?></div>
+<?php endif; ?>
 <?php if (!empty($mensaje)) echo $mensaje; ?>
 <h2>Documentos de la gestión</h2>
 <?php if (empty($documentosAgrupados)): ?>
@@ -71,11 +83,19 @@
                 <td><?= esc_html($doc->NombreArchivo) ?></td>
                 <td><?= isset($doc->Descripcion) ? esc_html($doc->Descripcion) : '' ?></td>
                 <td>
-                  <a href="/wp-content/gestionDocumental/controllers/descargar_documento.php?id=<?= esc_attr($doc->RutaArchivo) ?>" target="_blank" title="Ver/Descargar" onclick="showLoader()" download>
-                    <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path fill-rule="evenodd" d="M4.998 7.78C6.729 6.345 9.198 5 12 5c2.802 0 5.27 1.345 7.002 2.78a12.713 12.713 0 0 1 2.096 2.183c.253.344.465.682.618.997.14.286.284.658.284 1.04s-.145.754-.284 1.04a6.6 6.6 0 0 1-.618.997 12.712 12.712 0 0 1-2.096 2.183C17.271 17.655 14.802 19 12 19c-2.802 0-5.27-1.345-7.002-2.78a12.712 12.712 0 0 1-2.096-2.183 6.6 6.6 0 0 1-.618-.997C2.144 12.754 2 12.382 2 12s.145-.754.284-1.04c.153-.315.365-.653.618-.997A12.714 12.714 0 0 1 4.998 7.78ZM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd" />
-                    </svg>
-                  </a>
+                  <?php if (!empty($suscripcionBloqueada)): ?>
+                    <span title="<?= esc_attr($mensajeSuscripcion) ?>" style="opacity:.45; cursor:not-allowed; display:inline-flex;">
+                      <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M4.998 7.78C6.729 6.345 9.198 5 12 5c2.802 0 5.27 1.345 7.002 2.78a12.713 12.713 0 0 1 2.096 2.183c.253.344.465.682.618.997.14.286.284.658.284 1.04s-.145.754-.284 1.04a6.6 6.6 0 0 1-.618.997 12.712 12.712 0 0 1-2.096 2.183C17.271 17.655 14.802 19 12 19c-2.802 0-5.27-1.345-7.002-2.78a12.712 12.712 0 0 1-2.096-2.183 6.6 6.6 0 0 1-.618-.997C2.144 12.754 2 12.382 2 12s.145-.754.284-1.04c.153-.315.365-.653.618-.997A12.714 12.714 0 0 1 4.998 7.78ZM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd" />
+                      </svg>
+                    </span>
+                  <?php else: ?>
+                    <a href="/wp-content/gestionDocumental/controllers/descargar_documento.php?id=<?= esc_attr($doc->RutaArchivo) ?>" target="_blank" title="Ver/Descargar" onclick="showLoader()" download>
+                      <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M4.998 7.78C6.729 6.345 9.198 5 12 5c2.802 0 5.27 1.345 7.002 2.78a12.713 12.713 0 0 1 2.096 2.183c.253.344.465.682.618.997.14.286.284.658.284 1.04s-.145.754-.284 1.04a6.6 6.6 0 0 1-.618.997 12.712 12.712 0 0 1-2.096 2.183C17.271 17.655 14.802 19 12 19c-2.802 0-5.27-1.345-7.002-2.78a12.712 12.712 0 0 1-2.096-2.183 6.6 6.6 0 0 1-.618-.997C2.144 12.754 2 12.382 2 12s.145-.754.284-1.04c.153-.315.365-.653.618-.997A12.714 12.714 0 0 1 4.998 7.78ZM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd" />
+                      </svg>
+                    </a>
+                  <?php endif; ?>
                 </td>
                 <td>
                   <a href="#" class="btn-detalle-doc"
@@ -127,12 +147,12 @@
   <div class="form-container" style="max-width:700px; margin:auto;">
     <h1>Crear Nuevo Documento</h1>
     <?php if (!empty($mensaje)) echo $mensaje; ?>
-    <form id="form-nuevo-documento" method="post" enctype="multipart/form-data" action="">
+    <form id="form-nuevo-documento" method="post" enctype="multipart/form-data" action=""<?= !empty($suscripcionBloqueada) ? ' onsubmit="return false;"' : '' ?>>
       <input type="hidden" name="gestion_id" value="<?= isset($gestionId) ? esc_attr($gestionId) : '' ?>">
       <div class="form-grid">
         <div class="form-group full-width">
           <label for="tipo_documento">Tipo de Gestión Documental</label>
-          <select class="input" name="tipo_documento" id="tipo_documento" required>
+          <select class="input" name="tipo_documento" id="tipo_documento" required<?= !empty($suscripcionBloqueada) ? ' disabled' : '' ?>>
             <option value="">Seleccione...</option>
             <?php foreach ($tiposDocumento as $tipo): ?>
               <option value="<?= esc_attr($tipo->Id) ?>"><?= esc_html($tipo->Nombre) ?></option>
@@ -141,7 +161,7 @@
         </div>
         <div class="form-group">
           <label for="tipo_doc_conta">Tipo Documento Contabilidad</label>
-          <select class="input" name="tipo_doc_conta" id="tipo_doc_conta">
+          <select class="input" name="tipo_doc_conta" id="tipo_doc_conta"<?= !empty($suscripcionBloqueada) ? ' disabled' : '' ?>>
             <option value="">Seleccione...</option>
             <?php foreach ($tiposDocContabilidad as $tipo): ?>
               <option value="<?= esc_attr($tipo->Id) ?>"><?= esc_html($tipo->Descripcion) ?></option>
@@ -150,7 +170,7 @@
         </div>
         <div class="form-group" style="grid-column: 1 / -1;">
           <label for="cliente_proveedor">Cliente/Proveedor</label>
-          <select class="input" name="cliente_proveedor" id="cliente_proveedor">
+          <select class="input" name="cliente_proveedor" id="cliente_proveedor"<?= !empty($suscripcionBloqueada) ? ' disabled' : '' ?>>
             <option value="">Seleccione...</option>
             <?php
             $clientes = $wpdb->get_results("SELECT Id, RazonSocial, NumeroDocumento, EsCliente, EsProveedor 
@@ -172,24 +192,24 @@
         </div>
         <div class="form-group">
           <label for="fecha_documento">Fecha Documento</label>
-          <input class="input" type="date" name="fecha_documento" id="fecha_documento">
+          <input class="input" type="date" name="fecha_documento" id="fecha_documento"<?= !empty($suscripcionBloqueada) ? ' disabled' : '' ?>>
         </div>
         <div class="form-group">
           <label for="nombre">Nombre del Archivo</label>
-          <input class="input" type="text" name="nombre" id="nombre" required>
+          <input class="input" type="text" name="nombre" id="nombre" required<?= !empty($suscripcionBloqueada) ? ' disabled' : '' ?>>
         </div>
         <div class="form-group">
           <label for="archivo">Seleccionar Archivo</label>
-          <input class="input" type="file" name="archivo" id="archivo">
+          <input class="input" type="file" name="archivo" id="archivo"<?= !empty($suscripcionBloqueada) ? ' disabled' : '' ?>>
         </div>
         <div class="form-group full-width">
           <label for="descripcion">Descripción</label>
-          <textarea class="input" name="descripcion" id="descripcion" rows="2"></textarea>
+          <textarea class="input" name="descripcion" id="descripcion" rows="2"<?= !empty($suscripcionBloqueada) ? ' disabled' : '' ?>></textarea>
         </div>
       </div>
       <div class="form-buttons">
         <label for="popup-toggle-add-doc" class="btn close">Cancelar</label>
-        <button type="submit" class="btn">Crear</button>
+        <button type="submit" class="btn"<?= !empty($suscripcionBloqueada) ? ' disabled title="' . esc_attr($mensajeSuscripcion) . '"' : '' ?>>Crear</button>
       </div>
     </form>
   </div>
@@ -237,6 +257,7 @@
 
 <script>
 console.log('documentosAgrupados:', <?php echo json_encode($documentosAgrupados); ?>);
+const suscripcionBloqueada = <?php echo !empty($suscripcionBloqueada) ? 'true' : 'false'; ?>;
 // Normalizar fechas renderizadas (evita desfase UTC vs local)
 document.querySelectorAll('.gd-fecha').forEach(td => {
   const fechaDocumento = td.dataset.fechaDocumento || '';
@@ -249,7 +270,7 @@ document.querySelectorAll('.gd-fecha').forEach(td => {
 const btnNuevoDoc = document.getElementById('btn-nuevo-documento');
 const popupToggle = document.getElementById('popup-toggle-add-doc');
 const overlayAdd = document.querySelector('.overlay-add');
-if (btnNuevoDoc) {
+if (btnNuevoDoc && !suscripcionBloqueada) {
   btnNuevoDoc.addEventListener('click', function(e) {
     e.preventDefault();
     popupToggle.checked = true;
@@ -277,7 +298,12 @@ descargarLinks.forEach(link => {
   });
 });
 
-document.getElementById('form-nuevo-documento').addEventListener('submit', function() {
+document.getElementById('form-nuevo-documento').addEventListener('submit', function(e) {
+    if (suscripcionBloqueada) {
+      e.preventDefault();
+      hideLoader();
+      return;
+    }
     showLoader(); // Muestra el loader al enviar el formulario
 });
 

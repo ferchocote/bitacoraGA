@@ -51,6 +51,14 @@ $tabla_estados = 'bc_' . 'estado_proceso';
 $tabla_detalle = 'bc_' . 'detalle_proceso';
 $tabla_tipo_entrada = 'bc_' . 'tipo_entrada';
 
+function nullable_post_int($key) {
+  if (!isset($_POST[$key]) || $_POST[$key] === '') {
+    return null;
+  }
+
+  return intval($_POST[$key]);
+}
+
 // 1) Procesar formulario de edición antes de cualquier salida
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view'] === 'bitacora_detalle') {
   check_admin_referer('editar_proceso_action', 'editar_proceso_nonce');
@@ -80,7 +88,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
     $detalle->EntregaTransporte = $detalle->EntregaTransporte ? date('Y-m-d H:i:s', strtotime($_POST['EntregaTransporte'])) : null;
     $detalle->DevolucionUnidad = $detalle->DevolucionUnidad ? date('Y-m-d H:i:s', strtotime($_POST['DevolucionUnidad'])) : null;
     $detalle->Pago = $detalle->Pago ? date('Y-m-d H:i:s', strtotime($_POST['Pago'])) : null;
-    $detalle->Deposito = sanitize_text_field($_POST['Deposito']);
     $detalle->Manifiesto = sanitize_text_field($_POST['Manifiesto']);
     $detalle->Observaciones = sanitize_text_field($_POST['Observaciones']);
   }
@@ -100,11 +107,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['view']) && $_GET['view
     'IdCliente'           => intval($_POST['IdCliente']),
     'IdImportador'        => intval($_POST['IdImportador']),
   ];
-  $data_p['IdTipoProceso']        = intval($_POST['IdTipoProceso']);
-  $data_p['IdDigitacionRevision'] = intval($_POST['IdDigitacionRevision']);
-  $data_p['IdAduana']             = intval($_POST['IdAduana']);
-  $data_p['IdPies']               = intval($_POST['IdPies']);
-  $data_p['IdPuerto']             = intval($_POST['IdPuerto']);
+  $data_p['IdTipoProceso']        = nullable_post_int('IdTipoProceso');
+  $data_p['IdDigitacionRevision'] = nullable_post_int('IdDigitacionRevision');
+  $data_p['IdAduana']             = nullable_post_int('IdAduana');
+  $data_p['IdPies']               = nullable_post_int('IdPies');
+  $data_p['IdPuerto']             = nullable_post_int('IdPuerto');
 
 
   $wpdb->update($tabla_proceso, $data_p, ['Id' => $id]);
